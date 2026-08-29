@@ -12,6 +12,7 @@
     "check": "astro check",
     "check:content": "node scripts/check-content.mjs",
     "images:placeholders": "node scripts/generate-placeholders.mjs",
+    "images:favicons": "node scripts/generate-favicons.mjs",
     "images:readme": "node scripts/images-readme.mjs",
     "i18n:status": "node scripts/translation-status.mjs",
     "qa": "node scripts/qa-report.mjs",

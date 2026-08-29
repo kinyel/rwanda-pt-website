@@ -128,7 +128,26 @@ const jsonLd = [organizationSchema(logoUrl), ...schemas];
     <link rel="preload" as="font" type="font/woff2" href={fontDisplay} crossorigin />
 
     <meta name="theme-color" content="#0e1013" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+    <!--
+      Icons. All generated from the one logo by scripts/generate-favicons.mjs
+      (`npm run images:favicons`), so a new logo means one command rather than
+      six PNGs redrawn by hand.
+
+      They sit on a white plate on purpose. The logo is a black wordmark on a
+      transparent ground, so unplated it vanishes against a dark browser tab
+      strip — the same problem the footer and the dark-theme header already
+      solve the same way.
+
+      `favicon.ico` is not listed here. Browsers take the PNGs above it; the
+      file exists at the root for the crawlers and unfurlers that request
+      /favicon.ico blind and would otherwise log a 404 on every visit.
+    -->
+    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
+    <link rel="icon" href="/favicon-48.png" type="image/png" sizes="48x48" />
+    <link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
 
     <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} is:inline />
 
