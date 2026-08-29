@@ -1,0 +1,42 @@
+---
+/**
+ * The scrolling strip carried over from the live site.
+ *
+ * Duplicated content is aria-hidden so a screen reader hears the phrase once.
+ * The whole thing is decorative, so it stops entirely under reduced motion
+ * rather than looping without animation.
+ */
+interface Props {
+  items: readonly string[];
+  tone?: 'dark' | 'prime';
+}
+
+const { items, tone = 'prime' } = Astro.props;
+const doubled = [...items, ...items];
+const shell = tone === 'prime' ? 'bg-prime-500 text-white' : 'bg-ink-900 text-ink-200';
+---
+
+<div data-nav="dark" class={`marquee overflow-hidden ${shell}`} role="presentation">
+  <div class="marquee-track flex w-max items-center gap-10 py-3.5">
+    {
+      doubled.map((item, i) => (
+        <span class="flex shrink-0 items-center gap-10 text-[0.9375rem] font-semibold" aria-hidden={i >= items.length}>
+          {item}
+          <span class="h-1 w-1 rounded-full bg-current opacity-50" />
+        </span>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  @media (prefers-reduced-motion: no-preference) {
+    .marquee-track {
+      animation: marquee-track 34s linear infinite;
+    }
+    .marquee:hover .marquee-track {
+      animation-play-state: paused;
+    }
+  }
+  /* Under reduced motion the track simply sits still, showing the first items. */
+</style>

@@ -1,0 +1,82 @@
+---
+/**
+ * Prime Careers. Short page, so it is composed rather than padded: the two
+ * questions from the live copy carry the middle of the page instead of filler.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import Section from '../components/Section.astro';
+import Button from '../components/Button.astro';
+import { routes } from '../data/navigation';
+import { company, primeValues } from '../data/company';
+import { breadcrumbSchema } from '../data/schema';
+import { useTranslations, localizePath, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const c = t.companyPages.careers;
+const site = Astro.site ?? new URL('https://primetrack.rw');
+const url = new URL(localizePath(routes.careers, locale), site).href;
+---
+
+<BaseLayout
+  locale={locale}
+  path={routes.careers}
+  title={t.seo.careers.title}
+  description={t.seo.careers.description}
+  schemas={[
+    breadcrumbSchema([
+      { name: t.common.common.home, url: new URL(localizePath(routes.home, locale), site).href },
+      { name: c.title, url },
+    ]),
+  ]}
+>
+  <PageHero locale={locale} eyebrow={c.eyebrow} title={c.title} lead={c.lead} crumbs={[{ name: c.title, href: routes.careers }]} />
+
+  <Section tone="light">
+    <div class="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)] lg:gap-20">
+      <div>
+        <h2 class="text-h2">{c.questionsTitle}</h2>
+        <ol class="mt-8 flex flex-col gap-8">
+          {
+            c.questions.map((question, i) => (
+              <li class="flex gap-5">
+                <span class="text-stat leading-none text-prime-100" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+                <p class="self-center text-h3 text-ink-800">{question}</p>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+
+      <div class="rounded-[--radius-panel] border border-ink-100 bg-ink-50 p-7 sm:p-9 lg:self-start">
+        <p class="measure text-ink-700">{c.closing}</p>
+        <Button href={`mailto:${company.careersEmail}`} variant="primary" size="lg" class="mt-7">
+          {c.applyCta}
+        </Button>
+        <p class="mt-4 text-[0.9375rem] text-ink-600">
+          {c.applyNote.split('{email}')[0]}
+          <a href={`mailto:${company.careersEmail}`} class="font-semibold text-prime-700 underline underline-offset-4">
+            {company.careersEmail}
+          </a>
+          {c.applyNote.split('{email}')[1]}
+        </p>
+
+        <ul class="mt-8 flex flex-wrap gap-x-4 gap-y-2 border-t border-ink-200 pt-6">
+          {
+            primeValues.map((value) => (
+              <li class="text-[0.8125rem] font-bold uppercase tracking-[0.1em] text-ink-500">
+                <span class="text-prime-600">{t.home.values.items[value].letter}</span>
+                {t.home.values.items[value].title.slice(1)}
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+  </Section>
+</BaseLayout>

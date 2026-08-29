@@ -1,0 +1,75 @@
+---
+/**
+ * The one button in the system. Renders <a> when given href, <button> otherwise.
+ *
+ * Variants exist for a reason, not for variety:
+ *   primary   the single most important action in a view
+ *   secondary a real alternative to the primary action
+ *   ghost     tertiary, used inside dense areas
+ *   onDark    primary equivalent for dark surfaces
+ *   secondaryOnDark  the real alternative alongside a primary, on dark
+ *
+ * `secondary` and `secondaryOnDark` are not interchangeable. `secondary` is a
+ * white plate, which on a dark ground reads as loud as the primary and splits
+ * the eye between two filled buttons. `secondaryOnDark` is an outline in white
+ * at 30%: 3.4:1 against ink-950, so the boundary itself clears WCAG 1.4.11,
+ * with white label text at 19:1. It stays unmistakably a button while letting
+ * the orange primary carry the weight.
+ */
+interface Props {
+  href?: string;
+  variant?: 'primary' | 'secondary' | 'ghost' | 'onDark' | 'secondaryOnDark';
+  size?: 'md' | 'lg';
+  external?: boolean;
+  type?: 'button' | 'submit';
+  disabled?: boolean;
+  class?: string;
+  [key: string]: unknown;
+}
+
+const {
+  href,
+  variant = 'primary',
+  size = 'md',
+  external = false,
+  type = 'button',
+  disabled = false,
+  class: className = '',
+  ...rest
+} = Astro.props;
+
+/* min-h keeps every button at or above the 44px touch target on mobile. */
+const base =
+  'inline-flex items-center justify-center gap-2 rounded-[--radius-card] font-semibold ' +
+  'transition-[background-color,color,border-color,transform] duration-[--duration-base] ' +
+  'ease-[--ease-prime] active:translate-y-px disabled:pointer-events-none disabled:opacity-55 text-balance';
+
+const sizes = {
+  md: 'min-h-11 px-5 py-2.5 text-[0.9375rem]',
+  lg: 'min-h-13 px-7 py-3.5 text-[1.0625rem]',
+};
+
+const variants = {
+  primary: 'bg-prime-500 text-white hover:bg-prime-600',
+  secondary: 'border border-ink-200 bg-white text-ink-900 hover:border-ink-300 hover:bg-ink-50',
+  ghost: 'text-prime-700 hover:bg-prime-50',
+  onDark: 'bg-white text-ink-950 hover:bg-prime-50',
+  secondaryOnDark:
+    'border border-white/30 bg-white/5 text-white hover:border-white/55 hover:bg-white/12',
+};
+
+const cls = `${base} ${sizes[size]} ${variants[variant]} ${className}`;
+const externalAttrs = external ? { target: '_blank', rel: 'noopener noreferrer' } : {};
+---
+
+{
+  href ? (
+    <a href={href} class={cls} {...externalAttrs} {...rest}>
+      <slot />
+    </a>
+  ) : (
+    <button type={type} class={cls} disabled={disabled} {...rest}>
+      <slot />
+    </button>
+  )
+}

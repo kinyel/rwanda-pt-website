@@ -1,0 +1,51 @@
+---
+/**
+ * /industries/ — the eight verticals as a hub.
+ *
+ * Reuses the homepage's wall so the two stay identical in look and in code.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import Section from '../components/Section.astro';
+import IndustryWall from '../components/IndustryWall.astro';
+import CTA from '../components/CTA.astro';
+import { routes } from '../data/navigation';
+import { breadcrumbSchema } from '../data/schema';
+import { useTranslations, localizePath, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props as Props;
+const t = useTranslations(locale);
+const site = Astro.site ?? new URL('https://primetrack.rw');
+const url = new URL(localizePath(routes.industries, locale), site).href;
+---
+
+<BaseLayout
+  locale={locale}
+  path={routes.industries}
+  title="Fleet Tracking by Industry in Rwanda | PrimeTrack"
+  description="GPS fleet tracking, video telematics and fuel monitoring for construction, logistics, transport, pharmaceutical, emergency and fuel distribution fleets across Rwanda."
+  schemas={[
+    breadcrumbSchema([
+      { name: t.common.common.home, url: new URL(localizePath(routes.home, locale), site).href },
+      { name: t.industries.index.eyebrow, url },
+    ]),
+  ]}
+>
+  <PageHero
+    locale={locale}
+    eyebrow={t.industries.index.eyebrow}
+    title={t.industries.index.pageTitle}
+    lead={t.industries.index.pageLead}
+    crumbs={[{ name: t.industries.index.eyebrow, href: routes.industries }]}
+  />
+
+  <Section tone="light">
+    <IndustryWall locale={locale} />
+  </Section>
+
+  <CTA locale={locale} title={t.home.finalCta.title} body={t.home.finalCta.body} />
+</BaseLayout>

@@ -1,0 +1,91 @@
+---
+/**
+ * Terms of service and privacy policy.
+ *
+ * Legal text read at length, so it runs in a single readable column with a
+ * numbered section list, rather than being broken into cards. Content is
+ * preserved in full from the live site.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import Section from '../components/Section.astro';
+import { routes } from '../data/navigation';
+import { breadcrumbSchema } from '../data/schema';
+import { useTranslations, localizePath, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+  page: 'terms' | 'privacy';
+}
+
+const { locale, page } = Astro.props;
+const t = useTranslations(locale);
+const doc = t.companyPages[page];
+const seo = t.seo[page];
+const path = page === 'terms' ? routes.terms : routes.privacy;
+const site = Astro.site ?? new URL('https://primetrack.rw');
+const url = new URL(localizePath(path, locale), site).href;
+
+/* Terms publishes a dedicated legal address; privacy uses the general one. */
+const contactEmail = page === 'terms' ? t.companyPages.terms.legalEmail : 'admin@primetrack.rw';
+---
+
+<BaseLayout
+  locale={locale}
+  path={path}
+  title={seo.title}
+  description={seo.description}
+  schemas={[
+    breadcrumbSchema([
+      { name: t.common.common.home, url: new URL(localizePath(routes.home, locale), site).href },
+      { name: doc.title, url },
+    ]),
+  ]}
+>
+  <PageHero locale={locale} eyebrow={doc.eyebrow} title={doc.title} crumbs={[{ name: doc.title, href: path }]} />
+
+  <Section tone="light">
+    <div class="prose-prime">
+      <p class="text-lead text-ink-700">{doc.intro}</p>
+
+      <ol class="mt-12 flex flex-col gap-9">
+        {
+          doc.sections.map((section, i) => (
+            <li>
+              <h2 class="flex gap-3 text-h3">
+                <span class="text-prime-500" aria-hidden="true">{i + 1}.</span>
+                {section.title}
+              </h2>
+              <p class="mt-3 text-ink-700">
+                {section.body.includes('{email}') ? (
+                  <Fragment>
+                    {section.body.split('{email}')[0]}
+                    <a href={`mailto:${contactEmail}`} class="text-prime-700 underline underline-offset-4">{contactEmail}</a>
+                    {section.body.split('{email}')[1]}
+                  </Fragment>
+                ) : (
+                  section.body
+                )}
+              </p>
+            </li>
+          ))
+        }
+      </ol>
+
+      {
+        page === 'terms' && (
+          <p class="mt-12 border-t border-ink-100 pt-8 text-ink-700">
+            {t.companyPages.terms.contactNote.split('{email}')[0]}
+            <a href={`mailto:${contactEmail}`} class="text-prime-700 underline underline-offset-4">{contactEmail}</a>
+            {t.companyPages.terms.contactNote.split('{email}')[1]}
+            <br />
+            <a href={localizePath(routes.privacy, locale)} class="mt-3 inline-block font-semibold text-prime-700 underline underline-offset-4">
+              {t.companyPages.terms.privacyLink}
+            </a>
+          </p>
+        )
+      }
+      {page === 'privacy' && <p class="mt-12 border-t border-ink-100 pt-8 text-ink-700">{t.companyPages.privacy.closing}</p>}
+    </div>
+  </Section>
+</BaseLayout>

@@ -1,0 +1,137 @@
+---
+/**
+ * One industry vertical.
+ *
+ * Structure follows brief section 8: the sector's real operating problems
+ * first, then the solutions that address them, then the hardware, then a way to
+ * start a conversation.
+ *
+ * No customer counts, deployments or case studies appear here, because none are
+ * verified for any sector. The page earns its place on the strength of naming
+ * the problems accurately and routing to the pages that solve them.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import Section from '../components/Section.astro';
+import SectionHeader from '../components/SectionHeader.astro';
+import CTA from '../components/CTA.astro';
+import Icon from '../components/Icon.astro';
+import RelatedLinks from '../components/RelatedLinks.astro';
+import { routes, resolveKey } from '../data/navigation';
+import { industryPath, type Industry } from '../data/industries';
+import { breadcrumbSchema, serviceSchema } from '../data/schema';
+import { useTranslations, localizePath, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+  industry: Industry;
+}
+
+const { locale, industry } = Astro.props as Props;
+const t = useTranslations(locale);
+const copy = (t.industries.items as Record<string, {
+  name: string; summary: string; lead: string; challenges: readonly string[];
+}>)[industry.key];
+
+const site = Astro.site ?? new URL('https://primetrack.rw');
+const path = industryPath(industry.slug);
+const url = new URL(localizePath(path, locale), site).href;
+
+/* Titles and descriptions are derived rather than hand-written per sector: the
+   pattern is unique per page, front-loads the sector plus the primary keyword,
+   and stays inside display length for every one of the eight names. */
+const title = `${copy.name} Fleet Tracking in Rwanda | PrimeTrack`;
+const description = copy.summary;
+
+/* The link graph for this sector, resolved from routes to display names. */
+const nameFor: Record<string, { titleKey: string; descriptorKey: string }> = {
+  [routes.fleettracking]: { titleKey: 'products.fleettracking.name', descriptorKey: 'products.fleettracking.menuDescriptor' },
+  [routes.videoTracking]: { titleKey: 'products.videoTracking.name', descriptorKey: 'products.videoTracking.menuDescriptor' },
+  [routes.fuelmanagement]: { titleKey: 'products.fuelmanagement.name', descriptorKey: 'products.fuelmanagement.menuDescriptor' },
+  [routes.containertracking]: { titleKey: 'products.containertracking.name', descriptorKey: 'products.containertracking.menuDescriptor' },
+  [routes.primesolar]: { titleKey: 'products.primesolar.name', descriptorKey: 'products.primesolar.menuDescriptor' },
+  [routes.ectss]: { titleKey: 'products.ectss.name', descriptorKey: 'products.ectss.menuDescriptor' },
+  [routes.fleetAnalytics]: { titleKey: 'services.fleetAnalytics.name', descriptorKey: 'services.fleetAnalytics.menuDescriptor' },
+  [routes.drivermonitoring]: { titleKey: 'services.drivermonitoring.name', descriptorKey: 'services.drivermonitoring.menuDescriptor' },
+  [routes.apiIntegrations]: { titleKey: 'services.apiIntegrations.name', descriptorKey: 'services.apiIntegrations.menuDescriptor' },
+};
+
+const solutionLinks = industry.solutions.map((href) => ({ href, ...nameFor[href] }));
+const productLinks = industry.products.map((href) => ({ href, ...nameFor[href] }));
+---
+
+<BaseLayout
+  locale={locale}
+  path={path}
+  title={title}
+  description={description}
+  schemas={[
+    serviceSchema({ name: `Fleet tracking for ${copy.name.toLowerCase()}`, description, url }),
+    breadcrumbSchema([
+      { name: t.common.common.home, url: new URL(localizePath(routes.home, locale), site).href },
+      { name: t.industries.index.eyebrow, url: new URL(localizePath(routes.industries, locale), site).href },
+      { name: copy.name, url },
+    ]),
+  ]}
+>
+  <PageHero
+    locale={locale}
+    eyebrow={t.industries.index.eyebrow}
+    title={copy.name}
+    lead={copy.summary}
+    crumbs={[
+      { name: t.industries.index.eyebrow, href: routes.industries },
+      { name: copy.name, href: path },
+    ]}
+  />
+
+  <!-- The sector's own language, then what tends to go wrong in it. -->
+  <Section tone="light">
+    <div class="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:gap-20">
+      <p class="text-lead text-ink-700">{copy.lead}</p>
+
+      <div>
+        <h2 class="text-label uppercase text-ink-400">{t.industries.index.challengesTitle}</h2>
+        <ul class="mt-6 flex flex-col divide-y divide-ink-100">
+          {
+            copy.challenges.map((challenge) => (
+              <li class="flex items-start gap-3 py-4 first:pt-0 last:pb-0">
+                <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-prime-500" aria-hidden="true" />
+                <span class="text-ink-700">{challenge}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+  </Section>
+
+  <!-- What these operations run on. -->
+  <Section tone="tint">
+    <SectionHeader eyebrow={t.industries.index.eyebrow} title={t.industries.index.solutionsTitle} />
+    <ul class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {
+        solutionLinks.map((link, i) => (
+          <li class="reveal" style={`--n:${i}`}>
+            <a
+              href={localizePath(link.href, locale)}
+              class="group flex h-full flex-col rounded-[--radius-panel] border border-ink-100 bg-white p-6
+                     transition-[border-color,box-shadow] duration-[--duration-base] ease-[--ease-prime]
+                     hover:border-prime-300 hover:shadow-[--shadow-card]"
+            >
+              <span class="mb-4 inline-flex h-9 w-9 items-center justify-center rounded-[0.55rem] bg-prime-50 text-prime-700">
+                <Icon name={industry.icon} size={17} />
+              </span>
+              <span class="text-h4 text-ink-950 group-hover:text-prime-700">{resolveKey(t, link.titleKey)}</span>
+              <span class="mt-2 text-[0.9375rem] leading-snug text-ink-600">{resolveKey(t, link.descriptorKey)}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </Section>
+
+  <RelatedLinks locale={locale} items={productLinks} />
+
+  <CTA locale={locale} title={t.home.finalCta.title} body={t.home.finalCta.body} />
+</BaseLayout>

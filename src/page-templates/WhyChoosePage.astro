@@ -1,0 +1,107 @@
+---
+/**
+ * Why Choose PrimeTrack: the site's strongest trust page.
+ *
+ * The seven advantages are presented as a numbered sequence rather than a card
+ * grid, because they build an argument and reading them in order is the point.
+ * The seventh is the P.R.I.M.E. values, which have a different shape from the
+ * other six, so they get their own treatment at the end.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import Section from '../components/Section.astro';
+import Picture from '../components/Picture.astro';
+import StatBand from '../components/StatBand.astro';
+import CTA from '../components/CTA.astro';
+import { routes } from '../data/navigation';
+import { primeValues } from '../data/company';
+import { breadcrumbSchema } from '../data/schema';
+import { useTranslations, localizePath, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const w = t.companyPages.whyChoose;
+const site = Astro.site ?? new URL('https://primetrack.rw');
+const url = new URL(localizePath(routes.whyChoose, locale), site).href;
+
+/* Six prose advantages; the seventh (values) renders separately below. */
+const numbered = ['regulator', 'support', 'hardware', 'ai', 'warranty', 'scale'] as const;
+---
+
+<BaseLayout
+  locale={locale}
+  path={routes.whyChoose}
+  title={t.seo.whyChoose.title}
+  description={t.seo.whyChoose.description}
+  schemas={[
+    breadcrumbSchema([
+      { name: t.common.common.home, url: new URL(localizePath(routes.home, locale), site).href },
+      { name: w.title, url },
+    ]),
+  ]}
+>
+  <PageHero locale={locale} eyebrow={w.eyebrow} title={w.title} lead={w.lead} crumbs={[{ name: w.title, href: routes.whyChoose }]} />
+
+  <Section tone="light">
+    <div class="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.6fr)] lg:gap-16">
+      <ol class="flex flex-col">
+        {
+          numbered.map((key, i) => (
+            <li class="reveal flex gap-6 border-t border-ink-100 py-8 first:border-t-0 first:pt-0 sm:gap-9">
+              <span class="text-stat leading-none text-prime-100" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+              <div>
+                <h2 class="text-h3">{w.advantages[key].title}</h2>
+                <p class="mt-3 measure text-ink-600">{w.advantages[key].body}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+
+      <div class="lg:sticky lg:top-32 lg:self-start">
+        <Picture
+          imageKey="companyInstall"
+          locale={locale}
+          wrapperClass="rounded-[--radius-panel] border border-ink-100"
+          aspect="16 / 11"
+          sizes="(min-width: 1024px) 34vw, 100vw"
+        />
+      </div>
+    </div>
+  </Section>
+
+  <!-- Advantage seven: the values. Different shape, different treatment. -->
+  <Section tone="ink" class="bg-contour-prime">
+    <div class="flex gap-6 sm:gap-9">
+      <span class="text-stat leading-none text-white/15" aria-hidden="true">07</span>
+      <div>
+        <h2 class="text-h2 text-white">{w.advantages.values.title}</h2>
+        <p class="mt-3 measure text-ink-400">{t.home.values.lead}</p>
+      </div>
+    </div>
+
+    <ul class="mt-12 grid gap-px overflow-hidden rounded-[--radius-panel] border border-white/10 bg-white/10 sm:grid-cols-2 lg:grid-cols-5">
+      {
+        primeValues.map((value) => (
+          <li class="bg-ink-950 p-6">
+            <p class="text-stat leading-none text-prime-500">{t.home.values.items[value].letter}</p>
+            <h3 class="mt-4 text-h4 text-white">{t.home.values.items[value].title}</h3>
+            <p class="mt-2 text-[0.875rem] leading-relaxed text-ink-400">{t.home.values.items[value].body}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </Section>
+
+  <Section tone="light" space="sm">
+    <div class="overflow-hidden rounded-[--radius-panel] bg-ink-950">
+      <StatBand locale={locale} tone="dark" />
+    </div>
+  </Section>
+
+  <CTA locale={locale} title={w.ctaTitle} body={w.ctaBody} />
+</BaseLayout>

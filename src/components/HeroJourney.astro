@@ -1,0 +1,1097 @@
+---
+/**
+ * The hero journey: a vehicle travelling a route, driven entirely by scroll.
+ *
+ * THE IDEA. Formspree's hero flies their product, a form, into place. The
+ * equivalent here is not a card: PrimeTrack's product is following a vehicle
+ * along a route, so the scroll itself becomes the trip. A vehicle travels a
+ * route down the right of the screen as you read, and each waypoint it reaches
+ * reveals one of the things the unit actually reports. It is the only animation
+ * on this site that is not decoration. It is the product, drawn.
+ *
+ * TWO COLUMNS, ONE EVENT. The right of the section is the trip: a vehicle on a
+ * route, reaching four waypoints. The left of the section is what the unit on
+ * board is reporting, and it is a pinned presentation rather than a list. The
+ * four reports are panels on a drum turning in real CSS perspective past a
+ * fixed read head, and the drum turns by exactly one report each time the
+ * vehicle reaches a waypoint, because both are read off the same `--p`. They
+ * cannot drift apart, which is the whole reason it works: it reads as one
+ * instrument, not as two animations that happen to be side by side.
+ *
+ * DARK GROUND, REAL DEPTH. This section runs on ink-950, the same ground as
+ * PageHero, the CTA block and the footer, and the rail on the right was drawn
+ * against it: the white waypoint discs read as lit nodes and the orange trace
+ * and its glow only resolve on a dark field.
+ *
+ * It used to carry a drawn terrain backdrop of stacked ridgelines as well.
+ * Each ridge was a full-width band with a translucent orange fill and a
+ * hairline edge, and they read as bumps striping the screen behind the two
+ * things worth looking at. The component is gone, not disabled. What replaced
+ * it is not another picture of depth: the reports genuinely sit at different
+ * distances from the camera, so the section has depth because it has geometry.
+ *
+ * THE RAIL IS UNCHANGED. Its markup, classes, styles, path, waypoint values,
+ * aspect ratio, sticky behaviour and driving script are all exactly as they
+ * were. What did change is the section's HEIGHT: the report sequence needs
+ * scroll to be pinned through, so the section went from about two screens to
+ * about 3.6, and the same drive is therefore spread over more scroll. The
+ * vehicle still starts at 0%, still finishes at 100%, and still reaches its
+ * four waypoints at 8, 36, 64 and 92% of the section. It travels the same route
+ * at a calmer pace. `--report-track` below is the single number that sets it.
+ *
+ * THE HANDOFF. The rail is `position: sticky` across the whole journey section.
+ * The headline scrolls away beneath it, the report sequence pins alongside it,
+ * and the rail stays put through both before releasing into the next section.
+ * That is the point of the extra height: the element is not parked in the hero
+ * and abandoned at its edge, it carries the reader across the seam.
+ *
+ * THE TECHNIQUE. One number, `--p`, is the journey's progress from 0 to 1.
+ * Everything else is derived from it in CSS: the vehicle's position on the
+ * route, how much of the route is lit, which stops have been reached, and which
+ * one is currently being passed. Nothing can drift out of step with anything
+ * else because there is only one source of truth.
+ *
+ * `--p` is written by a rAF-throttled scroll handler, the same mechanism the
+ * product helix uses, rather than by `animation-timeline: view()`. That was the
+ * first implementation and it is the more elegant one, but it ships only in
+ * Chromium: Safari and Firefox would have had a static rail indefinitely. Since
+ * the helix already needs a scroll handler, using it here too means one
+ * mechanism in the codebase instead of two, and a journey that actually moves
+ * for every visitor. The handler writes a single custom property and touches
+ * nothing else; all the animation remains declarative CSS.
+ *
+ * The vehicle, the waypoint markers and the waypoint labels all sit on the SAME
+ * `offset-path`, so the geometry is declared once and nothing needs manual
+ * coordinates. Moving the route means editing one path string.
+ *
+ * DEGRADATION, in the order it is checked:
+ *   - no `is-loaded` class (JS off)                     -> static, fully revealed
+ *   - `prefers-reduced-motion: reduce`                  -> static, fully revealed
+ *   - no `animation-timeline` support (Safari, Firefox) -> static, fully revealed
+ *   - viewport under 1024px                             -> rail hidden, list stacks
+ * In every one of those the copy is complete and the section reads as finished.
+ * The animation adds emphasis; it never carries meaning on its own.
+ *
+ * Only transform, opacity, filter and offset-distance are animated, all of them
+ * compositor-friendly. Nothing here can move layout.
+ */
+import Icon from './Icon.astro';
+import Button from './Button.astro';
+import { routes } from '../data/navigation';
+import { useTranslations, localizePath, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props as Props;
+const t = useTranslations(locale);
+const j = t.home.journey;
+
+const specs = [j.specs.accuracy, j.specs.interval];
+
+/* Waypoints in travel order.
+   `at` is the position along the route as a percentage of its length; `x`/`y`
+   are that same point in the SVG's 360x1000 user units, measured once with
+   getPointAtLength rather than eyeballed. `side` puts the label on whichever
+   side of the route has room at that point.
+
+   Keeping both means the marker can be a plain SVG circle at a fixed
+   coordinate, which renders correctly everywhere, while only the moving
+   vehicle needs offset-path. */
+const waypoints = [
+  { key: 'position', icon: 'truck', at: 8, x: 152.8, y: 94.5, side: 'right' },
+  { key: 'fuel', icon: 'fuel', at: 36, x: 220.6, y: 392.5, side: 'left' },
+  { key: 'driver', icon: 'shield', at: 64, x: 64, y: 655.2, side: 'right' },
+  { key: 'video', icon: 'video', at: 92, x: 189.2, y: 925.3, side: 'left' },
+] as const;
+
+/* The route. Declared once; the SVG normalises its own length via pathLength. */
+const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
+---
+
+<section class="hero-journey on-dark relative bg-ink-950" data-nav="dark">
+  <div class="journey-wash pointer-events-none absolute inset-0" aria-hidden="true"></div>
+
+  <div class="container-wide relative">
+    <div class="journey-grid">
+      <!-- ============ Left: the reading column ============ -->
+      <div class="journey-column">
+        <!-- Screen one: the hero proper. -->
+        <div class="journey-panel">
+          <p class="eyebrow mb-6">{t.home.hero.eyebrow}</p>
+          <h1 class="text-display-xl text-white">{t.home.hero.title}</h1>
+          <p class="mt-7 measure text-lead text-ink-300">{t.home.hero.lead}</p>
+
+          <div class="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <Button href={localizePath(routes.contact, locale)} variant="primary" size="lg">
+              {t.home.hero.primaryCta}
+            </Button>
+            <Button href={localizePath(routes.solutions, locale)} variant="secondaryOnDark" size="lg">
+              {t.home.hero.secondaryCta}
+            </Button>
+          </div>
+        </div>
+
+        <!-- Screen two: the report sequence the journey is travelling toward.
+
+             This is a presentation, not a list. Once the drive is running it
+             pins beside the rail and plays as an instrument: a meter fills
+             with the trip, a read head holds one report at the focus line, and
+             the strip of four reports glides up by exactly one row each time
+             the vehicle on the right reaches a waypoint. Left and right are the
+             same event, told twice.
+
+             Everything below is ordinary readable markup first. The pinning,
+             the clipping and the glide are added only under
+             `[data-journey-live]` at lg and above, so a narrow screen, reduced
+             motion or no JavaScript all get a plain, complete, stacked list. -->
+        <div class="journey-panel journey-panel-payoff journey-report">
+          <div class="journey-report-stage">
+            <div class="journey-report-head">
+              <div class="journey-report-meta">
+                <p class="eyebrow">{j.eyebrow}</p>
+
+                <!-- Decorative chrome for the sequence: the counter tells you
+                     which report is being delivered. Hidden from the
+                     accessibility tree because the reports themselves are
+                     right there, numbered, in reading order. -->
+                <p class="journey-counter" aria-hidden="true">
+                  <span class="journey-counter-slot">
+                    {waypoints.map((_point, i) => <span class="journey-counter-n" style={`--i:${i}`}>0{i + 1}</span>)}
+                  </span>
+                  <span class="journey-counter-total">/ 0{waypoints.length}</span>
+                </p>
+              </div>
+
+              <div class="journey-meter" aria-hidden="true"><span class="journey-meter-fill"></span></div>
+
+              <h2 class="journey-report-title text-h2 text-white">{j.title}</h2>
+
+              <!-- Two lines in one slot. The lead holds until the last report
+                   lands, then the closing line takes its place, so the
+                   sequence finishes on a sentence instead of trailing off.
+                   Both are always in the DOM and both are readable when the
+                   sequence is not running. -->
+              <div class="journey-report-say measure">
+                <p class="journey-say journey-say-lead text-lead text-ink-300">{j.lead}</p>
+                <p class="journey-say journey-say-closing text-lead text-ink-300">{j.closing}</p>
+              </div>
+
+              <dl class="journey-specs">
+                {
+                  specs.map((spec) => (
+                    <div class="journey-spec">
+                      <dt class="journey-spec-label">{spec.label}</dt>
+                      <dd class="journey-spec-value">
+                        {spec.value}
+                        <span class="journey-spec-unit">{spec.unit}</span>
+                      </dd>
+                    </div>
+                  ))
+                }
+              </dl>
+            </div>
+
+            <div class="journey-window">
+              <div class="journey-window-clip">
+                <!-- The camera, and nothing else. Perspective has to sit on the
+                     strip's direct parent, and that parent must not clip or
+                     mask: `overflow` and `mask-image` each force an element to
+                     flatten, which would collapse the drum back into a flat
+                     list. So the clip and the fade stay one level out. Same
+                     split as the product helix. -->
+                <div class="journey-window-cam">
+                  <ol class="journey-strip">
+                    {
+                      waypoints.map((point, i) => (
+                        <li class="journey-row" style={`--i:${i}; --at:${point.at / 100}`}>
+                          <span class="journey-row-n" aria-hidden="true">0{i + 1}</span>
+                          <span class="journey-row-text">
+                            <span class="journey-row-label">
+                              <span class="journey-row-icon"><Icon name={point.icon} size={15} /></span>
+                              {j.waypoints[point.key].label}
+                            </span>
+                            <span class="journey-row-refrain">{j.waypoints[point.key].refrain}</span>
+                            <span class="journey-row-body">{j.waypoints[point.key].body}</span>
+                          </span>
+                        </li>
+                      ))
+                    }
+                  </ol>
+                </div>
+              </div>
+
+              <!-- The read head. It never moves: the strip moves past it. The
+                   hairline runs out into the gutter toward the rail, so the
+                   report being delivered and the waypoint being reached read as
+                   one instrument rather than two columns. -->
+              <span class="journey-readhead" aria-hidden="true"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ Right: the pinned route ============ -->
+      <div class="journey-rail">
+        <div class="journey-stage">
+          <!--
+            One coordinate system for everything.
+
+            The stage carries `aspect-ratio: 360 / 1000`, the same as the
+            viewBox, so the SVG fills it with no letterboxing and one user unit
+            is always one stage unit. SVG parts sit at measured coordinates;
+            the HTML labels are positioned as percentages of the same box.
+            Both therefore stay locked to the route at any rail height, which
+            an HTML `offset-path` in pixels could never do against a viewBox
+            that scales.
+          -->
+          <svg
+            class="journey-svg"
+            viewBox="0 0 360 1000"
+            fill="none"
+            preserveAspectRatio="xMidYMid meet"
+            role="img"
+            aria-label={j.railLabel}
+          >
+            <defs>
+              <linearGradient id="journey-fade" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#f35d01" stop-opacity="0" />
+                <stop offset="10%" stop-color="#f35d01" stop-opacity="1" />
+                <stop offset="90%" stop-color="#f35d01" stop-opacity="1" />
+                <stop offset="100%" stop-color="#f35d01" stop-opacity="0" />
+              </linearGradient>
+              <filter id="journey-glow" x="-60%" y="-60%" width="220%" height="220%">
+                <feGaussianBlur stdDeviation="7" result="b" />
+                <feMerge>
+                  <feMergeNode in="b" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+
+            <!-- The road ahead. -->
+            <path d={ROUTE} stroke="#1b1f26" stroke-opacity="0.13" stroke-width="3" stroke-linecap="round" />
+
+            <!-- The road already travelled, drawn in behind the vehicle. -->
+            <!--
+              `pathLength="1"` re-scales this path's own length to 1 unit, so
+              the dash maths below is just `1 - progress` and carries no
+              measured constant. Edit the route and the draw still works.
+            -->
+            <path
+              class="journey-trace"
+              d={ROUTE}
+              pathLength="1"
+              stroke="url(#journey-fade)"
+              stroke-width="3.5"
+              stroke-linecap="round"
+              filter="url(#journey-glow)"
+            />
+
+            <!-- Waypoint markers, at measured points on the route. -->
+            {
+              waypoints.map((point, i) => (
+                <g class="journey-marker" style={`--at:${point.at / 100}`}>
+                  <circle cx={point.x} cy={point.y} r="17" fill="#ffffff" />
+                  <circle cx={point.x} cy={point.y} r="17" fill="none" stroke="#f35d01" stroke-opacity="0.45" stroke-width="1.5" />
+                  <circle cx={point.x} cy={point.y} r="4.5" fill="#f35d01" />
+                </g>
+              ))
+            }
+
+            <!-- The vehicle. The only part that needs offset-path, and the
+                 only part that moves. -->
+            <g class="journey-vehicle">
+              <circle r="26" fill="#f35d01" fill-opacity="0.16" />
+              <circle r="9" fill="#f35d01" filter="url(#journey-glow)" />
+            </g>
+          </svg>
+
+          <!-- Labels stay HTML so they wrap, translate and inherit type. -->
+          {
+            waypoints.map((point, i) => (
+              <span
+                class:list={['journey-label', `journey-label-${point.side}`]}
+                style={`--y:${(point.y / 1000) * 100}%; --at:${point.at / 100}`}
+              >
+                {j.waypoints[point.key].label}
+              </span>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<style>
+  /* The route, declared once. Every element that rides it references this same
+     string, so the geometry has exactly one definition. */
+  @property --journey-progress {
+    syntax: '<percentage>';
+    inherits: false;
+    initial-value: 0%;
+  }
+
+  .journey-wash {
+    /* One soft field where the route runs, plus the contour motif at section
+       scale, and nothing else.
+
+       The contour is `bg-contour-prime` re-pitched for a box this tall: the
+       utility's own 34px repeat is tuned for a one-screen hero and would band
+       three and a half screens into stripes. Same motif, same lighting, one
+       number different.
+
+       This hero used to carry a drawn terrain backdrop as well: stacked
+       ridgelines, each a full-width band with a translucent orange fill and a
+       hairline edge. They read as bumps banding the whole screen, and they
+       competed with the route on the right and the report sequence on the
+       left, which are the two things actually worth looking at. They are gone.
+       The depth in this section is now real depth: the reports are a drum
+       turning in perspective, not a picture of a landscape. */
+    background-image:
+      radial-gradient(44% 38% at 77% 44%, rgb(243 93 1 / 0.20), transparent 72%),
+      repeating-radial-gradient(
+        ellipse 150% 26% at 78% 4%,
+        rgb(255 255 255 / 0.032) 0 1px,
+        transparent 1px 52px
+      );
+  }
+
+  .hero-journey {
+    position: relative;
+
+    /* How much scroll the pinned report sequence is given, and therefore the
+       section's total height: one screen of headline plus this. It is the one
+       number that sets the pace of everything here, the drive on the right
+       included, so it is declared once, at the top, rather than buried in the
+       rule that uses it. Only applied in the driven state. */
+    --report-track: 280svh;
+
+    /* The report drum.
+       The four reports are not a list that slides, they are panels on a drum
+       that turns past a fixed read head. `--drum-radius` is how far a report
+       one step from the head sits back from the screen, `--drum-step` is how
+       far it has turned by then, and `--drum-lens` is the camera. Together
+       they are the whole of the 3D: everything else is the same two numbers,
+       `--p` and `--adv`, that drive the flat version. */
+    --drum-lens: 1080px;
+    --drum-radius: 152px;
+    --drum-step: 17deg;
+
+    /* `clip`, never `hidden`.
+    
+       `overflow: hidden` turns this into a scroll container, and a scroll
+       container becomes the scrollport its sticky descendants position
+       against. The rail would then be sticky relative to a box that never
+       scrolls, so it just rides the page instead of pinning, and the whole
+       journey stops tracking scroll. `clip` keeps the report drum inside the
+       section without creating a scrollport. */
+    overflow: clip;
+  }
+
+  /* ---------- Base: one column, everything static and readable ---------- */
+  .journey-grid {
+    display: grid;
+    gap: 3rem;
+  }
+
+  .journey-panel {
+    padding-block: 4.5rem;
+  }
+  .journey-panel-payoff {
+    padding-top: 0;
+  }
+
+  .journey-rail {
+    display: none;
+  }
+
+  /* ---------- The report sequence, static ------------------------------
+     This is the whole of it on a phone, under reduced motion, and with no
+     JavaScript: a heading, two sentences, two figures and four numbered
+     reports, stacked and complete. The presentation in the lg block adds
+     pinning, clipping and movement on top of exactly this markup, and adds
+     nothing that carries meaning on its own. */
+  .journey-report-head {
+    display: flex;
+    flex-direction: column;
+  }
+  .journey-report-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  /* Chrome for the scroll sequence, and meaningless without it. */
+  .journey-counter,
+  .journey-meter,
+  .journey-readhead {
+    display: none;
+  }
+
+  .journey-report-title {
+    margin-top: 1.25rem;
+  }
+
+  .journey-report-say {
+    margin-top: 1.25rem;
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .journey-specs {
+    margin-top: 2.25rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 3rem;
+  }
+  .journey-spec {
+    display: flex;
+    flex-direction: column;
+  }
+  /* DOM order is dt then dd, which is the only order a definition list may
+     have. `order` puts the figure above its label without inverting it. */
+  .journey-spec-value {
+    order: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 0.04em;
+    margin: 0;
+    font-size: var(--text-stat);
+    font-weight: 800;
+    line-height: 0.98;
+    letter-spacing: -0.035em;
+    color: var(--color-white);
+  }
+  .journey-spec-unit {
+    font-size: 0.45em;
+    font-weight: 700;
+    color: var(--color-prime-400);
+  }
+  .journey-spec-label {
+    order: 1;
+    margin-top: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--color-ink-400);
+  }
+
+  .journey-window {
+    position: relative;
+    margin-top: 2.5rem;
+  }
+  .journey-strip {
+    display: grid;
+    gap: 1.75rem;
+    border-top: 1px solid rgb(255 255 255 / 0.12);
+    padding-top: 2rem;
+  }
+  .journey-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 1rem;
+    align-items: start;
+  }
+  .journey-row-n {
+    padding-top: 0.2rem;
+    font-size: 0.875rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    color: var(--color-ink-400);
+  }
+  .journey-row-text {
+    display: grid;
+    gap: 0.3rem;
+  }
+  .journey-row-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: var(--text-label);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    line-height: 1.1;
+    text-transform: uppercase;
+    color: var(--color-prime-400);
+  }
+  .journey-row-icon {
+    display: inline-flex;
+  }
+  .journey-row-refrain {
+    font-size: var(--text-h4);
+    font-weight: 700;
+    line-height: 1.28;
+    letter-spacing: -0.008em;
+    color: var(--color-white);
+  }
+  .journey-row-body {
+    max-width: 46ch;
+    font-size: var(--text-small);
+    line-height: 1.55;
+    color: var(--color-ink-300);
+  }
+
+  @media (width >= 40rem) {
+    .journey-panel {
+      padding-block: 6rem;
+    }
+    .journey-panel-payoff {
+      padding-top: 0;
+    }
+  }
+
+  /* ---------- From lg: two columns, the rail pinned beside them --------- */
+  @media (width >= 64rem) {
+    .journey-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr);
+      gap: 3rem;
+      align-items: start;
+    }
+
+    /* Each panel holds roughly a screen, which is what gives the pinned rail
+       something to be pinned through. */
+    .journey-panel {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: calc(100svh - var(--header-h));
+      padding-block: 3rem;
+    }
+
+    .journey-rail {
+      display: flex;
+      justify-content: center;
+      position: sticky;
+      top: var(--header-h);
+      height: calc(100svh - var(--header-h));
+      padding-block: 2rem;
+    }
+
+    /* Same ratio as the viewBox, so SVG user units and percentage positions
+       describe the same points. */
+    .journey-stage {
+      position: relative;
+      height: 100%;
+      aspect-ratio: 360 / 1000;
+    }
+
+    .journey-svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    .journey-vehicle {
+      offset-path: path('M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988');
+      offset-distance: 0%;
+      offset-rotate: 0deg;
+    }
+
+    /* The lit road. `pathLength="1"` on the element means one dash covers the
+       whole route, so offsetting by `1 - progress` reveals it from the start.
+       The static state is fully drawn, which is the finished composition. */
+    .journey-trace {
+      stroke-dasharray: 1;
+      stroke-dashoffset: 0;
+    }
+
+    /* Labels sit OUTSIDE the route's swing, pinned to the stage edges, rather
+       than beside their marker. Anchoring to the marker put them on top of the
+       route wherever it curved back under them. Out here they never collide,
+       the left and right stacks line up as two clean columns, and a short tick
+       plus shared vertical position carries the association. */
+    .journey-label {
+      position: absolute;
+      top: var(--y);
+      max-width: 9.5rem;
+      font-size: 0.9375rem;
+      font-weight: 700;
+      line-height: 1.25;
+      color: var(--color-ink-100);
+      text-wrap: balance;
+    }
+    .journey-label-right {
+      left: 100%;
+      transform: translate(1.75rem, -50%);
+    }
+    .journey-label-left {
+      left: 0;
+      transform: translate(calc(-100% - 1.75rem), -50%);
+      text-align: right;
+    }
+
+    /* The tick back toward the route. */
+    .journey-label::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 1rem;
+      height: 1px;
+      background-color: var(--color-prime-300);
+    }
+    .journey-label-right::after {
+      right: 100%;
+      margin-right: 0.5rem;
+    }
+    .journey-label-left::after {
+      left: 100%;
+      margin-left: 0.5rem;
+    }
+
+    /* ---------- Driven state -------------------------------------------
+       Everything above is the finished, static composition. The rules below
+       only apply once the handler has taken over (`data-journey-live`), so a
+       failed script, a blocked module or JavaScript off all leave the section
+       complete rather than blank. Reduced motion opts out too. */
+    @media (prefers-reduced-motion: no-preference) {
+      .hero-journey[data-journey-live] {
+        --p: 0;
+      }
+
+      /* The vehicle's position on the route. */
+      .hero-journey[data-journey-live] .journey-vehicle {
+        offset-distance: calc(var(--p) * 100%);
+      }
+
+      /* How much of the route is lit behind it. */
+      .hero-journey[data-journey-live] .journey-trace {
+        stroke-dashoffset: calc(1 - var(--p));
+      }
+
+      /* Each stop derives its own state from `--p` and its own `--at`.
+         `--lit` ramps 0 to 1 over the last stretch of approach, so a stop
+         resolves in as the vehicle arrives rather than snapping on. */
+      .hero-journey[data-journey-live] .journey-marker,
+      .hero-journey[data-journey-live] .journey-label {
+        --lit: clamp(0, (var(--p) - var(--at) + 0.09) * 11, 1);
+        opacity: var(--lit);
+        filter: blur(calc((1 - var(--lit)) * 10px));
+        transform: translateY(calc((1 - var(--lit)) * 14px));
+      }
+
+      /* `--near` peaks at 1 while the vehicle is at this stop and falls away
+         either side, which is what lets the current stop lead without the
+         earlier ones switching off. */
+      .hero-journey[data-journey-live] .journey-marker,
+      .hero-journey[data-journey-live] .journey-label {
+        --dist: max(var(--p) - var(--at), var(--at) - var(--p));
+        --near: clamp(0, 1 - var(--dist) * 7, 1);
+      }
+
+      /* The stop being passed grows and warms; the ones behind stay legible. */
+      .hero-journey[data-journey-live] .journey-marker circle:nth-child(3) {
+        r: calc(4.5px + var(--near) * 3.5px);
+      }
+      .hero-journey[data-journey-live] .journey-label {
+        color: color-mix(in oklab, var(--color-white) calc(var(--near) * 100%), var(--color-ink-400));
+      }
+
+      /* ================================================================
+         THE REPORT SEQUENCE
+         ================================================================
+         The left column stops being a list and becomes an instrument. It
+         pins beside the rail, a meter fills with the trip, and a strip of
+         four reports glides up by exactly one row each time the vehicle
+         reaches a waypoint. Both columns are driven by the same `--p`, so
+         the report being delivered and the waypoint being reached are the
+         same event: they cannot drift.
+
+         Waypoint one, at 8% of the section, is deliberately not an advance.
+         Eight percent of the section is always inside the first screen, so
+         it fires while the headline still fills the view and this stage is
+         below the fold. The stage therefore arrives with report one already
+         standing, which is the correct reading: the unit was reporting
+         before you scrolled to look at it. The three advances the reader
+         can actually see are locked to waypoints two, three and four. */
+
+      /* Track length. The stage is one screen tall and sticky; this is the
+         scroll it is pinned for. Raise it and every beat gets more room and
+         the drive on the right plays more slowly; lower it and the reverse.
+         It is the only number that governs the section's total height. */
+      .hero-journey[data-journey-live] .journey-report {
+        min-height: 0;
+        height: var(--report-track);
+        padding-block: 0;
+        /* `.journey-panel` centres its content, which is right for the
+           headline screen and wrong here: a sticky element starts pinning from
+           its static position, so centring it inside a track this tall parks it
+           half a track down and it does not pin until most of the drive is
+           already over. The stage must start at the top of its own track. */
+        justify-content: flex-start;
+      }
+
+      .hero-journey[data-journey-live] .journey-report-stage {
+        position: sticky;
+        top: var(--header-h);
+        height: calc(100svh - var(--header-h));
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding-block: 1.25rem;
+
+        /* One ramp per advance. Each runs over 8% of the section starting at
+           the moment the vehicle reaches its waypoint, so the strip begins
+           moving as the vehicle arrives and settles just after it: cause,
+           then effect. Smoothstepped (x²(3-2x)) so the glide eases in and
+           out instead of sliding at a constant rate. */
+        --a1: clamp(0, (var(--p) - 0.36) * 12.5, 1);
+        --a2: clamp(0, (var(--p) - 0.64) * 12.5, 1);
+        --a3: clamp(0, (var(--p) - 0.92) * 12.5, 1);
+        --adv: calc(
+          var(--a1) * var(--a1) * (3 - 2 * var(--a1)) + var(--a2) * var(--a2) * (3 - 2 * var(--a2)) +
+            var(--a3) * var(--a3) * (3 - 2 * var(--a3))
+        );
+
+        /* A floor under the row pitch, and where in the window the report
+           being delivered sits. The pitch itself is not fixed: see the strip.
+
+           The read head sits a little over half a report down rather than at
+           the top of the window. That half report of clearance above it is
+           what makes the drum legible AS a drum: the report just delivered
+           turns up and away over the top edge at the same moment the next one
+           turns up into the light from below. With the head at the top you
+           only ever see one side of the rotation, which reads as a list
+           fading rather than as an object turning. */
+        --row-h: clamp(5.5rem, 12.5svh, 7.5rem);
+        --focus: calc(var(--row-h) * 0.55);
+      }
+
+      /* `--cur` is 1 for the report currently at the read head and falls to 0
+         one step away, so consecutive reports cross-fade and the emphasis is
+         never in two places. `--ahead` marks the ones not yet delivered.
+
+         `--off` is the same distance kept SIGNED: negative for reports already
+         delivered, positive for the ones still to come. The sign is what makes
+         a drum rather than a stack. Reports above the head tip their top away,
+         reports below tip their bottom away, and the one at the head is the
+         only panel square to the camera. `--dist` is its magnitude, used for
+         depth and focus, which have no direction.
+
+         `abs()` is deliberately not used here: it is recent enough that Safari
+         and Firefox versions still in real use would drop the whole
+         declaration. `max(x, -x)` is the same value everywhere. */
+      .hero-journey[data-journey-live] .journey-row,
+      .hero-journey[data-journey-live] .journey-counter-n {
+        --off: calc(var(--i) - var(--adv));
+        --dist: max(calc(var(--adv) - var(--i)), calc(var(--i) - var(--adv)));
+        --cur: clamp(0, 1 - var(--dist), 1);
+        --ahead: clamp(0, calc(var(--i) - var(--adv)), 1);
+      }
+
+      /* ---- Header chrome ---- */
+      .hero-journey[data-journey-live] .journey-meter {
+        display: block;
+        height: 2px;
+        margin-top: 0.7rem;
+        border-radius: 2px;
+        background-color: rgb(255 255 255 / 0.12);
+        overflow: clip;
+      }
+      .hero-journey[data-journey-live] .journey-meter-fill {
+        display: block;
+        height: 100%;
+        transform: scaleX(var(--p));
+        transform-origin: left;
+        background-image: linear-gradient(to right, var(--color-amber-500), var(--color-prime-500));
+      }
+
+      .hero-journey[data-journey-live] .journey-counter {
+        display: flex;
+        align-items: baseline;
+        gap: 0.3rem;
+        font-size: 0.8125rem;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 0.08em;
+        color: var(--color-prime-400);
+      }
+      .hero-journey[data-journey-live] .journey-counter-slot {
+        display: grid;
+      }
+      .hero-journey[data-journey-live] .journey-counter-n {
+        grid-area: 1 / 1;
+        opacity: var(--cur);
+      }
+      .hero-journey[data-journey-live] .journey-counter-total {
+        color: var(--color-ink-400);
+      }
+
+      .hero-journey[data-journey-live] .journey-report-title {
+        margin-top: 0.85rem;
+      }
+
+      /* Two sentences sharing one slot. The lead holds until the last report
+         lands and the closing line takes over, so the sequence finishes on a
+         sentence. Sharing a grid cell means the slot is as tall as the taller
+         of the two and never resizes mid-transition. */
+      .hero-journey[data-journey-live] .journey-report-say {
+        display: grid;
+        margin-top: 0.75rem;
+        gap: 0;
+      }
+      .hero-journey[data-journey-live] .journey-say {
+        grid-area: 1 / 1;
+        font-size: var(--text-body);
+      }
+      .hero-journey[data-journey-live] .journey-say-lead {
+        opacity: calc(1 - var(--a3));
+      }
+      .hero-journey[data-journey-live] .journey-say-closing {
+        opacity: var(--a3);
+      }
+
+      /* The two figures shrink to a caption line: at this size they annotate
+         the sequence rather than competing with the heading for the eye. */
+      .hero-journey[data-journey-live] .journey-specs {
+        margin-top: 0.85rem;
+        gap: 0 1.75rem;
+      }
+      .hero-journey[data-journey-live] .journey-spec {
+        flex-direction: row;
+        align-items: baseline;
+        gap: 0.4rem;
+      }
+      .hero-journey[data-journey-live] .journey-spec-value {
+        font-size: 1.375rem;
+        letter-spacing: -0.02em;
+      }
+      .hero-journey[data-journey-live] .journey-spec-label {
+        margin-top: 0;
+        font-size: 0.75rem;
+      }
+
+      /* ---- The strip ---- */
+      /* The window is capped at roughly three rows rather than taking all the
+         space the stage has. Uncapped, a tall screen shows all four rows at
+         once, which both gives the ending away and leaves the strip standing
+         empty under the read head once the last report has landed. Capped, the
+         composition is the same shape on every screen and the spare height
+         goes to the heading instead. */
+      .hero-journey[data-journey-live] .journey-window {
+        position: relative;
+        flex: 1;
+        min-height: 0;
+        max-height: calc(var(--row-h) * 3 + 0.75rem);
+        margin-top: 0.9rem;
+      }
+
+      /* `clip`, not `hidden`, for the same reason the section uses it. The
+         fade at both ends is what lets the drum turn out of view instead of
+         being cut off at a hard edge. */
+      .hero-journey[data-journey-live] .journey-window-clip {
+        height: 100%;
+        overflow: clip;
+        mask-image: linear-gradient(to bottom, transparent 0, #000 23%, #000 72%, transparent 100%);
+      }
+
+      /* The camera. It holds the perspective and nothing else, because both
+         `overflow` and `mask-image` force an element to flatten and either one
+         on this element would render the drum as a flat list. Keeping the clip
+         and the fade one level out is the same split the product helix uses.
+
+         The vanishing point sits on the read head, not in the middle of the
+         window: the report being delivered is the one the camera is square to,
+         so it is the one that stays undistorted. */
+      .hero-journey[data-journey-live] .journey-window-cam {
+        height: 100%;
+        perspective: var(--drum-lens);
+        perspective-origin: 24% calc(var(--focus) + var(--row-h) * 0.5);
+      }
+
+      /* `1fr` rows, not a fixed height. Every row is then exactly as tall as
+         the tallest one, whatever the column width or the language does to the
+         line count, and one row is always exactly 25% of the strip. That is
+         what the glide translates by, so the read head lands on a row boundary
+         at every width instead of only the one this was designed at. A fixed
+         pitch collides the moment a body wraps to a third line. */
+      .hero-journey[data-journey-live] .journey-strip {
+        display: grid;
+        grid-auto-rows: 1fr;
+        gap: 0;
+        border-top: 0;
+        padding-top: 0;
+        /* The strip moves; the read head does not. The rows carry their own
+           depth and rotation, so this stays a 3D context rather than
+           flattening them into it. */
+        transform-style: preserve-3d;
+        transform: translateY(calc(var(--focus) - var(--adv) * 25%));
+      }
+
+      /* One report, as a panel on the drum.
+
+         Depth is `--dist`, so a report is equally far back whether it has been
+         delivered or is still coming. Rotation is `--off`, so the two sides
+         turn opposite ways. The small sideways push is `--ahead` only: the
+         reports still to come sit a little further into the gutter, which
+         opens the diagonal the read head runs along, while the delivered ones
+         stay in the left margin where the eye last read them.
+
+         The blur is depth of field, not decoration: it comes from the same
+         distance that sets the Z, so the plane in focus is exactly the plane
+         the camera is square to. */
+      .hero-journey[data-journey-live] .journey-row {
+        align-content: start;
+        min-height: var(--row-h);
+        padding-block: 0.15rem 0.75rem;
+        /* Presence falls off with distance, not with a flag: the report next
+           in line is visibly next, and the two behind it are further back
+           still. A flat "everything not current" dim made the lower half of
+           the drum read as one grey mass. */
+        opacity: calc((0.30 + 0.70 * var(--cur)) * clamp(0, 1 - var(--dist) * 0.34, 1));
+        filter: blur(calc(var(--dist) * 1.05px));
+
+        /* The panel itself. Text alone tilting in space reads as text that has
+           been skewed; a surface tilting reads as an object, because the eye
+           gets an edge and a fill to judge the angle against. This is the
+           faintest surface that does that job: a warm wash that only the
+           report at the read head carries, no border and no shadow, so it
+           lights the current panel rather than boxing it. */
+        border-radius: 0.85rem;
+        background-image: linear-gradient(
+          100deg,
+          color-mix(in oklab, var(--color-prime-500) calc(var(--cur) * 12%), transparent),
+          transparent 44%
+        );
+        transform:
+          translate3d(
+            calc(var(--ahead) * 0.7rem),
+            0,
+            calc(var(--dist) * var(--drum-radius) * -1)
+          )
+          rotateX(calc(var(--off) * var(--drum-step) * -1));
+      }
+
+      .hero-journey[data-journey-live] .journey-row-n {
+        display: block;
+        padding-top: 0.05rem;
+        font-size: 1.25rem;
+        transform: scale(calc(1 + var(--cur) * 0.34));
+        transform-origin: left top;
+        color: color-mix(in oklab, var(--color-prime-400) calc(var(--cur) * 100%), var(--color-ink-400));
+      }
+
+      .hero-journey[data-journey-live] .journey-row-refrain {
+        font-size: var(--text-h3);
+        line-height: 1.2;
+      }
+
+      .hero-journey[data-journey-live] .journey-row-body {
+        /* Only the report at the read head spells itself out. The others stay
+           readable as a label and a statement, which is what makes room for
+           the type to be this large without the column turning into a wall. */
+        opacity: calc(0.22 + 0.78 * var(--cur));
+      }
+
+      /* The read head. Fixed to the focus line, running out into the gutter
+         toward the rail, so the report being delivered and the waypoint being
+         reached read as one instrument instead of two columns. */
+      .hero-journey[data-journey-live] .journey-readhead {
+        display: block;
+        position: absolute;
+        left: -1.5rem;
+        right: -2.5rem;
+        top: var(--focus);
+        height: 1px;
+        background-image: linear-gradient(
+          to right,
+          var(--color-prime-500) 0 1.75rem,
+          color-mix(in oklab, var(--color-prime-500) 42%, transparent) 1.75rem 58%,
+          color-mix(in oklab, var(--color-prime-500) 10%, transparent) 100%
+        );
+      }
+      .hero-journey[data-journey-live] .journey-readhead::before {
+        content: '';
+        position: absolute;
+        left: -1px;
+        top: -4.5px;
+        width: 3px;
+        height: 10px;
+        background-color: var(--color-prime-500);
+        animation: journey-live 2.6s ease-in-out infinite;
+      }
+      @keyframes journey-live {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
+      }
+    }
+  }
+
+
+
+</style>
+
+<script>
+  /**
+   * Drives the journey.
+   *
+   * Writes one custom property, `--p`, the section's scroll progress from 0 to
+   * 1. Every visual consequence of that number lives in CSS: where the vehicle
+   * sits on the route, how much of the route is lit, which stops have been
+   * reached and which one is being passed. Nothing here knows about any of it.
+   *
+   * Reads are batched into a requestAnimationFrame so a scroll burst costs at
+   * most one layout read per frame, and the whole thing exits early when the
+   * section is off screen.
+   *
+   * `data-journey-live` is only set once this runs, and the CSS that hides
+   * unreached stops is scoped to that attribute. If this script never executes,
+   * the section renders complete and static rather than blank.
+   */
+  function initJourney(root: HTMLElement) {
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    let frame = 0;
+    let live = false;
+
+    const update = () => {
+      frame = 0;
+      if (!live) return;
+
+      const rect = root.getBoundingClientRect();
+      const vh = window.innerHeight;
+
+      /* Off screen: leave the last value alone rather than writing every frame. */
+      if (rect.bottom < 0 || rect.top > vh) return;
+
+      /* Progress across the section, measured from the moment its top reaches
+         the top of the viewport to the moment its bottom does. That is exactly
+         the stretch where the rail is pinned, so the drive lines up with what
+         the reader sees rather than starting before the section arrives. */
+      const travel = rect.height - vh;
+      const p = travel > 0 ? Math.min(1, Math.max(0, -rect.top / travel)) : 0;
+
+      root.style.setProperty('--p', p.toFixed(4));
+    };
+
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+
+    const apply = () => {
+      live = !still.matches;
+      root.toggleAttribute('data-journey-live', live);
+
+      if (live) {
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', onScroll, { passive: true });
+        update();
+      } else {
+        window.removeEventListener('scroll', onScroll);
+        window.removeEventListener('resize', onScroll);
+        root.style.removeProperty('--p');
+      }
+    };
+
+    still.addEventListener('change', apply);
+    apply();
+  }
+
+  document.querySelectorAll<HTMLElement>('.hero-journey').forEach((el) => initJourney(el));
+</script>
+

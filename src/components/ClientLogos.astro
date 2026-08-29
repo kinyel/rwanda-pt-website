@@ -1,0 +1,39 @@
+---
+/**
+ * "Some brands we serve".
+ *
+ * These are real organisations named on the live Rwanda site, so unlike the
+ * Nigeria build (where the equivalent section held no verifiable names and was
+ * dropped) this section ships. The logos are shown in greyscale at rest so ten
+ * different brand palettes do not fight the page, and resolve to full colour on
+ * hover and on focus.
+ */
+import { Image } from 'astro:assets';
+import { clientLogos } from '../data/images';
+import { useTranslations, interpolate, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+---
+
+<ul class="grid grid-cols-2 gap-px overflow-hidden rounded-[--radius-panel] border border-ink-100 bg-ink-100 sm:grid-cols-3 lg:grid-cols-5">
+  {
+    clientLogos.map((client) => (
+      <li class="flex items-center justify-center bg-white p-6 sm:p-8">
+        <Image
+          src={client.src}
+          alt={interpolate(t.images.clientLogo, { name: client.name })}
+          widths={[160, 320]}
+          sizes="160px"
+          loading="lazy"
+          class="h-11 w-auto max-w-full object-contain opacity-70 grayscale transition
+                 duration-[--duration-base] ease-[--ease-prime] hover:opacity-100 hover:grayscale-0"
+        />
+      </li>
+    ))
+  }
+</ul>

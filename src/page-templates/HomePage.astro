@@ -1,0 +1,333 @@
+---
+/**
+ * Homepage.
+ *
+ * SECTION ORDER is a rebuild, not a port of either sibling site.
+ * The live Rwanda site opens hero → dead checkbox list → value proposition →
+ * capability cards. The Nigeria rebuild opens hero → descriptor → stats →
+ * products. Rwanda opens on the customer's problem instead, because the single
+ * most useful thing the old homepage had was its list of fleet pain points, and
+ * it was going to waste as a control that did nothing.
+ *
+ *   1 Hero journey             what we do, then what a unit reports,
+ *                             carried by one pinned scroll-driven rail
+ *   2 Products                 the range, as a CSS 3D helix
+ *   3 Descriptor band          six verified one-liners from the live site
+ *   4 Industries               the eight verticals
+ *   5 Challenges               the visitor's own problem, routed to the fix
+ *   6 Value proposition        how we answer it (Solutions / Service / Simplicity)
+ *   7 Video telematics         flagship product, full-bleed dark
+ *   8 Fuel monitoring          second feature, light split
+ *   9 Services                 what happens to the data
+ *  10 Platform capabilities    what is included
+ *  11 Why PrimeTrack + stats   credibility, with the numbers
+ *  12 Clients                  named organisations
+ *  13 CTA                      conversion
+ *
+ * TONE. The page opens on one long dark passage — the hero journey runs
+ * straight into the product helix with no seam between them, because both are
+ * on ink-950 and both are a lit object turning against it. That is the point:
+ * the two scroll-driven pieces read as one continuous descent rather than as
+ * two effects with a white band wedged between them, and the eye is not asked
+ * to re-adjust twice in the first two screens.
+ *
+ * The light run then starts at the descriptor band and holds through industries
+ * (tint), challenges and the value proposition, so the reading sections are one
+ * block rather than an alternating stripe, and the next dark section (video
+ * telematics) lands as a deliberate shift of subject rather than as another
+ * flip.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Section from '../components/Section.astro';
+import SectionHeader from '../components/SectionHeader.astro';
+import Button from '../components/Button.astro';
+import HeroJourney from '../components/HeroJourney.astro';
+import IndustryWall from '../components/IndustryWall.astro';
+import ChallengeGrid from '../components/ChallengeGrid.astro';
+import ProductSpiral, { type SpiralItem } from '../components/ProductSpiral.astro';
+import ServiceCard from '../components/ServiceCard.astro';
+import Picture from '../components/Picture.astro';
+import StatBand from '../components/StatBand.astro';
+import ClientLogos from '../components/ClientLogos.astro';
+import Marquee from '../components/Marquee.astro';
+import CTA from '../components/CTA.astro';
+import { routes } from '../data/navigation';
+import { localBusinessSchema } from '../data/schema';
+import { useTranslations, localizePath, type Locale } from '../i18n';
+import { images } from '../data/images';
+import { getImage } from 'astro:assets';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const site = Astro.site ?? new URL('https://primetrack.rw');
+const logoUrl = new URL((await getImage({ src: images.logo, format: 'png', width: 512 })).src, site).href;
+
+/* The six product families, in the order they climb the helix. Video Trackers
+   leads because it is the flagship. Each carries an icon name from Icon.astro;
+   labels and descriptors come from i18n, so a longer Kinyarwanda string simply
+   wraps inside the card. */
+const spiralItems: SpiralItem[] = [
+  { href: routes.videoTracking, titleKey: 'products.videoTracking.name', descriptorKey: 'products.videoTracking.menuDescriptor', icon: 'video' },
+  { href: routes.primesolar, titleKey: 'products.primesolar.name', descriptorKey: 'products.primesolar.menuDescriptor', icon: 'solar' },
+  { href: routes.fleettracking, titleKey: 'products.fleettracking.name', descriptorKey: 'products.fleettracking.menuDescriptor', icon: 'truck' },
+  { href: routes.fuelmanagement, titleKey: 'products.fuelmanagement.name', descriptorKey: 'products.fuelmanagement.menuDescriptor', icon: 'fuel' },
+  { href: routes.containertracking, titleKey: 'products.containertracking.name', descriptorKey: 'products.containertracking.menuDescriptor', icon: 'package' },
+  { href: routes.ectss, titleKey: 'products.ectss.name', descriptorKey: 'products.ectss.menuDescriptor', icon: 'lock' },
+];
+
+const serviceOrder = [
+  { key: 'fleetAnalytics', href: routes.fleetAnalytics },
+  { key: 'drivermonitoring', href: routes.drivermonitoring },
+  { key: 'apiIntegrations', href: routes.apiIntegrations },
+] as const;
+
+const capabilityKeys = ['mobile', 'driver', 'maintenance', 'speedLimiters'] as const;
+const valuePropKeys = ['solutions', 'service', 'simplicity'] as const;
+const whyKeys = ['regulator', 'support', 'hardware'] as const;
+---
+
+<BaseLayout
+  locale={locale}
+  path={routes.home}
+  title={t.seo.home.title}
+  description={t.seo.home.description}
+  schemas={[localBusinessSchema(logoUrl)]}
+>
+  <!-- 1 · Hero, as a scroll-driven journey.
+       Owns the headline and the pinned report presentation that follows it.
+       See HeroJourney for why it runs to roughly three and a half screens. -->
+  <HeroJourney locale={locale} />
+
+  <!-- 2 · Products, as the helix.
+       Directly against the hero, deliberately: both run on ink-950, so there is
+       no seam between them and the two scroll-driven pieces read as one
+       descent. See the tone note at the top of this file. -->
+  <ProductSpiral
+    locale={locale}
+    eyebrow={t.home.products.eyebrow}
+    title={t.home.products.title}
+    menuTitle={t.home.products.menuTitle}
+    items={spiralItems}
+    cta={t.home.products.cardCta}
+  />
+
+  <!--
+    3 · Descriptor band.
+    Lifted out of the hero section so the hero reads cleaner. Kept as its own
+    thin band rather than deleted: these six descriptors are verified copy from
+    the live site and they still do useful work here.
+
+    It sits after the helix rather than before it, because before it, it was a
+    white stripe between two dark sections — the one thing standing between the
+    hero and the helix reading as a single passage. Here it does the opposite
+    job and does it better: it is the first light surface on the page, so it
+    opens the reading run instead of interrupting the dark one.
+  -->
+  <div data-nav="light" class="border-y border-ink-100 bg-white">
+    <div class="container-wide">
+      <ul class="flex flex-wrap items-center gap-x-6 gap-y-2 py-4 text-[0.8125rem] font-semibold text-ink-500">
+        {
+          t.home.hero.descriptors.map((item, i) => (
+            <li class="flex items-center gap-6">
+              {i > 0 && <span class="h-1 w-1 rounded-full bg-prime-500" aria-hidden="true" />}
+              {item}
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+
+  <!-- 4 · Industries. The eight verticals. -->
+  <Section tone="tint">
+    <div class="flex flex-wrap items-end justify-between gap-6">
+      <SectionHeader
+        eyebrow={t.industries.index.eyebrow}
+        title={t.industries.index.title}
+        lead={t.industries.index.lead}
+      />
+      <Button href={localizePath(routes.industries, locale)} variant="secondary">
+        {t.industries.index.cta}
+      </Button>
+    </div>
+    <div class="mt-14">
+      <IndustryWall locale={locale} />
+    </div>
+  </Section>
+
+  <!-- 5 · Challenges -->
+  <Section tone="light">
+    <SectionHeader eyebrow={t.home.challenges.eyebrow} title={t.home.challenges.title} lead={t.home.challenges.lead} />
+    <div class="mt-10 reveal">
+      <ChallengeGrid locale={locale} />
+    </div>
+  </Section>
+
+  <!-- 6 · Value proposition -->
+  <Section tone="light">
+    <SectionHeader eyebrow={t.home.valueProp.eyebrow} title={t.home.valueProp.title} />
+    <ul class="mt-10 grid gap-8 md:grid-cols-3">
+      {
+        valuePropKeys.map((key, i) => (
+          <li class="reveal border-t-2 border-prime-500 pt-6" style={`--n:${i}`}>
+            <p class="text-label uppercase text-ink-400">{String(i + 1).padStart(2, '0')}</p>
+            <h3 class="mt-3 text-h3">{t.home.valueProp.items[key].title}</h3>
+            <p class="mt-3 text-ink-600">{t.home.valueProp.items[key].body}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </Section>
+
+  <!-- 7 · Video telematics, the flagship -->
+  <Section tone="ink" wide space="lg" class="bg-contour-prime">
+    <div class="grid items-center gap-12 lg:grid-cols-2">
+      <div>
+        <p class="eyebrow mb-4">{t.home.videoFeature.eyebrow}</p>
+        <h2 class="text-h2 text-white">{t.home.videoFeature.title}</h2>
+        <p class="mt-5 measure text-lead text-ink-300">{t.home.videoFeature.body}</p>
+        <p class="mt-4 measure text-ink-400">{t.home.videoFeature.closing}</p>
+
+        <ul class="mt-8 grid gap-x-6 gap-y-3 sm:grid-cols-2">
+          {
+            t.products.videoTracking.highlights.map((item, i) => (
+              <li class="reveal flex items-start gap-2.5 text-[0.9375rem] text-ink-200" style={`--n:${i % 3}`}>
+                <svg class="mt-1.5 h-3.5 w-3.5 shrink-0 text-prime-400" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                  <path d="m2 7.4 3 3L12 3.4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                {item}
+              </li>
+            ))
+          }
+        </ul>
+
+        <div class="mt-9 flex flex-col gap-3 sm:flex-row">
+          <Button href={localizePath(routes.contact, locale)} variant="primary">{t.home.videoFeature.primaryCta}</Button>
+          <Button href={localizePath(routes.videoTracking, locale)} variant="onDark">{t.home.videoFeature.secondaryCta}</Button>
+        </div>
+      </div>
+
+      <Picture
+        imageKey="homeVideoTelematics"
+        locale={locale}
+        wrapperClass="rounded-[--radius-panel] border border-white/10 reveal-soft"
+        aspect="4 / 3"
+        sizes="(min-width: 1024px) 46vw, 100vw"
+      />
+    </div>
+  </Section>
+
+  <!-- 8 · Fuel monitoring -->
+  <Section tone="light" space="lg">
+    <div class="grid items-center gap-12 lg:grid-cols-2">
+      <Picture
+        imageKey="homeFuelMonitoring"
+        locale={locale}
+        wrapperClass="rounded-[--radius-panel] border border-ink-100 reveal-soft lg:order-1"
+        aspect="4 / 3"
+        sizes="(min-width: 1024px) 46vw, 100vw"
+      />
+      <div>
+        <p class="eyebrow mb-4">{t.home.fuelFeature.eyebrow}</p>
+        <h2 class="text-h2">{t.home.fuelFeature.title}</h2>
+        <p class="mt-5 measure text-lead text-ink-600">{t.home.fuelFeature.body}</p>
+        <div class="mt-9 flex flex-col gap-3 sm:flex-row">
+          <Button href={localizePath(routes.contact, locale)} variant="primary">{t.home.fuelFeature.primaryCta}</Button>
+          <Button href={localizePath(routes.fuelmanagement, locale)} variant="secondary">{t.home.fuelFeature.secondaryCta}</Button>
+        </div>
+      </div>
+    </div>
+  </Section>
+
+  <!-- 9 · Services -->
+  <Section tone="tint">
+    <SectionHeader eyebrow={t.home.services.eyebrow} title={t.home.services.title} lead={t.home.services.lead} />
+    <div class="mt-12 grid gap-10 md:grid-cols-3">
+      {
+        serviceOrder.map((service, i) => (
+          <ServiceCard
+            locale={locale}
+            index={i + 1}
+            style={`--n:${i}`}
+            name={t.services[service.key].name}
+            tagline={t.services[service.key].tagline}
+            summary={t.services[service.key].summary}
+            href={service.href}
+            class="reveal"
+          />
+        ))
+      }
+    </div>
+  </Section>
+
+  <!-- 10 · Platform capabilities -->
+  <Section tone="dark">
+    <div class="grid gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+      <div>
+        <p class="eyebrow mb-4">{t.home.capabilities.eyebrow}</p>
+        <h2 class="text-h2 text-white">{t.home.capabilities.title}</h2>
+        <div class="mt-8 hidden lg:block">
+          <Picture
+            imageKey="homeMobileApps"
+            locale={locale}
+            wrapperClass="rounded-[--radius-panel] border border-white/10 max-w-xs"
+            aspect="4 / 5"
+            sizes="320px"
+          />
+        </div>
+      </div>
+
+      <ul class="grid gap-px overflow-hidden rounded-[--radius-panel] border border-white/10 bg-white/10 sm:grid-cols-2">
+        {
+          capabilityKeys.map((key, i) => (
+            <li class="reveal bg-ink-900 p-6 sm:p-7" style={`--n:${i}`}>
+              <h3 class="text-h4 text-white">{t.home.capabilities.items[key].title}</h3>
+              <p class="mt-2.5 text-[0.9375rem] leading-relaxed text-ink-400">{t.home.capabilities.items[key].body}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </Section>
+
+  <Marquee items={[t.home.marquee.primary, ...t.home.marquee.items]} />
+
+  <!-- 11 · Why PrimeTrack + stats -->
+  <Section tone="light">
+    <div class="flex flex-wrap items-end justify-between gap-6">
+      <SectionHeader eyebrow={t.home.whyPrime.eyebrow} title={t.home.whyPrime.title} lead={t.home.whyPrime.lead} />
+      <Button href={localizePath(routes.whyChoose, locale)} variant="secondary">{t.home.whyPrime.cta}</Button>
+    </div>
+
+    <ul class="mt-12 grid gap-8 md:grid-cols-3">
+      {
+        whyKeys.map((key, i) => (
+          <li class="reveal" style={`--n:${i}`}>
+            <p class="text-stat leading-none text-prime-100">{String(i + 1).padStart(2, '0')}</p>
+            <h3 class="mt-4 text-h3">{t.companyPages.whyChoose.advantages[key].title}</h3>
+            <p class="mt-3 text-ink-600">{t.companyPages.whyChoose.advantages[key].body}</p>
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="mt-16 overflow-hidden rounded-[--radius-panel] bg-ink-950">
+      <StatBand locale={locale} tone="dark" />
+    </div>
+  </Section>
+
+  <!-- 12 · Clients -->
+  <Section tone="tint" space="sm">
+    <SectionHeader eyebrow={t.home.clients.eyebrow} title={t.home.clients.title} align="center" class="measure-wide" />
+    <div class="mt-10 reveal-soft">
+      <ClientLogos locale={locale} />
+    </div>
+  </Section>
+
+  <!-- 13 · CTA -->
+  <CTA locale={locale} eyebrow={t.home.finalCta.eyebrow} title={t.home.finalCta.title} body={t.home.finalCta.body} />
+</BaseLayout>

@@ -1,0 +1,240 @@
+---
+/**
+ * The single HTML shell for every page.
+ *
+ * Responsibilities: the `lang` attribute, title and description, canonical,
+ * hreflang alternates for both languages, Open Graph and Twitter cards,
+ * JSON-LD, the skip link, and the header/main/footer landmarks.
+ *
+ * Pages pass content; they never emit <head> tags of their own.
+ */
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { useTranslations, localeMeta, LOCALES, localizePath, type Locale } from '../i18n';
+import { images } from '../data/images';
+import { organizationSchema } from '../data/schema';
+import { getImage } from 'astro:assets';
+
+/* Preload the two weights that render above the fold on every page: 400 for
+   body copy and 800 for the h1. Imported rather than hardcoded so the URLs
+   carry the build hash. The other weights load normally through the stylesheet;
+   preloading all of them would compete with the LCP image for bandwidth. */
+import fontBody from '@fontsource/alegreya-sans/files/alegreya-sans-latin-400-normal.woff2?url';
+import fontDisplay from '@fontsource/alegreya-sans/files/alegreya-sans-latin-800-normal.woff2?url';
+
+interface Props {
+  locale: Locale;
+  /** Locale-free path for this page, e.g. '/video-tracking/'. */
+  path: string;
+  title: string;
+  description: string;
+  /** Extra JSON-LD objects for this page, beyond the site-wide Organization. */
+  schemas?: object[];
+  /** Set on the 404 page so search engines do not index it. */
+  noindex?: boolean;
+  /**
+   * Pages that exist in one language only (the migrated English articles).
+   * They emit no hreflang alternates, because advertising a /rw/ URL that does
+   * not exist is worse than advertising none, and the language switcher points
+   * at `switcherFallback` instead of a dead translation.
+   */
+  singleLocale?: boolean;
+  /** Where the language switcher goes when this page has no translation. */
+  switcherFallback?: string;
+  /**
+   * The `data-nav` value of this page's FIRST section, so the header renders
+   * in the right theme server-side and there is no flash of the wrong state
+   * before hydration.
+   *
+   * Dark is the default because every template except the homepage and the
+   * 404 opens on `PageHero`, which is ink-950. A page whose first section is
+   * light passes `navTheme="light"` and starts light.
+   */
+  navTheme?: 'dark' | 'light';
+  bodyClass?: string;
+}
+
+const {
+  locale,
+  path,
+  title,
+  description,
+  schemas = [],
+  noindex = false,
+  singleLocale = false,
+  switcherFallback,
+  navTheme = 'dark',
+  bodyClass = '',
+} = Astro.props;
+
+const t = useTranslations(locale);
+const site = Astro.site ?? new URL('https://primetrack.rw');
+const canonical = new URL(localizePath(path, locale), site).href;
+
+/* hreflang: one entry per language plus x-default pointing at English, which
+   is the version served to anyone whose language we do not have. */
+const alternates = LOCALES.map((l) => ({
+  hreflang: localeMeta[l].hreflang,
+  href: new URL(localizePath(path, l), site).href,
+}));
+
+/* Resolved through the asset pipeline so the URL is fingerprinted. */
+const ogImage = await getImage({ src: images.ogDefault, format: 'jpg', width: 1200, height: 630 });
+const ogImageUrl = new URL(ogImage.src, site).href;
+const logoUrl = new URL((await getImage({ src: images.logo, format: 'png', width: 512 })).src, site).href;
+
+const jsonLd = [organizationSchema(logoUrl), ...schemas];
+---
+
+<!doctype html>
+<html lang={localeMeta[locale].code}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex, follow" />}
+
+    {
+      !singleLocale && (
+        <Fragment>
+          {alternates.map((alt) => <link rel="alternate" hreflang={alt.hreflang} href={alt.href} />)}
+          <link rel="alternate" hreflang="x-default" href={new URL(localizePath(path, 'en'), site).href} />
+        </Fragment>
+      )
+    }
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={t.common.brand.legalName} />
+    <meta property="og:locale" content={locale === 'rw' ? 'rw_RW' : 'en_RW'} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={t.images.ogDefault} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageUrl} />
+
+    <link rel="preload" as="font" type="font/woff2" href={fontBody} crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href={fontDisplay} crossorigin />
+
+    <meta name="theme-color" content="#0e1013" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} is:inline />
+
+    <!--
+      Entry-animation gate.
+
+      Every scroll-driven and entry animation on the site is scoped to
+      `html.is-loaded`, so a visitor without JavaScript gets the resting state,
+      which is the finished design.
+
+      Set synchronously here rather than on requestAnimationFrame: the class
+      then exists before the first paint, so nothing can flash through its 0%
+      state, and it does not depend on rAF running at all. A tab opened in the
+      background never fires rAF, and an animation that only starts once the
+      tab is focused is a bug nobody can reproduce on purpose.
+    -->
+    <script is:inline>
+      document.documentElement.classList.add('is-loaded');
+    </script>
+
+    <!--
+      Language persistence.
+
+      THE URL IS THE SOURCE OF TRUTH. Every link on the site is already
+      locale-aware, so switching and navigating need no JavaScript at all; this
+      script exists only to remember a returning visitor's choice.
+
+      It therefore does exactly two things, and deliberately nothing more:
+
+      1. Records the choice when the switcher is clicked. Delegated from
+         document, so it covers the header and footer switchers with one
+         listener no matter how many are on the page.
+      2. On the English homepage, and ONLY there, sends a returning visitor who
+         previously chose Kinyarwanda to /rw/.
+
+      An earlier version applied the stored preference on every path. That
+      hijacked shared and bookmarked links: opening /primesolar/ with "rw"
+      stored would bounce you to /rw/primesolar/, which reads as the switcher
+      refusing to stay in English. Restricting it to the bare homepage keeps
+      return-visit persistence and makes every explicit URL authoritative.
+
+      Root-only also makes a redirect loop impossible: / is the only origin and
+      /rw/ is never a source.
+    -->
+    <script is:inline>
+      (() => {
+        const KEY = 'primetrack-locale';
+
+        /* 1. Remember an explicit choice. */
+        document.addEventListener('click', (event) => {
+          const link = event.target.closest?.('a[data-locale]');
+          if (!link) return;
+          try {
+            localStorage.setItem(KEY, link.dataset.locale);
+          } catch {
+            /* Private mode or storage disabled: the link still navigates. */
+          }
+        });
+
+        /* 2. Apply it, on the English homepage only. */
+        try {
+          if (location.pathname !== '/') return;
+          if (localStorage.getItem(KEY) !== 'rw') return;
+          location.replace('/rw/' + location.search + location.hash);
+        } catch {
+          /* Storage unavailable: serve the URL exactly as requested. */
+        }
+      })();
+    </script>
+  </head>
+
+  <body class={bodyClass}>
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-ink-950 focus:px-4 focus:py-3 focus:text-white"
+    >
+      {t.common.nav.skipToContent}
+    </a>
+
+    <Header locale={locale} path={path} switcherFallback={switcherFallback} navTheme={navTheme} />
+
+    <!--
+      At-rest sentinel.
+
+      Pinned to the top of the DOCUMENT, not to the header, which is sticky and
+      therefore never moves. While this is in view the page has not been
+      scrolled and the bar stays bare; once it leaves, the header takes a
+      background, a hairline and a restrained blur. One IntersectionObserver
+      reads it, so the state costs nothing per scroll frame.
+
+      Absolutely positioned out of flow with no size of its own beyond the
+      8px it needs to be observable, so it can shift nothing.
+    -->
+    <div
+      data-nav-scroll-sentinel
+      aria-hidden="true"
+      style="position:absolute;top:0;left:0;width:1px;height:8px;pointer-events:none"
+    >
+    </div>
+
+    <!-- scroll-margin-top keeps the skip link's target clear of the sticky
+         header, which is taller than a default anchor jump allows for. -->
+    <main id="main" style="scroll-margin-top:calc(var(--header-h) + 1rem)">
+      <slot />
+    </main>
+
+    <Footer locale={locale} path={path} switcherFallback={switcherFallback} />
+  </body>
+</html>

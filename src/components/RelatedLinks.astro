@@ -1,0 +1,54 @@
+---
+/**
+ * Internal linking block.
+ *
+ * Every product links to related products and to the services that operate on
+ * its data; every service links back to the products that feed it. That is
+ * deliberate: it gives crawlers a dense internal graph and gives readers the
+ * obvious next page.
+ */
+import Section from './Section.astro';
+import { resolveKey } from '../data/navigation';
+import { useTranslations, localizePath, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+  items: { href: string; titleKey: string; descriptorKey?: string }[];
+}
+
+const { locale, items } = Astro.props;
+const t = useTranslations(locale);
+---
+
+{
+  items.length > 0 && (
+    <Section tone="light" space="sm" as="aside">
+      <h2 class="text-label uppercase text-ink-400">{t.common.common.relatedTitle}</h2>
+      <ul class="mt-6 grid gap-px overflow-hidden rounded-[--radius-panel] border border-ink-100 bg-ink-100 sm:grid-cols-2 lg:grid-cols-3">
+        {items.map((item) => (
+          <li class="bg-white">
+            <a
+              href={localizePath(item.href, locale)}
+              class="group flex h-full flex-col p-6 transition-colors duration-[--duration-base] ease-[--ease-prime] hover:bg-ink-50"
+            >
+              <span class="flex items-center gap-1.5 text-h4 text-ink-950 group-hover:text-prime-700">
+                {resolveKey(t, item.titleKey)}
+                <svg
+                  class="h-4 w-4 text-prime-600 transition-transform duration-[--duration-base] motion-safe:group-hover:translate-x-0.5"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path d="M3 8h9m0 0L8.5 4.5M12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </span>
+              {item.descriptorKey && (
+                <span class="mt-2 text-[0.9375rem] leading-snug text-ink-600">{resolveKey(t, item.descriptorKey)}</span>
+              )}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </Section>
+  )
+}

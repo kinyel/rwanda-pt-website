@@ -1,0 +1,48 @@
+---
+/**
+ * Vertical rhythm and surface tone for a page section.
+ *
+ * Sections alternate tone deliberately rather than decoratively: a dark section
+ * marks a shift in subject, which is what keeps a long page navigable without
+ * drawing rules across it.
+ */
+interface Props {
+  tone?: 'light' | 'tint' | 'dark' | 'ink';
+  space?: 'sm' | 'md' | 'lg';
+  wide?: boolean;
+  id?: string;
+  as?: 'section' | 'div' | 'aside';
+  class?: string;
+}
+
+const { tone = 'light', space = 'md', wide = false, id, as: Tag = 'section', class: className = '' } = Astro.props as Props;
+
+const tones = {
+  light: 'bg-white text-ink-800',
+  tint: 'bg-ink-50 text-ink-800',
+  dark: 'on-dark bg-ink-900 text-ink-200',
+  ink: 'on-dark bg-ink-950 text-ink-200',
+};
+
+/**
+ * What the header should do while this section is passing under it.
+ *
+ * Declared here rather than page by page: a section already knows whether its
+ * ground is dark, so the two can never disagree, and every page on the site
+ * gets contrast-aware navigation without its author doing anything. See
+ * Header.astro for how it is read.
+ */
+const navTones = { light: 'light', tint: 'light', dark: 'dark', ink: 'dark' } as const;
+
+const spaces = {
+  sm: 'py-14 sm:py-16',
+  md: 'py-16 sm:py-20 lg:py-24',
+  lg: 'py-20 sm:py-24 lg:py-32',
+};
+---
+
+<Tag id={id} data-nav={navTones[tone]} class={`relative ${tones[tone]} ${spaces[space]} ${className}`}>
+  <div class={wide ? 'container-wide' : 'container-prime'}>
+    <slot />
+  </div>
+</Tag>

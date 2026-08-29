@@ -1,0 +1,58 @@
+---
+/**
+ * Every migrated SEO article, rendered at its original root-level WordPress
+ * slug so no indexed URL changes.
+ *
+ * Articles exist in English only. Rather than publish machine-translated
+ * versions under /rw/, the Kinyarwanda site links to these English URLs, and
+ * this route deliberately generates no /rw/ variants.
+ */
+import ArticlePage from '../page-templates/ArticlePage.astro';
+import { getCollection } from 'astro:content';
+import { routes } from '../data/navigation';
+
+export async function getStaticPaths() {
+  const articles = await getCollection('articles');
+  return articles.map((article) => ({
+    params: { article: article.id },
+    props: { article },
+  }));
+}
+
+const { article } = Astro.props;
+
+/**
+ * Choose the commercial pages this article should point at, from what the
+ * article is actually about. Articles exist to support the money pages, and on
+ * the live site none of them linked anywhere, which wasted every one of them.
+ */
+const P = {
+  fleet: { href: routes.fleettracking, titleKey: 'products.fleettracking.name', descriptorKey: 'products.fleettracking.menuDescriptor' },
+  video: { href: routes.videoTracking, titleKey: 'products.videoTracking.name', descriptorKey: 'products.videoTracking.menuDescriptor' },
+  fuel: { href: routes.fuelmanagement, titleKey: 'products.fuelmanagement.name', descriptorKey: 'products.fuelmanagement.menuDescriptor' },
+  star: { href: routes.containertracking, titleKey: 'products.containertracking.name', descriptorKey: 'products.containertracking.menuDescriptor' },
+  solar: { href: routes.primesolar, titleKey: 'products.primesolar.name', descriptorKey: 'products.primesolar.menuDescriptor' },
+  analytics: { href: routes.fleetAnalytics, titleKey: 'services.fleetAnalytics.name', descriptorKey: 'services.fleetAnalytics.menuDescriptor' },
+  driver: { href: routes.drivermonitoring, titleKey: 'services.drivermonitoring.name', descriptorKey: 'services.drivermonitoring.menuDescriptor' },
+};
+
+const slug = article.id;
+const picked: (typeof P)[keyof typeof P][] = [];
+const add = (item: (typeof P)[keyof typeof P]) => {
+  if (!picked.some((p) => p.href === item.href)) picked.push(item);
+};
+
+if (/fuel/.test(slug)) add(P.fuel);
+if (/video|camera|telematic/.test(slug)) add(P.video);
+if (/container|cargo|goods|logistic|haulage|supply/.test(slug)) add(P.star);
+if (/solar|truck/.test(slug)) add(P.solar);
+if (/driver|speed|behaviou?r|safety|certification/.test(slug)) add(P.driver);
+if (/analytic|report|monitor|real-time|manifest|dispatch/.test(slug)) add(P.analytics);
+/* Fleet tracking is relevant to essentially every article, so it backfills. */
+add(P.fleet);
+add(P.analytics);
+
+const related = picked.slice(0, 3);
+---
+
+<ArticlePage locale="en" article={article} related={related} />

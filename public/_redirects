@@ -1,0 +1,31 @@
+# PrimeTrack Rwanda — redirects (Cloudflare Pages / Netlify format)
+#
+# Design goal: this file is short. Every page that ranks keeps its exact URL,
+# so the only entries here are for content that genuinely does not survive.
+
+# /egy/ existed as an empty stub. The country switcher has always pointed Egypt
+# at the Nigeria domain, so the orphaned stub follows it.
+/egy/                          https://primetracknigeria.com/egy  301
+/egy                           https://primetracknigeria.com/egy  301
+
+# Three URLs shared one duplicated 2020 anniversary note, and their titles did
+# not match that body. Consolidated onto the blog index.
+/10-reasons-you-should-track/   /blog/       301
+/primetrack-is-10-yippie/       /blog/       301
+/another-awesome-news-post/     /blog/       301
+
+# WordPress demo content unrelated to the business.
+/nothing/                       /blog/       301
+
+# Contact Form 7 receipt pages. The rebuilt form confirms inline, so these have
+# no destination of their own.
+/confirmed/                     /contactus/  301
+/confirmation/                  /contactus/  301
+/2604e-received/                /contactus/  301
+
+# Legacy WordPress endpoints. Static hosting has no such routes.
+/wp-admin/*                     /404         410
+/wp-login.php                   /404         410
+/feed/                          /blog/       301
+/comments/feed/                 /blog/       301
+/category/uncategorized/        /blog/       301

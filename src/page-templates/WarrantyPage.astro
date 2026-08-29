@@ -1,0 +1,86 @@
+---
+/**
+ * Prime Warranties.
+ *
+ * Covered and excluded are set side by side rather than as one long list,
+ * because the question a customer arrives with is "is my situation covered",
+ * and a two-column comparison answers it faster than prose.
+ *
+ * The five-year figure is Rwanda's own, and differs from the Nigeria site's
+ * three years. scripts/check-content.mjs fails the build if the wrong term
+ * appears anywhere.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import Section from '../components/Section.astro';
+import CTA from '../components/CTA.astro';
+import { routes } from '../data/navigation';
+import { breadcrumbSchema } from '../data/schema';
+import { useTranslations, localizePath, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const w = t.companyPages.warranty;
+const site = Astro.site ?? new URL('https://primetrack.rw');
+const url = new URL(localizePath(routes.warranty, locale), site).href;
+---
+
+<BaseLayout
+  locale={locale}
+  path={routes.warranty}
+  title={t.seo.warranty.title}
+  description={t.seo.warranty.description}
+  schemas={[
+    breadcrumbSchema([
+      { name: t.common.common.home, url: new URL(localizePath(routes.home, locale), site).href },
+      { name: w.title, url },
+    ]),
+  ]}
+>
+  <PageHero locale={locale} eyebrow={w.eyebrow} title={w.title} lead={w.lead} crumbs={[{ name: w.title, href: routes.warranty }]} />
+
+  <Section tone="light">
+    <p class="measure-wide text-lead text-ink-700">{w.intro}</p>
+
+    <div class="mt-12 grid gap-px overflow-hidden rounded-[--radius-panel] border border-ink-100 bg-ink-100 lg:grid-cols-2">
+      <div class="bg-white p-7 sm:p-9">
+        <h2 class="flex items-center gap-2.5 text-h3">
+          <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-prime-50 text-prime-700" aria-hidden="true">
+            <svg class="h-4 w-4" viewBox="0 0 16 16" fill="none">
+              <path d="m3 8.4 3.2 3.2L13 4.8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
+          {w.coveredTitle}
+        </h2>
+        <ul class="mt-6 flex flex-col gap-4">
+          {w.covered.map((item) => <li class="text-ink-700">{item}</li>)}
+        </ul>
+      </div>
+
+      <div class="bg-ink-50 p-7 sm:p-9">
+        <h2 class="flex items-center gap-2.5 text-h3">
+          <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-ink-200 text-ink-600" aria-hidden="true">
+            <svg class="h-4 w-4" viewBox="0 0 16 16" fill="none">
+              <path d="M4.5 4.5l7 7m0-7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg>
+          </span>
+          {w.notCoveredTitle}
+        </h2>
+        <ul class="mt-6 flex flex-col gap-4">
+          {w.notCovered.map((item) => <li class="text-ink-700">{item}</li>)}
+        </ul>
+      </div>
+    </div>
+
+    <div class="mt-12 prose-prime">
+      <h2 class="text-h3">{w.extensionTitle}</h2>
+      <p class="mt-3 text-ink-700">{w.extensionBody}</p>
+    </div>
+  </Section>
+
+  <CTA locale={locale} title={t.home.finalCta.title} body={t.home.finalCta.body} />
+</BaseLayout>

@@ -1,0 +1,55 @@
+---
+/**
+ * PrimeTOOLS: support manuals and documents.
+ *
+ * The live /tools/ page exists and is linked from the footer sitewide, but
+ * renders with no content at all. The URL is preserved and the page ships as a
+ * real, indexable page with an explicit note that the library is not yet
+ * published, plus a working route to get a manual. Nothing is invented, and
+ * nothing that is already linked becomes a dead end.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import Section from '../components/Section.astro';
+import Button from '../components/Button.astro';
+import { routes } from '../data/navigation';
+import { company } from '../data/company';
+import { breadcrumbSchema } from '../data/schema';
+import { useTranslations, localizePath, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const tools = t.companyPages.tools;
+const site = Astro.site ?? new URL('https://primetrack.rw');
+const url = new URL(localizePath(routes.tools, locale), site).href;
+---
+
+<BaseLayout
+  locale={locale}
+  path={routes.tools}
+  title={t.seo.tools.title}
+  description={t.seo.tools.description}
+  schemas={[
+    breadcrumbSchema([
+      { name: t.common.common.home, url: new URL(localizePath(routes.home, locale), site).href },
+      { name: tools.title, url },
+    ]),
+  ]}
+>
+  <PageHero locale={locale} eyebrow={tools.eyebrow} title={tools.title} lead={tools.lead} crumbs={[{ name: tools.title, href: routes.tools }]} />
+
+  <Section tone="light">
+    <div class="rounded-[--radius-panel] border border-prime-200 bg-prime-50 p-7 sm:p-10">
+      <h2 class="text-h3">{tools.pendingTitle}</h2>
+      <p class="mt-4 measure text-ink-700">{tools.pendingBody}</p>
+      <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+        <Button href={company.whatsappUrl} variant="primary" external>{tools.pendingCta}</Button>
+        <Button href={`mailto:${company.email}`} variant="secondary">{company.email}</Button>
+      </div>
+    </div>
+  </Section>
+</BaseLayout>

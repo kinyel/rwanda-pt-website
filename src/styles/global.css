@@ -1,0 +1,740 @@
+/* Alegreya Sans carries the entire site.
+   Four weights (400 body, 500 UI, 700 headings, 800 display) plus one italic,
+   which the migrated articles use for emphasis.
+
+   Latin subsets only. The full imports also pull Cyrillic, Greek and Vietnamese,
+   which neither English nor Kinyarwanda can ever need. Browsers would skip them
+   via unicode-range anyway, but there is no reason to build and deploy them.
+   latin-ext is kept for accented characters in names and place names.
+
+   fontsource self-hosts the woff2 files and sets font-display: swap. */
+@import "@fontsource/alegreya-sans/latin-400.css";
+@import "@fontsource/alegreya-sans/latin-ext-400.css";
+@import "@fontsource/alegreya-sans/latin-500.css";
+@import "@fontsource/alegreya-sans/latin-ext-500.css";
+@import "@fontsource/alegreya-sans/latin-700.css";
+@import "@fontsource/alegreya-sans/latin-ext-700.css";
+@import "@fontsource/alegreya-sans/latin-800.css";
+@import "@fontsource/alegreya-sans/latin-ext-800.css";
+@import "@fontsource/alegreya-sans/latin-400-italic.css";
+
+@import "tailwindcss";
+
+/* ==========================================================================
+   PrimeTrack Rwanda design system
+   Single source of truth for colour, type, spacing, radius, shadow, motion.
+
+   Shared DNA with PrimeTrack Nigeria: the token architecture, the ink scale,
+   the elevation and motion language, the one-dominant-colour-per-section rule.
+   Rwanda's own: the orange is re-anchored on the values the live Rwanda site
+   actually uses (#f35d01 / #ff8c00, sampled from primetrack.rw), the type is
+   Alegreya Sans throughout, and the signature motif is contour geometry rather
+   than Nigeria's flat coordinate grid.
+
+   Usage rule: one dominant colour and one accent per section. Orange carries
+   the brand; red is reserved for genuine alert states only; ink and white do
+   the structural work.
+   ========================================================================== */
+@theme {
+  /* --- Ink: the structural near-black scale ----------------------------- */
+  --color-ink-950: #08090b;
+  --color-ink-900: #0e1013;
+  --color-ink-850: #14171c;
+  --color-ink-800: #1b1f26;
+  --color-ink-700: #262c35;
+  --color-ink-600: #39414d;
+  --color-ink-500: #5a6472;
+  --color-ink-400: #808b99;
+  --color-ink-300: #a8b1bd;
+  --color-ink-200: #cdd3db;
+  --color-ink-100: #e6e9ee;
+  --color-ink-50: #f4f6f8;
+
+  /* --- Prime orange: the brand accent ------------------------------------
+     500 is #f35d01, read directly out of the live Rwanda site (23 uses in the
+     homepage stylesheet). It sits one step warmer and redder than Nigeria's
+     #ff7000, which is what lets a single screenshot tell the two sites apart
+     while keeping them unmistakably the same brand.
+
+     CONTRAST (measured, not guessed):
+       prime-500 on white ........ 3.3:1  → fills, large type, UI. NOT body text.
+       prime-500 on ink-950 ...... 6.0:1  → safe for normal text on dark.
+       prime-700 on white ........ 5.8:1  → the orange for small text and links.
+       prime-400 on ink-950 ...... 7.7:1  → orange text on dark.                */
+  --color-prime-950: #331300;
+  --color-prime-900: #5c2201;
+  --color-prime-800: #823002;
+  --color-prime-700: #ab3d00;   /* 5.8:1 on white — orange text/links */
+  --color-prime-600: #d44e00;   /* 3.9:1 on white — large text / UI only */
+  --color-prime-500: #f35d01;   /* BRAND. 6.0:1 on ink-950 */
+  --color-prime-400: #ff7d29;   /* 7.7:1 on ink-950 — orange text on dark */
+  --color-prime-300: #ff9d5c;
+  --color-prime-200: #ffc199;
+  --color-prime-100: #ffe1cc;
+  --color-prime-50: #fff3ea;
+
+  /* --- Amber: the light-orange partner, also from the live Rwanda site ----
+     #ff8c00 is 2.3:1 on white. It is a FILL AND GRAPHIC colour only and must
+     never carry text on a light surface. On ink-950 it reaches 8.4:1.        */
+  --color-amber-600: #cc7000;
+  --color-amber-500: #ff8c00;   /* BRAND light orange */
+  --color-amber-400: #ffa63d;
+  --color-amber-300: #ffbf73;
+
+  /* --- Signal red: genuine alert and live states ONLY -------------------- */
+  --color-signal-700: #b82a0e;   /* 5.9:1 on white — the only red safe as text */
+  --color-signal-600: #e63a19;
+  --color-signal-500: #ff5433;
+  --color-signal-400: #ff7a61;
+  --color-signal-100: #ffe3dd;
+
+  /* --- Type -------------------------------------------------------------
+     One family, Alegreya Sans, carrying everything. Hierarchy is built from
+     size, weight, letter-spacing and colour — never from effects or a second
+     typeface.
+
+     Alegreya Sans runs narrower and sits optically smaller than a grotesque at
+     the same pixel size, so the base is 17px rather than 16px and the display
+     sizes are tracked slightly tighter than Nigeria's Space Grotesk scale.
+
+     Weights loaded: 400 body, 500 UI/nav, 700 headings, 800 display. Nothing
+     else is loaded, so nothing else may be used.                            */
+  --font-sans: "Alegreya Sans", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: var(--font-sans);
+
+  --text-display-xl: clamp(2.9rem, 1.65rem + 4.9vw, 5.6rem);
+  --text-display-xl--line-height: 1.03;
+  --text-display-xl--letter-spacing: -0.028em;
+  --text-display-xl--font-weight: 800;
+
+  --text-display: clamp(2.25rem, 1.4rem + 3.3vw, 4rem);
+  --text-display--line-height: 1.07;
+  --text-display--letter-spacing: -0.024em;
+  --text-display--font-weight: 800;
+
+  --text-h2: clamp(1.85rem, 1.35rem + 1.9vw, 2.8rem);
+  --text-h2--line-height: 1.13;
+  --text-h2--letter-spacing: -0.02em;
+  --text-h2--font-weight: 700;
+
+  --text-h3: clamp(1.35rem, 1.2rem + 0.65vw, 1.75rem);
+  --text-h3--line-height: 1.22;
+  --text-h3--letter-spacing: -0.014em;
+  --text-h3--font-weight: 700;
+
+  --text-h4: 1.1875rem;
+  --text-h4--line-height: 1.36;
+  --text-h4--letter-spacing: -0.008em;
+  --text-h4--font-weight: 700;
+
+  --text-lead: clamp(1.125rem, 1.05rem + 0.36vw, 1.3125rem);
+  --text-lead--line-height: 1.58;
+
+  --text-body: 1.0625rem;
+  --text-body--line-height: 1.68;
+
+  --text-small: 0.9375rem;
+  --text-small--line-height: 1.6;
+
+  --text-label: 0.78125rem;
+  --text-label--line-height: 1.2;
+  --text-label--letter-spacing: 0.15em;
+  --text-label--font-weight: 700;
+
+  --text-stat: clamp(2.6rem, 1.85rem + 2.8vw, 4rem);
+  --text-stat--line-height: 0.98;
+  --text-stat--letter-spacing: -0.035em;
+  --text-stat--font-weight: 800;
+
+  /* --- Radius ------------------------------------------------------------
+     Tighter than Nigeria's (0.875 / 1.5rem). Rwanda's surfaces read a little
+     more architectural, which is part of what separates the two siblings.   */
+  --radius-card: 0.625rem;
+  --radius-panel: 1.125rem;
+
+  /* --- Shadow: restrained, never a glow --------------------------------- */
+  --shadow-card: 0 1px 2px rgb(8 9 11 / 0.04), 0 8px 24px -12px rgb(8 9 11 / 0.12);
+  --shadow-lift: 0 2px 4px rgb(8 9 11 / 0.05), 0 18px 40px -18px rgb(8 9 11 / 0.22);
+  --shadow-menu: 0 24px 64px -24px rgb(8 9 11 / 0.35);
+
+  /* --- Motion: subtle, fast, consistent. Shared with Nigeria. ----------- */
+  --ease-prime: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --duration-fast: 140ms;
+  --duration-base: 220ms;
+  --duration-slow: 420ms;
+
+  /* The header's dark/light crossfade. Long enough not to snap at a section
+     boundary, short enough that it never lags behind the scroll. Its own
+     token rather than --duration-base because it is the one duration tuned
+     against scrolling rather than against a click. */
+  --duration-theme: 240ms;
+}
+
+/* --- Base ---------------------------------------------------------------- */
+@layer base {
+  /* Header geometry.
+     --header-bar-h  the white bar carrying the logo and nav
+     --header-h      the whole sticky header, including the utility row that
+                     appears from `sm` up. The mobile drawer is portalled to
+                     <body> (see MainNav), so it reads these from :root rather
+                     than inheriting them from the header element. */
+  :root {
+    --header-bar-h: 4.5rem;
+    --header-h: 4.5rem;
+  }
+  @media (min-width: 40rem) {
+    :root { --header-h: 7rem; }        /* 2.5rem utility row + 4.5rem bar */
+  }
+  @media (min-width: 64rem) {
+    :root { --header-bar-h: 5rem; --header-h: 7.5rem; }
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    /* Clears the sticky header on anchor jumps. Derived from --header-h
+       rather than being a fixed 6rem: the header is 7.5rem at lg, so the flat
+       value landed anchor targets 1.5rem underneath the bar on exactly the
+       widths where the bar is tallest. */
+    scroll-padding-top: calc(var(--header-h) + 1rem);
+  }
+
+  body {
+    background-color: var(--color-white);
+    color: var(--color-ink-800);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: 1.68;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    color: var(--color-ink-950);
+    text-wrap: balance;
+  }
+
+  /* Focus ring uses prime-700, not prime-500: the brand orange is 3.3:1 on
+     white and a focus indicator needs 3:1 against BOTH the component and the
+     background (WCAG 1.4.11). One step darker clears it everywhere. Identical
+     for a mouse user; only visible when tabbing. On dark surfaces, prime-400. */
+  :focus-visible {
+    outline: 2px solid var(--color-prime-700);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+  .on-dark :focus-visible { outline-color: var(--color-prime-400); }
+
+  ::selection {
+    background-color: var(--color-prime-500);
+    color: var(--color-white);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* --- Components ----------------------------------------------------------
+   Only patterns repeated across many pages live here. Anything used once
+   stays in its own component file.                                          */
+@layer components {
+  /* --- Page shells -------------------------------------------------------
+     Two shells, one fluid gutter. `container-prime` is the default;
+     `container-wide` is for full-bleed visual sections such as the hero.
+
+     Widening the shell must never widen a paragraph: line length is capped
+     separately by `.measure`, because it is a readability constraint rather
+     than a layout one.                                                      */
+  .container-prime,
+  .container-wide {
+    width: 100%;
+    margin-inline: auto;
+    padding-inline: clamp(1.25rem, 4vw, 4.5rem);
+  }
+  .container-prime { max-width: 96rem; }   /* 1536px */
+  .container-wide { max-width: 118rem; }   /* 1888px */
+
+  /* Readable measure for anything read at length. Alegreya Sans is narrow, so
+     these sit slightly wider than a grotesque would at the same character
+     count and still land around 65–75 rendered characters. */
+  .measure { max-width: 66ch; }
+  .measure-wide { max-width: 76ch; }
+
+  /* Eyebrow label above section headings. The leading rule is Rwanda's: a
+     short double tick rather than Nigeria's single line. */
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: var(--text-label);
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    /* prime-700, not 600: the eyebrow renders at ~12.5px and prime-600 is
+       3.9:1 on white, under the 4.5:1 AA floor for small text. */
+    color: var(--color-prime-700);
+  }
+  .eyebrow::before {
+    content: "";
+    width: 1.25rem;
+    height: 0.5rem;
+    flex: none;
+    background-image: linear-gradient(
+      to bottom,
+      var(--color-prime-500) 0 2px,
+      transparent 2px 6px,
+      var(--color-amber-500) 6px 8px
+    );
+  }
+  .on-dark .eyebrow { color: var(--color-prime-400); }
+
+  /* Long-form body copy: article pages and legal pages. */
+  .prose-prime { max-width: 70ch; }
+  .prose-prime :is(p, ul, ol) { margin-block: 0.9rem; }
+  .prose-prime ul { list-style: disc; padding-inline-start: 1.25rem; }
+  .prose-prime ol { list-style: decimal; padding-inline-start: 1.25rem; }
+  .prose-prime li { margin-block: 0.35rem; }
+  .prose-prime a {
+    color: var(--color-prime-700);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .prose-prime a:hover { color: var(--color-prime-800); }
+  .prose-prime h2 {
+    font-size: var(--text-h3);
+    font-weight: 700;
+    margin-block: 2.25rem 0.75rem;
+  }
+  .prose-prime h3 {
+    font-size: var(--text-h4);
+    font-weight: 700;
+    margin-block: 1.6rem 0.5rem;
+  }
+  .prose-prime strong { font-weight: 700; color: var(--color-ink-900); }
+
+  /* ======================================================================
+     THE SITE HEADER
+     ======================================================================
+     The bar is contrast-aware: it reads light-on-dark over the dark hero and
+     dark-on-light over the pale sections below, and it does that WITHOUT
+     sampling pixels, reading computed backgrounds or hardcoding scroll
+     offsets — all three break the moment the copy on a page gets longer.
+
+     Instead each full-width section declares its own intent in the markup:
+
+         <section data-nav="dark">   dark ground, so the header goes light
+         <section data-nav="light">  light ground, so the header goes dark
+
+     A single IntersectionObserver (see Header.astro) watches those sections
+     through a thin band positioned exactly at the header's lower edge and
+     writes `data-theme` on the header. Everything below keys off that one
+     attribute, so there is one source of truth and nothing to keep in sync.
+
+     STATE MODEL. Two axes, kept independent so all ten combinations are
+     reachable and each is defined once:
+
+       data-theme = dark | light     which ground the bar is sitting over
+       data-state = top | scrolled   whether the page has moved
+       data-solid                    a mega menu or the drawer is open, so the
+                                     bar is forced to its opaque state and
+                                     released again on close
+
+     GEOMETRY IS FIXED. Only colour, background and border transition. Nothing
+     here may change height, padding or position: the bar must not move or
+     resize when the theme flips, and a sticky bar that resizes mid-scroll is
+     the single most common regression in this pattern.                     */
+
+  /* The mobile drawer is portalled to <body>, so it sits outside the header
+     and cannot inherit its tokens. It carries a copy of the header's
+     `data-theme` and is listed alongside it here rather than given a second
+     palette of its own, so the two can never drift apart. */
+  .site-header,
+  .nav-drawer {
+    /* --- Light: dark ink on a pale ground ------------------------------
+       Contrast against white, measured:
+         ink-700  #262c35 .... 12.9:1
+         ink-500  #5a6472 ..... 6.9:1
+         prime-700 #ab3d00 .... 5.8:1                                      */
+    --nav-fg: var(--color-ink-700);
+    --nav-fg-strong: var(--color-ink-950);
+    --nav-fg-muted: var(--color-ink-500);
+    --nav-accent: var(--color-prime-700);
+    --nav-rule: var(--color-ink-100);
+    --nav-hairline: var(--color-ink-100);
+    --nav-chip-border: var(--color-ink-200);
+    --nav-chip-bg: var(--color-ink-50);
+    --nav-chip-hover-bg: var(--color-white);
+    --nav-panel-bg: var(--color-white);
+    --nav-panel-border: var(--color-ink-100);
+    --nav-panel-hover: var(--color-ink-50);
+    --nav-focus: var(--color-prime-700);
+    --nav-logo-plate: transparent;
+
+    /* The ground the bar sits on at rest, and again once scrolled. At the top
+       the first value matches the section behind it exactly, so the bar reads
+       as part of the hero rather than as a lid on it. */
+    --nav-surface-top: var(--color-white);
+    --nav-surface-scrolled: rgb(255 255 255 / 0.88);
+    --nav-surface-solid: var(--color-white);
+  }
+
+  /* Until the observers have reported once, theme changes are instant.
+     `data-theme` is server-rendered from the page's FIRST section, so on a
+     reload part-way down the page — or after the back button restores a
+     scroll position — the first observer callback may have to correct it. That
+     correction should land before the reader sees anything, not crossfade in
+     over a quarter of a second. Every theme transition is timed on
+     --duration-theme and nothing else is, so zeroing it here disables exactly
+     those and leaves the hover underline alone. The script sets
+     `data-nav-ready` once it has settled, and the crossfade takes over from
+     there. With JavaScript off the attribute never appears, which costs
+     nothing: the theme never changes either. */
+  .site-header:not([data-nav-ready]) {
+    --duration-theme: 0ms;
+  }
+
+  /* --- Dark: light on ink-950 ----------------------------------------
+     Contrast against ink-950, measured:
+       white ............... 19.9:1
+       ink-200  #cdd3db .... 13.2:1
+       ink-400  #808b99 ..... 5.8:1   (the floor; ink-500 is 3.3:1 and is
+                                       therefore never used for text here)
+       prime-400 #ff7d29 .... 7.8:1                                        */
+  .site-header[data-theme='dark'],
+  .nav-drawer[data-theme='dark'] {
+    --nav-fg: var(--color-ink-200);
+    --nav-fg-strong: var(--color-white);
+    --nav-fg-muted: var(--color-ink-400);
+    --nav-accent: var(--color-prime-400);
+    --nav-rule: rgb(255 255 255 / 0.12);
+    --nav-hairline: rgb(255 255 255 / 0.12);
+    --nav-chip-border: rgb(255 255 255 / 0.22);
+    --nav-chip-bg: rgb(255 255 255 / 0.06);
+    --nav-chip-hover-bg: rgb(255 255 255 / 0.14);
+    --nav-focus: var(--color-prime-400);
+    --nav-logo-plate: rgb(255 255 255 / 0.95);
+
+    --nav-surface-top: var(--color-ink-950);
+    --nav-surface-scrolled: rgb(8 9 11 / 0.82);
+    --nav-surface-solid: var(--color-ink-950);
+
+    /* The dropdown panel keeps its own ground in both themes: a menu is a
+       surface the reader is looking INTO, not part of the bar, and a
+       translucent panel over busy content is unreadable at any blur. */
+    --nav-panel-bg: var(--color-ink-900);
+    --nav-panel-border: rgb(255 255 255 / 0.12);
+    --nav-panel-hover: rgb(255 255 255 / 0.06);
+  }
+
+  /* Focus rings need different colours per theme: a ring must clear 3:1
+     against both the component and the ground behind it (WCAG 1.4.11), and
+     one colour cannot do that on white and on ink-950 at once. */
+  .site-header :focus-visible,
+  .nav-drawer :focus-visible {
+    outline: 2px solid var(--nav-focus);
+    outline-offset: 3px;
+  }
+
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  /* --- The surface ---------------------------------------------------
+     Background, blur and hairline live on their own absolutely positioned
+     layer rather than on the header itself. A backdrop-filter creates both a
+     stacking context and a containing block, which would trap the mega-menu
+     panel inside the bar's compositing layer and paint it beneath the page.
+     Keeping the effect on a sibling gives the same look with none of that. */
+  .site-header-surface {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-color: var(--nav-surface-top);
+    border-bottom: 1px solid transparent;
+    transition:
+      background-color var(--duration-theme) var(--ease-prime),
+      border-color var(--duration-theme) var(--ease-prime);
+  }
+
+  .site-header[data-state='scrolled'] .site-header-surface {
+    background-color: var(--nav-surface-scrolled);
+    border-bottom-color: var(--nav-hairline);
+    /* Restrained on purpose. A heavy blur across a full-width surface is one
+       of the most expensive things a mid-range Android GPU can be asked to do
+       every frame; 10px is enough to keep text legible over busy content and
+       cheap enough not to cost scroll smoothness. */
+    backdrop-filter: blur(10px) saturate(1.35);
+    -webkit-backdrop-filter: blur(10px) saturate(1.35);
+  }
+
+  /* A menu or the drawer is open: the bar takes a solid ground for as long as
+     that lasts, and is released again on close. An open panel hanging off a
+     transparent bar has no visual footing, and the blur is dropped with it
+     because an opaque surface has nothing to blur. */
+  .site-header[data-solid] .site-header-surface {
+    background-color: var(--nav-surface-solid);
+    border-bottom-color: var(--nav-hairline);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  /* --- The utility row ------------------------------------------------ */
+  .site-header-utility {
+    border-bottom: 1px solid var(--nav-rule);
+    transition: border-color var(--duration-theme) var(--ease-prime);
+  }
+
+  /* --- The logo -------------------------------------------------------
+     The mark is a black wordmark on transparency, so on ink-950 it would be
+     black on black. The footer already solves this with a white plate; the
+     header does the same, except that the plate is always present and only
+     its BACKGROUND changes. Making the plate appear and disappear would
+     change the bar's padding, and geometry here is fixed. */
+  .site-header-logo {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem;
+    border-radius: var(--radius-card);
+    background-color: var(--nav-logo-plate);
+    transition: background-color var(--duration-theme) var(--ease-prime);
+  }
+
+  /* --- Nav items ------------------------------------------------------
+     ONE hover language across the whole bar: an underline that grows from the
+     left. Not an underline plus a colour shift plus a chip. The active page
+     wears the same underline permanently, at full width and in the accent
+     colour, so the current page is marked by a shape as well as a colour and
+     survives a monochrome or high-contrast rendering.
+
+     Weights are 500 and 700 because those are the weights this site actually
+     loads. Hover never changes weight: that would reflow the row.          */
+  .nav-item {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    height: 2.5rem;
+    /* Tight at lg and roomier from xl. At 1024px the row carries the logo,
+       five nav items, both switchers and the button with almost no slack, and
+       the Kinyarwanda labels for these groups run longer than the English
+       ones. The narrower padding is what keeps the control pair from being
+       pushed out of the row at exactly that width. */
+    padding-inline: 0.625rem;
+    border-radius: var(--radius-card);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    color: var(--nav-fg);
+    transition: color var(--duration-theme) var(--ease-prime);
+  }
+
+  @media (width >= 80rem) {
+    .nav-item { padding-inline: 0.875rem; }
+    .nav-item::after { left: 0.875rem; right: 0.875rem; }
+  }
+
+  .nav-item::after {
+    content: "";
+    position: absolute;
+    left: 0.625rem;
+    right: 0.625rem;
+    bottom: 0.35rem;
+    height: 2px;
+    border-radius: 2px;
+    background-color: currentColor;
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform var(--duration-base) var(--ease-prime);
+  }
+
+  .nav-item:hover,
+  .nav-item[data-open='true'] {
+    color: var(--nav-fg-strong);
+  }
+  .nav-item:hover::after,
+  .nav-item[data-open='true']::after,
+  .nav-item:focus-visible::after {
+    transform: scaleX(1);
+  }
+
+  .nav-item[aria-current='page'],
+  .nav-item[data-active='true'] {
+    color: var(--nav-accent);
+    font-weight: 700;
+  }
+  .nav-item[aria-current='page']::after,
+  .nav-item[data-active='true']::after {
+    transform: scaleX(1);
+  }
+
+  /* --- The quiet control pair -----------------------------------------
+     Language and region are styled as one family: same border, same fill,
+     same height, same restraint. They are obviously interactive and just as
+     obviously not the call to action, which is the only filled element in the
+     bar and the only place the eye is meant to land. */
+  .nav-control {
+    height: 2.25rem;
+    border: 1px solid var(--nav-chip-border);
+    background-color: var(--nav-chip-bg);
+    color: var(--nav-fg);
+    border-radius: var(--radius-card);
+    transition:
+      color var(--duration-theme) var(--ease-prime),
+      background-color var(--duration-theme) var(--ease-prime),
+      border-color var(--duration-theme) var(--ease-prime);
+  }
+
+  /* --- The mega-menu panel -------------------------------------------- */
+  .nav-panel {
+    background-color: var(--nav-panel-bg);
+    border: 1px solid var(--nav-panel-border);
+    border-radius: var(--radius-panel);
+    box-shadow: var(--shadow-menu);
+  }
+
+  /* A quick, small move. A translate of a few pixels plus a fade reads as the
+     panel arriving; anything larger reads as a slide, and a bounce reads as a
+     toy. Applied via motion-safe only, so reduced motion gets the end state
+     with no movement at all. */
+  @keyframes nav-panel-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+/* --- Utilities ------------------------------------------------------------ */
+@layer utilities {
+  /* Rwanda's signature substrate: contour geometry.
+     Rwanda's terrain genuinely shapes fleet work here — gradients drive fuel
+     burn, hills shape route times — so contour lines are an honest technical
+     motif rather than decoration, and they read as data, not scenery.
+     Used sparingly, on dark surfaces only. */
+  .bg-contour-prime {
+    background-image:
+      repeating-radial-gradient(
+        ellipse 120% 60% at 78% 8%,
+        rgb(255 255 255 / 0.055) 0 1px,
+        transparent 1px 34px
+      );
+  }
+
+  /* The technical grid, kept from Nigeria for family resemblance but used at
+     a larger pitch here so the two never read as the same texture. */
+  .bg-grid-prime {
+    background-image:
+      linear-gradient(to right, rgb(255 255 255 / 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 0.04) 1px, transparent 1px);
+    background-size: 72px 72px;
+  }
+
+  /* Directional wash behind dark hero content. Anchored bottom-left, where
+     Nigeria's sits top-left — the same lighting language, aimed differently. */
+  .bg-prime-glow {
+    background-image: radial-gradient(
+      68% 85% at 12% 100%,
+      rgb(243 93 1 / 0.18) 0%,
+      transparent 60%
+    );
+  }
+
+  .text-balance { text-wrap: balance; }
+  .text-pretty { text-wrap: pretty; }
+
+  /* Scroll reveal — CSS-only, no JS, no animation library.
+     `animation-timeline: view()` is progressively enhanced: where it is not
+     supported the declaration is invalid, the animation falls back to the
+     document timeline at zero duration, and `both` snaps it to the `to` frame.
+     The resting state is therefore the finished design everywhere.
+
+     `--n` staggers an element within its group. Set it per item and a row, a
+     grid or a list arrives in sequence rather than all at once, which is what
+     gives a long page the feel of one thing happening at a time. Keep the
+     offsets small: this is pacing, not choreography. */
+  .reveal {
+    animation: reveal-in linear both;
+    animation-timeline: view();
+    animation-range: entry calc(2% + var(--n, 0) * 5%) cover calc(24% + var(--n, 0) * 5%);
+  }
+
+  /* A section arriving as a unit: the header leads, its content follows. */
+  .reveal-lead { --n: 0; }
+  .reveal-follow { --n: 1; }
+
+  @keyframes reveal-in {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  /* A softer variant for larger blocks, where a slide would read as a jolt.
+     Resolves out of blur instead of moving far. */
+  .reveal-soft {
+    animation: reveal-soft-in linear both;
+    animation-timeline: view();
+    animation-range: entry calc(2% + var(--n, 0) * 5%) cover calc(28% + var(--n, 0) * 5%);
+  }
+  @keyframes reveal-soft-in {
+    from { opacity: 0; filter: blur(12px); transform: translateY(20px); }
+    72% { transform: translateY(0); }
+    to { opacity: 1; filter: blur(0); transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal,
+    .reveal-soft {
+      animation: none;
+      opacity: 1;
+      filter: none;
+      transform: none;
+    }
+  }
+
+  /* Screen-reader-only, used for form labels and switcher context. */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+}
+
+/* --- Keyframes -----------------------------------------------------------
+   Used by the navigation island and the marquee. Declared here rather than in
+   the components so the timing values stay next to the motion tokens that
+   govern them. Each is applied via motion-safe:, so a reduced-motion visitor
+   gets the end state immediately with no movement. */
+@keyframes menu-in {
+  from { opacity: 0; transform: translate(-50%, -6px) scaleY(0.98); }
+  to { opacity: 1; transform: translate(-50%, 0) scaleY(1); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes drawer-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes marquee-track {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}

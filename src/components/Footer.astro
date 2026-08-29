@@ -1,0 +1,234 @@
+---
+/**
+ * Site footer.
+ *
+ * Keeps PrimeTrack's own column naming (PrimeINFO, PrimeTOOLS, PrimeCARE,
+ * PrimeTIPS) because those names are part of how the company talks about
+ * itself, and carries the language switcher a second time for visitors who
+ * reach the bottom of a long page.
+ */
+import Logo from './Logo.astro';
+import LanguageSwitcher from './LanguageSwitcher.astro';
+import { footerNav, routes, resolveKey } from '../data/navigation';
+import { company, primeValues, formspreeEndpoint } from '../data/company';
+import { useTranslations, interpolate, localizePath, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+  path: string;
+  /** Set on pages that exist in one language only. See BaseLayout. */
+  switcherFallback?: string;
+}
+
+const { locale, path, switcherFallback } = Astro.props;
+const t = useTranslations(locale);
+const year = new Date().getFullYear();
+
+const columns = [
+  { title: t.common.footer.productsTitle, links: footerNav.products },
+  { title: t.common.footer.servicesTitle, links: footerNav.services },
+  { title: t.common.footer.infoTitle, links: footerNav.info },
+  { title: t.common.footer.toolsTitle, links: footerNav.tools },
+];
+
+const socialPaths: Record<string, string> = {
+  instagram:
+    'M12 2.2c3.2 0 3.6 0 4.9.07 1.2.05 1.8.25 2.2.42.6.22 1 .48 1.4.9.4.4.7.8.9 1.4.2.4.4 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c0 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .4-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2 0-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c0-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.4 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 3.2A6.6 6.6 0 1 0 18.6 12 6.6 6.6 0 0 0 12 5.4zm0 10.9A4.3 4.3 0 1 1 16.3 12 4.3 4.3 0 0 1 12 16.3zm6.9-11.1a1.5 1.5 0 1 1-1.5-1.6 1.6 1.6 0 0 1 1.5 1.6z',
+  twitter:
+    'M17.5 3h3.1l-6.8 7.8L21.8 21h-6.3l-4.9-6.4L4.9 21H1.8l7.3-8.3L1.5 3h6.4l4.4 5.9zm-1.1 16.1h1.7L7.1 4.8H5.3z',
+  facebook:
+    'M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.4v7A10 10 0 0 0 22 12z',
+  linkedin:
+    'M4.98 3.5A2.5 2.5 0 1 1 2.5 6 2.5 2.5 0 0 1 5 3.5zM3 8.98h4v12H3zM9.5 8.98h3.8v1.64h.06a4.2 4.2 0 0 1 3.77-2.07c4 0 4.75 2.63 4.75 6.05v6.38h-4v-5.66c0-1.35 0-3.08-1.88-3.08s-2.17 1.47-2.17 3v5.74h-4z',
+};
+---
+
+<footer data-nav="dark" class="on-dark bg-ink-950 text-ink-300">
+  <div class="container-prime py-16 lg:py-20">
+    <div class="grid gap-12 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,2fr)]">
+      <!-- Brand + values -->
+      <div>
+        <a
+          href={localizePath(routes.home, locale)}
+          class="inline-flex items-center rounded-[--radius-card] bg-white/95 p-2"
+          aria-label={`${t.common.brand.legalName}. ${t.common.nav.home}`}
+        >
+          <Logo locale={locale} height={40} />
+        </a>
+        <p class="mt-5 measure text-[0.9375rem] leading-relaxed text-ink-400">{t.common.brand.tagline}</p>
+
+        <ul class="mt-6 flex flex-wrap gap-x-4 gap-y-2">
+          {
+            primeValues.map((value) => (
+              <li class="text-[0.8125rem] font-bold uppercase tracking-[0.1em] text-ink-500">
+                <span class="text-prime-400">{t.home.values.items[value].letter}</span>
+                <span class="ml-1">{t.home.values.items[value].title.slice(1)}</span>
+              </li>
+            ))
+          }
+        </ul>
+
+        <h2 class="mt-9 text-label uppercase text-ink-500">{t.common.footer.socialsTitle}</h2>
+        <ul class="mt-3 flex gap-2">
+          {
+            company.socials.map((social) => (
+              <li>
+                <a
+                  href={social.url}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                  class="inline-flex h-11 w-11 items-center justify-center rounded-[--radius-card] border border-white/10
+                         text-ink-400 transition-colors duration-[--duration-fast] hover:border-white/25 hover:text-white"
+                >
+                  <span class="sr-only">{`${t.common.brand.name} ${social.key}`}</span>
+                  <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d={socialPaths[social.key]} />
+                  </svg>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <!-- Link columns -->
+      <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        {
+          columns.map((column) => (
+            <nav aria-label={column.title}>
+              <h2 class="text-label uppercase text-ink-500">{column.title}</h2>
+              <ul class="mt-4 flex flex-col gap-1">
+                {column.links.map((link) => (
+                  <li>
+                    <a
+                      href={localizePath(link.href, locale)}
+                      aria-current={link.href === path ? 'page' : undefined}
+                      class={`inline-flex min-h-9 items-center text-[0.9375rem] transition-colors duration-[--duration-fast]
+                              ${link.href === path ? 'text-prime-400' : 'text-ink-300 hover:text-white'}`}
+                    >
+                      {resolveKey(t, link.titleKey)}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ))
+        }
+      </div>
+    </div>
+
+    <!-- PrimeCARE + office + PrimeTIPS + language -->
+    <div class="mt-14 grid gap-10 border-t border-white/10 pt-12 sm:grid-cols-2 lg:grid-cols-4">
+      <div>
+        <h2 class="text-h4 text-white">{t.common.footer.careTitle}</h2>
+        <p class="mt-3 measure text-[0.9375rem] text-ink-400">{t.common.footer.careBody}</p>
+        <ul class="mt-4 flex flex-col gap-1.5">
+          <li>
+            <a href={`tel:${company.phone.e164}`} class="inline-flex min-h-9 items-center font-semibold text-white hover:text-prime-400">
+              {company.phone.display}
+            </a>
+          </li>
+          <li>
+            <a href={`mailto:${company.email}`} class="inline-flex min-h-9 items-center text-ink-300 hover:text-white">
+              {company.email}
+            </a>
+          </li>
+          <li>
+            <a
+              href={company.whatsappUrl}
+              rel="noopener noreferrer"
+              target="_blank"
+              class="inline-flex min-h-9 items-center text-ink-300 hover:text-white"
+            >
+              {t.common.cta.whatsappUs}
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <div>
+        <h2 class="text-h4 text-white">{t.common.footer.officeTitle}</h2>
+        <address class="mt-3 not-italic text-[0.9375rem] leading-relaxed text-ink-400">
+          {company.address.line1}<br />
+          {company.address.line2}<br />
+          {company.address.city}, {company.address.country}
+        </address>
+        <p class="mt-4 text-[0.9375rem] text-ink-400">
+          {t.common.footer.nigeriaOfficeTitle}:{' '}
+          <a href="https://www.primetracknigeria.com" rel="noopener" class="text-prime-400 underline underline-offset-4 hover:text-prime-300">
+            {t.common.footer.nigeriaOfficeLink}
+          </a>
+        </p>
+      </div>
+
+      <!--
+        PrimeTIPS. The live site posts to a WordPress newsletter plugin that
+        cannot survive a static build, so this posts to the same Formspree form
+        as the contact page with its own subject line. It is a plain HTML form:
+        no JavaScript, works everywhere, and Formspree renders the confirmation.
+        With no form ID configured it degrades to a mailto link rather than a
+        field that quietly goes nowhere.
+      -->
+      <div>
+        <h2 class="text-h4 text-white">{t.common.footer.tipsTitle}</h2>
+        <p class="mt-3 text-[0.9375rem] text-ink-400">{t.common.footer.tipsBody}</p>
+
+        {
+          formspreeEndpoint ? (
+            <form method="POST" action={formspreeEndpoint} class="mt-4 flex flex-col gap-2">
+              <input type="hidden" name="_subject" value="PrimeTIPS subscription" />
+              <label class="sr-only" for="footer-tips-email">{t.common.footer.emailLabel}</label>
+              <input
+                id="footer-tips-email"
+                type="email"
+                name="email"
+                required
+                autocomplete="email"
+                placeholder={t.common.footer.emailPlaceholder}
+                class="min-h-11 w-full rounded-[--radius-card] border border-white/15 bg-white/5 px-3.5
+                       text-[0.9375rem] text-white placeholder:text-ink-500
+                       focus:border-prime-400 focus:outline-none focus:ring-2 focus:ring-prime-400/25"
+              />
+              <button
+                type="submit"
+                class="inline-flex min-h-11 items-center justify-center rounded-[--radius-card] bg-prime-500 px-5
+                       text-[0.9375rem] font-semibold text-white transition-colors duration-[--duration-base]
+                       ease-[--ease-prime] hover:bg-prime-600"
+              >
+                {t.common.footer.subscribe}
+              </button>
+            </form>
+          ) : (
+            <a
+              href={`mailto:${company.email}?subject=PrimeTIPS%20subscription`}
+              class="mt-4 inline-flex min-h-11 items-center rounded-[--radius-card] border border-white/15 px-4
+                     text-[0.9375rem] font-semibold text-ink-200 hover:border-white/30 hover:text-white"
+            >
+              {t.common.footer.subscribe}
+            </a>
+          )
+        }
+      </div>
+
+      <div>
+        <h2 class="text-h4 text-white">{t.common.language.label}</h2>
+        <p class="mt-3 text-[0.9375rem] text-ink-400">{t.common.language.pendingNotice}</p>
+        <LanguageSwitcher locale={locale} path={path} fallbackPath={switcherFallback} tone="dark" size="full" class="mt-4" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom bar -->
+  <div class="border-t border-white/10">
+    <div class="container-prime flex flex-col gap-3 py-6 text-[0.875rem] text-ink-500 sm:flex-row sm:items-center sm:justify-between">
+      <p>{interpolate(t.common.footer.copyright, { year })}</p>
+      <ul class="flex flex-wrap items-center gap-x-4 gap-y-1">
+        <li>{t.common.footer.licensed}</li>
+        <li aria-hidden="true" class="hidden h-3 w-px bg-white/15 sm:block"></li>
+        <li>{t.common.footer.warrantyLine}</li>
+        <li aria-hidden="true" class="hidden h-3 w-px bg-white/15 sm:block"></li>
+        <li>{t.common.footer.supportLine}</li>
+      </ul>
+    </div>
+  </div>
+</footer>

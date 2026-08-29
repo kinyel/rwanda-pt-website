@@ -1,0 +1,123 @@
+---
+/**
+ * Shared template for all six product pages.
+ *
+ * One template, but the content shape varies enough that pages do not look
+ * alike: sections may carry a body, a list, or both, and the template renders
+ * each differently. Video Trackers gets a long capability list, PrimeSOLAR gets
+ * four prose blocks, eCTS gets two grouped lists.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import Section from '../components/Section.astro';
+import Picture from '../components/Picture.astro';
+import CTA from '../components/CTA.astro';
+import RelatedLinks from '../components/RelatedLinks.astro';
+import { routes } from '../data/navigation';
+import { productSchema, breadcrumbSchema } from '../data/schema';
+import { useTranslations, localizePath, type Locale } from '../i18n';
+import type { ImageKey } from '../data/images';
+
+interface Props {
+  locale: Locale;
+  /** Key into the products dictionary. */
+  productKey: 'videoTracking' | 'primesolar' | 'fuelmanagement' | 'containertracking' | 'fleettracking' | 'ectss';
+  path: string;
+  imageKey: ImageKey;
+  seoKey: keyof ReturnType<typeof useTranslations>['seo'];
+  /** Locale-free paths of related pages, rendered at the foot of the page. */
+  related: { href: string; titleKey: string; descriptorKey?: string }[];
+}
+
+const { locale, productKey, path, imageKey, seoKey, related } = Astro.props;
+const t = useTranslations(locale);
+const product = t.products[productKey];
+const seo = t.seo[seoKey];
+const site = Astro.site ?? new URL('https://primetrack.rw');
+const url = new URL(localizePath(path, locale), site).href;
+
+/* Sections are an object rather than an array so each page can name its own
+   blocks; order is the declaration order, which is what we want. */
+const sections = Object.values(product.sections) as {
+  title: string;
+  body?: string;
+  items?: readonly string[];
+}[];
+
+const crumbs = [{ name: product.name, href: path }];
+---
+
+<BaseLayout
+  locale={locale}
+  path={path}
+  title={seo.title}
+  description={seo.description}
+  schemas={[
+    productSchema({ name: product.productName, description: seo.description, url }),
+    breadcrumbSchema([
+      { name: t.common.common.home, url: new URL(localizePath(routes.home, locale), site).href },
+      { name: product.name, url },
+    ]),
+  ]}
+>
+  <PageHero
+    locale={locale}
+    eyebrow={product.heroKicker}
+    title={product.productName}
+    lead={product.tagline}
+    chips={product.specs}
+    crumbs={crumbs}
+  />
+
+  <!-- Summary + product image -->
+  <Section tone="light">
+    <div class="grid items-start gap-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+      <div>
+        <p class="text-lead text-ink-700">{product.summary}</p>
+        {'intro' in product && product.intro && <p class="mt-5 measure text-ink-600">{product.intro}</p>}
+      </div>
+      <Picture
+        imageKey={imageKey}
+        locale={locale}
+        wrapperClass="rounded-[--radius-panel] border border-ink-100 bg-ink-50"
+        aspect="4 / 3"
+        sizes="(min-width: 1024px) 42vw, 100vw"
+        eager
+      />
+    </div>
+  </Section>
+
+  <!-- Feature sections. Alternating tone keeps a long page navigable. -->
+  <Section tone="tint">
+    <h2 class="sr-only">{t.products.index.featuresTitle}</h2>
+    <div class="flex flex-col gap-14 lg:gap-20">
+      {
+        sections.map((section, i) => (
+          <div class="reveal grid gap-6 lg:grid-cols-[minmax(0,0.42fr)_minmax(0,1fr)] lg:gap-12">
+            <div>
+              <p class="text-label uppercase text-ink-400">{String(i + 1).padStart(2, '0')}</p>
+              <h3 class="mt-3 text-h3">{section.title}</h3>
+            </div>
+            <div>
+              {section.body && <p class="measure-wide text-ink-700">{section.body}</p>}
+              {section.items && (
+                <ul class={`${section.body ? 'mt-6' : ''} grid gap-x-8 gap-y-2.5 sm:grid-cols-2`}>
+                  {section.items.map((item) => (
+                    <li class="flex items-start gap-2.5 text-[0.9375rem] text-ink-700">
+                      <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-prime-500" aria-hidden="true" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </Section>
+
+  <RelatedLinks locale={locale} items={related} />
+
+  <CTA locale={locale} title={product.ctaTitle} body={product.ctaBody} />
+</BaseLayout>

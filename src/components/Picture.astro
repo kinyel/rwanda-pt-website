@@ -1,0 +1,81 @@
+---
+/**
+ * Every content image on the site goes through here.
+ *
+ * It pairs an image key with its translated alt text automatically, so
+ * swapping the file never touches accessibility or SEO text, and it marks
+ * unreplaced placeholders during development so nothing ships looking like
+ * real content by accident.
+ *
+ * Formats: AVIF and WebP are emitted with a JPEG fallback. Widths are given so
+ * the browser can pick, and `sizes` should be passed by the caller whenever the
+ * rendered width is not the full viewport.
+ */
+import { Picture as AstroPicture } from 'astro:assets';
+import { images, isPlaceholder, type ImageKey } from '../data/images';
+import { useTranslations, interpolate, type Locale } from '../i18n';
+
+interface Props {
+  imageKey: ImageKey;
+  locale: Locale;
+  /** Overrides the alt from i18n. Pass '' for a decorative image. */
+  alt?: string;
+  /** Values for a templated alt string, e.g. { name: 'UNHCR' }. */
+  altValues?: Record<string, string>;
+  widths?: number[];
+  sizes?: string;
+  eager?: boolean;
+  aspect?: string;
+  class?: string;
+  wrapperClass?: string;
+}
+
+const {
+  imageKey,
+  locale,
+  alt,
+  altValues,
+  widths = [480, 768, 1200, 1600],
+  sizes = '100vw',
+  eager = false,
+  aspect,
+  class: className = '',
+  wrapperClass = '',
+} = Astro.props;
+
+const t = useTranslations(locale);
+const src = images[imageKey];
+
+const rawAlt = alt ?? (t.images as Record<string, string>)[imageKey] ?? '';
+const resolvedAlt = altValues ? interpolate(rawAlt, altValues) : rawAlt;
+
+/* Never upscale: cap the requested widths at the source's real width. */
+const usableWidths = [...new Set(widths.filter((w) => w <= src.width).concat(Math.min(src.width, Math.max(...widths))))].sort(
+  (a, b) => a - b,
+);
+
+const showBadge = import.meta.env.DEV && isPlaceholder(imageKey);
+---
+
+<div class={`relative overflow-hidden ${wrapperClass}`} style={aspect ? `aspect-ratio:${aspect}` : undefined}>
+  <AstroPicture
+    src={src}
+    alt={resolvedAlt}
+    widths={usableWidths}
+    sizes={sizes}
+    formats={['avif', 'webp']}
+    fallbackFormat="jpg"
+    loading={eager ? 'eager' : 'lazy'}
+    decoding={eager ? 'sync' : 'async'}
+    fetchpriority={eager ? 'high' : 'auto'}
+    class={`h-full w-full object-cover ${className}`}
+  />
+
+  {
+    showBadge && (
+      <span class="pointer-events-none absolute left-2 top-2 z-10 rounded bg-prime-700 px-2 py-1 text-[0.6875rem] font-bold uppercase tracking-wider text-white">
+        Placeholder
+      </span>
+    )
+  }
+</div>

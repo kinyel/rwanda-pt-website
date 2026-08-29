@@ -1,0 +1,217 @@
+---
+/**
+ * The industry wall: the eight verticals, directly under the hero.
+ *
+ * THE IDEA. A flat four-by-two grid of equal cards would say "here is a list".
+ * These tiles are woven instead: the second and fourth columns sit lower than
+ * the first and third, so the block reads as a moving formation rather than a
+ * table. Each tile carries a large ghosted numeral, which gives the section
+ * editorial weight without adding any decoration that means nothing.
+ *
+ * The attention-catching part is restraint plus one good move: an orange rule
+ * that draws across the top of a tile on hover or focus, in the direction of
+ * travel. Nothing bounces, nothing spins, and nothing hijacks the scroll. The
+ * page already has two pinned sections; a third would be exhausting.
+ *
+ * Entrance is the shared `.reveal-soft` staggered by column, so the wall
+ * assembles left to right as it arrives.
+ *
+ * Every tile is a real link to its industry page, so this section carries eight
+ * internal links to sector pages rather than being decorative.
+ */
+import Icon from './Icon.astro';
+import { industries, industryPath } from '../data/industries';
+import { useTranslations, localizePath, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props as Props;
+const t = useTranslations(locale);
+const items = t.industries.items as Record<string, { name: string; summary: string }>;
+---
+
+<ul class="industry-wall">
+  {
+    industries.map((industry, i) => {
+      const copy = items[industry.key];
+      return (
+        <li class="industry-cell" style={`--n:${i % 4}`}>
+          <a href={localizePath(industryPath(industry.slug), locale)} class="industry-tile reveal-soft">
+            <span class="industry-rule" aria-hidden="true" />
+            <span class="industry-index" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+
+            <span class="industry-icon" aria-hidden="true">
+              <Icon name={industry.icon} size={18} />
+            </span>
+
+            <span class="industry-name">{copy.name}</span>
+            <span class="industry-summary">{copy.summary}</span>
+
+            <span class="industry-go" aria-hidden="true">
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                <path d="M3 8h9m0 0L8.5 4.5M12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </span>
+          </a>
+        </li>
+      );
+    })
+  }
+</ul>
+
+<style>
+  .industry-wall {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr;
+  }
+
+  @media (width >= 40rem) {
+    .industry-wall {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.25rem;
+    }
+  }
+
+  @media (width >= 64rem) {
+    .industry-wall {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      column-gap: 1.25rem;
+      row-gap: 2rem;
+    }
+
+    /* The weave. Even columns drop, so the eight tiles read as a formation in
+       motion rather than a table of contents.
+
+       It sits on the cell while the scroll reveal sits on the tile inside it,
+       because both are transforms and an element only has one. Putting them on
+       the same element meant the reveal silently flattened the weave. */
+    .industry-cell:nth-child(2n) {
+      transform: translateY(2.25rem);
+    }
+  }
+
+  .industry-cell {
+    display: flex;
+  }
+
+  .industry-tile {
+    position: relative;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    height: 100%;
+    padding: 1.75rem 1.5rem 1.5rem;
+    overflow: hidden;
+    border: 1px solid var(--color-ink-100);
+    border-radius: var(--radius-panel);
+    background-color: var(--color-white);
+    transition:
+      border-color var(--duration-base) var(--ease-prime),
+      box-shadow var(--duration-base) var(--ease-prime),
+      transform var(--duration-base) var(--ease-prime);
+  }
+
+  .industry-tile:hover,
+  .industry-tile:focus-visible {
+    border-color: var(--color-ink-200);
+    box-shadow: var(--shadow-lift);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .industry-tile:hover,
+    .industry-tile:focus-visible {
+      transform: translateY(-3px);
+    }
+  }
+
+  /* The one move: a rule that draws across the top, in the direction of travel. */
+  .industry-rule {
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 2px;
+    background-image: linear-gradient(90deg, var(--color-prime-500), var(--color-amber-500));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--duration-slow) var(--ease-prime);
+  }
+  .industry-tile:hover .industry-rule,
+  .industry-tile:focus-visible .industry-rule {
+    transform: scaleX(1);
+  }
+
+  /* Ghosted numeral, behind everything. */
+  .industry-index {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.9rem;
+    font-size: 3.25rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: var(--color-ink-50);
+    transition: color var(--duration-base) var(--ease-prime);
+  }
+  .industry-tile:hover .industry-index,
+  .industry-tile:focus-visible .industry-index {
+    color: var(--color-prime-50);
+  }
+
+  .industry-icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.375rem;
+    height: 2.375rem;
+    border-radius: 0.55rem;
+    background-color: var(--color-prime-50);
+    border: 1px solid rgb(243 93 1 / 0.16);
+    color: var(--color-prime-700);
+    transition:
+      background-color var(--duration-base) var(--ease-prime),
+      color var(--duration-base) var(--ease-prime);
+  }
+  .industry-tile:hover .industry-icon,
+  .industry-tile:focus-visible .industry-icon {
+    background-color: var(--color-prime-500);
+    border-color: var(--color-prime-500);
+    color: var(--color-white);
+  }
+
+  .industry-name {
+    position: relative;
+    margin-top: 1.1rem;
+    font-size: var(--text-h4);
+    font-weight: 700;
+    color: var(--color-ink-950);
+    text-wrap: balance;
+  }
+
+  .industry-summary {
+    position: relative;
+    margin-top: 0.55rem;
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    color: var(--color-ink-600);
+  }
+
+  .industry-go {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    margin-top: auto;
+    padding-top: 1.1rem;
+    color: var(--color-prime-700);
+    transition: transform var(--duration-base) var(--ease-prime);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .industry-tile:hover .industry-go,
+    .industry-tile:focus-visible .industry-go {
+      transform: translateX(4px);
+    }
+  }
+</style>

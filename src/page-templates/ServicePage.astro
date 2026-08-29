@@ -1,0 +1,117 @@
+---
+/**
+ * Shared template for the three service pages.
+ *
+ * Services are presented as grouped capability lists rather than as feature
+ * cards, because each group answers a different question and the grouping is
+ * the useful part. Fleet Analytics in particular has fifteen capabilities: as a
+ * flat grid that is unreadable, so they are split into the four questions an
+ * operator actually asks.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import Section from '../components/Section.astro';
+import Picture from '../components/Picture.astro';
+import CTA from '../components/CTA.astro';
+import RelatedLinks from '../components/RelatedLinks.astro';
+import { routes } from '../data/navigation';
+import { serviceSchema, breadcrumbSchema } from '../data/schema';
+import { useTranslations, localizePath, type Locale } from '../i18n';
+import type { ImageKey } from '../data/images';
+
+interface Props {
+  locale: Locale;
+  serviceKey: 'fleetAnalytics' | 'apiIntegrations' | 'drivermonitoring';
+  path: string;
+  imageKey: ImageKey;
+  seoKey: keyof ReturnType<typeof useTranslations>['seo'];
+  related: { href: string; titleKey: string; descriptorKey?: string }[];
+}
+
+const { locale, serviceKey, path, imageKey, seoKey, related } = Astro.props;
+const t = useTranslations(locale);
+const service = t.services[serviceKey];
+const seo = t.seo[seoKey];
+const site = Astro.site ?? new URL('https://primetrack.rw');
+const url = new URL(localizePath(path, locale), site).href;
+
+const groups = Object.values(service.groups) as {
+  title: string;
+  body?: string;
+  items: readonly { name: string; body: string }[];
+}[];
+
+/* Total capability count, shown as a figure on the page. Derived, never typed
+   by hand, so it cannot drift from the list. */
+const capabilityCount = groups.reduce((sum, group) => sum + group.items.length, 0);
+---
+
+<BaseLayout
+  locale={locale}
+  path={path}
+  title={seo.title}
+  description={seo.description}
+  schemas={[
+    serviceSchema({ name: service.name, description: seo.description, url }),
+    breadcrumbSchema([
+      { name: t.common.common.home, url: new URL(localizePath(routes.home, locale), site).href },
+      { name: service.name, url },
+    ]),
+  ]}
+>
+  <PageHero
+    locale={locale}
+    eyebrow={service.heroKicker}
+    title={service.name}
+    lead={service.tagline}
+    crumbs={[{ name: service.name, href: path }]}
+  />
+
+  <Section tone="light">
+    <div class="grid items-start gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+      <div>
+        <p class="text-lead text-ink-700">{service.summary}</p>
+        {'intro' in service && service.intro && <p class="mt-5 measure text-ink-600">{service.intro}</p>}
+        <p class="mt-8 flex items-baseline gap-3">
+          <span class="text-stat text-prime-500">{capabilityCount}</span>
+          <span class="text-[0.9375rem] font-semibold text-ink-600">{service.name}</span>
+        </p>
+      </div>
+      <Picture
+        imageKey={imageKey}
+        locale={locale}
+        wrapperClass="rounded-[--radius-panel] border border-ink-100 bg-ink-50"
+        aspect="16 / 11"
+        sizes="(min-width: 1024px) 45vw, 100vw"
+        eager
+      />
+    </div>
+  </Section>
+
+  {
+    groups.map((group, i) => (
+      <Section tone={i % 2 === 0 ? 'tint' : 'light'} space="md">
+        <div class="grid gap-8 lg:grid-cols-[minmax(0,0.38fr)_minmax(0,1fr)] lg:gap-14">
+          <div>
+            <p class="text-label uppercase text-ink-400">{String(i + 1).padStart(2, '0')}</p>
+            <h2 class="mt-3 text-h2">{group.title}</h2>
+            {group.body && <p class="mt-4 text-ink-600">{group.body}</p>}
+          </div>
+
+          <ul class="grid gap-x-10 gap-y-7 sm:grid-cols-2">
+            {group.items.map((item) => (
+              <li class="reveal border-t border-ink-200 pt-5">
+                <h3 class="text-h4">{item.name}</h3>
+                <p class="mt-2 text-[0.9375rem] leading-relaxed text-ink-600">{item.body}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </Section>
+    ))
+  }
+
+  <RelatedLinks locale={locale} items={related} />
+
+  <CTA locale={locale} title={service.ctaTitle} body={service.ctaBody} />
+</BaseLayout>

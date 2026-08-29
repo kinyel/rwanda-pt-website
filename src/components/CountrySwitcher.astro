@@ -1,0 +1,119 @@
+---
+/**
+ * Region switcher: Nigeria / Rwanda / Egypt.
+ *
+ * Preserved from the live site's "Home" dropdown, including the fact that
+ * Egypt is served from the Nigeria domain. Built on <details>, so it opens on
+ * click and by keyboard with no JavaScript at all; a small inline script adds
+ * only the niceties (close on outside click, close on Escape).
+ *
+ * It is visually quieter than the language switcher on purpose. Changing
+ * language is something a Rwandan visitor may genuinely want; changing country
+ * is a rare action and should not compete for the same attention.
+ */
+import { countries, ACTIVE_COUNTRY } from '../data/company';
+import { useTranslations, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+  /** `auto` follows the header's theme. See LanguageSwitcher for the rest. */
+  tone?: 'auto' | 'light' | 'dark';
+  class?: string;
+}
+
+const { locale, tone = 'light', class: className = '' } = Astro.props;
+const t = useTranslations(locale);
+const active = countries.find((c) => c.code === ACTIVE_COUNTRY)!;
+
+const triggers = {
+  auto: 'nav-control hover:bg-[color:var(--nav-chip-hover-bg)]',
+  dark: 'border-white/15 text-ink-200 hover:border-white/30 hover:text-white',
+  light: 'border-ink-200 text-ink-700 hover:border-ink-300 hover:text-ink-950',
+};
+const trigger = triggers[tone];
+---
+
+<details class={`group relative ${className}`} data-country-switcher>
+  <summary
+    class={`flex h-8 cursor-pointer list-none items-center gap-1.5 rounded-[--radius-card] border px-3
+            text-[0.8125rem] font-bold transition-colors duration-[--duration-theme] ease-[--ease-prime] ${trigger}`}
+    aria-label={t.common.country.srLabel}
+  >
+    <span aria-hidden="true" class="text-[0.6875rem] tracking-[0.12em]">{active.code}</span>
+    <svg
+      class="h-3 w-3 transition-transform duration-[--duration-base] ease-[--ease-prime] group-open:rotate-180"
+      viewBox="0 0 12 12"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path d="M2.5 4.5 6 8l3.5-3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+  </summary>
+
+  <div
+    class="nav-panel absolute right-0 z-50 mt-2 min-w-[13rem] overflow-hidden p-1.5"
+  >
+    <p class="px-3 pb-1.5 pt-2 text-label uppercase text-[color:var(--nav-fg-muted)]">{t.common.country.label}</p>
+    <ul class="flex flex-col">
+      {
+        countries.map((country) => {
+          const isActive = country.code === ACTIVE_COUNTRY;
+          return (
+            <li>
+              <a
+                href={country.url}
+                aria-current={isActive ? 'true' : undefined}
+                {...(country.external ? { rel: 'noopener' } : {})}
+                class={`flex min-h-11 items-center justify-between gap-3 rounded-[--radius-card] px-3 text-[0.9375rem]
+                        transition-colors duration-[--duration-fast] ease-[--ease-prime]
+                        ${
+                          isActive
+                            ? 'bg-[color:var(--nav-panel-hover)] font-bold text-[color:var(--nav-accent)]'
+                            : 'text-[color:var(--nav-fg)] hover:bg-[color:var(--nav-panel-hover)]'
+                        }`}
+              >
+                <span>{t.common.country.names[country.code]}</span>
+                {isActive ? (
+                  <span class="text-[0.6875rem] font-bold tracking-[0.12em] text-[color:var(--nav-accent)]">
+                    {country.code}
+                    <span class="sr-only">. {t.common.country.current}</span>
+                  </span>
+                ) : (
+                  <svg class="h-3.5 w-3.5 text-[color:var(--nav-fg-muted)]" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <path
+                      d="M5 3h6v6M11 3 3.5 10.5"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <title>{t.common.country.opensExternal}</title>
+                  </svg>
+                )}
+              </a>
+            </li>
+          );
+        })
+      }
+    </ul>
+  </div>
+</details>
+
+<script is:inline>
+  (() => {
+    const all = () => document.querySelectorAll('details[data-country-switcher]');
+    document.addEventListener('click', (event) => {
+      for (const el of all()) {
+        if (el.open && !el.contains(event.target)) el.open = false;
+      }
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      for (const el of all()) {
+        if (!el.open) continue;
+        el.open = false;
+        el.querySelector('summary')?.focus();
+      }
+    });
+  })();
+</script>

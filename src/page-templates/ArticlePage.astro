@@ -1,0 +1,100 @@
+---
+/**
+ * A single migrated SEO article, rendered at its original WordPress URL so no
+ * ranking page moves.
+ *
+ * Every article closes with links into the commercial pages, which is the job
+ * these articles are meant to do and which the WordPress versions never did.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Section from '../components/Section.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import RelatedLinks from '../components/RelatedLinks.astro';
+import CTA from '../components/CTA.astro';
+import { routes } from '../data/navigation';
+import { articleSchema, breadcrumbSchema } from '../data/schema';
+import { useTranslations, localizePath, type Locale } from '../i18n';
+import { render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  locale: Locale;
+  article: CollectionEntry<'articles'>;
+  related: { href: string; titleKey: string; descriptorKey?: string }[];
+}
+
+const { locale, article, related } = Astro.props;
+const t = useTranslations(locale);
+const site = Astro.site ?? new URL('https://primetrack.rw');
+const path = `/${article.id}/`;
+const url = new URL(path, site).href;
+
+const { Content } = await render(article);
+
+const dateFormat = new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
+
+/* Migrated article headlines are long. The brand suffix is only worth the
+   characters when the result still fits a results page; past that it is the
+   first thing to lose. */
+const SUFFIX = ' | PrimeTrack Rwanda';
+const pageTitle =
+  article.data.title.length + SUFFIX.length <= 65 ? `${article.data.title}${SUFFIX}` : article.data.title;
+---
+
+<BaseLayout
+  locale={locale}
+  path={path}
+  title={pageTitle}
+  description={article.data.description}
+  singleLocale
+  switcherFallback={routes.blog}
+  schemas={[
+    articleSchema({
+      headline: article.data.title,
+      description: article.data.description,
+      url,
+      datePublished: article.data.date?.toISOString(),
+    }),
+    breadcrumbSchema([
+      { name: t.common.common.home, url: new URL(localizePath(routes.home, locale), site).href },
+      { name: t.companyPages.blog.eyebrow, url: new URL(localizePath(routes.blog, locale), site).href },
+      { name: article.data.title, url },
+    ]),
+  ]}
+>
+  <article>
+    <header data-nav="dark" class="on-dark relative overflow-hidden bg-ink-950 bg-contour-prime">
+      <div class="absolute inset-0 bg-prime-glow" aria-hidden="true"></div>
+      <div class="container-prime relative py-14 sm:py-16">
+        <Breadcrumbs
+          locale={locale}
+          crumbs={[{ name: t.companyPages.blog.eyebrow, href: routes.blog }, { name: article.data.title, href: path }]}
+          tone="dark"
+          class="mb-7"
+        />
+        <h1 class="measure-wide text-display text-white">{article.data.title}</h1>
+        <p class="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.875rem] text-ink-400">
+          <span>{t.common.common.by} {article.data.author}</span>
+          {
+            article.data.date && (
+              <>
+                <span aria-hidden="true">·</span>
+                <time datetime={article.data.date.toISOString().slice(0, 10)}>{dateFormat.format(article.data.date)}</time>
+              </>
+            )
+          }
+        </p>
+      </div>
+    </header>
+
+    <Section tone="light">
+      <div class="prose-prime">
+        <Content />
+      </div>
+    </Section>
+  </article>
+
+  <RelatedLinks locale={locale} items={related} />
+
+  <CTA locale={locale} title={t.home.finalCta.title} body={t.home.finalCta.body} />
+</BaseLayout>

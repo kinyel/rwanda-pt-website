@@ -1,0 +1,42 @@
+---
+/**
+ * Breadcrumb trail. Paired with BreadcrumbList JSON-LD emitted by the page,
+ * so the visible trail and the structured data always agree.
+ */
+import { useTranslations, localizePath, type Locale } from '../i18n';
+import { routes } from '../data/navigation';
+
+interface Props {
+  locale: Locale;
+  /** Ancestors only. The current page is appended automatically as text. */
+  crumbs: { name: string; href: string }[];
+  tone?: 'light' | 'dark';
+  class?: string;
+}
+
+const { locale, crumbs, tone = 'light', class: className = '' } = Astro.props;
+const t = useTranslations(locale);
+
+const linkTone = tone === 'dark' ? 'text-ink-400 hover:text-white' : 'text-ink-500 hover:text-prime-700';
+const sepTone = tone === 'dark' ? 'text-ink-600' : 'text-ink-300';
+const currentTone = tone === 'dark' ? 'text-ink-200' : 'text-ink-700';
+
+const trail = [{ name: t.common.common.home, href: routes.home }, ...crumbs];
+const current = trail.pop()!;
+---
+
+<nav aria-label={t.common.common.breadcrumbLabel} class={className}>
+  <ol class="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.8125rem]">
+    {
+      trail.map((crumb) => (
+        <li class="flex items-center gap-2">
+          <a href={localizePath(crumb.href, locale)} class={`transition-colors duration-[--duration-fast] ${linkTone}`}>
+            {crumb.name}
+          </a>
+          <span class={sepTone} aria-hidden="true">/</span>
+        </li>
+      ))
+    }
+    <li class={`font-semibold ${currentTone}`} aria-current="page">{current.name}</li>
+  </ol>
+</nav>

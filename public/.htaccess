@@ -1,0 +1,25 @@
+# PrimeTrack Rwanda — redirects (Apache / Hostinger)
+# Mirror of public/_redirects. Keep the two in step.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  RedirectMatch 301 ^/egy/?$ https://primetracknigeria.com/egy
+
+  Redirect 301 /10-reasons-you-should-track/ /blog/
+  Redirect 301 /primetrack-is-10-yippie/     /blog/
+  Redirect 301 /another-awesome-news-post/   /blog/
+  Redirect 301 /nothing/                     /blog/
+
+  Redirect 301 /confirmed/       /contactus/
+  Redirect 301 /confirmation/    /contactus/
+  Redirect 301 /2604e-received/  /contactus/
+
+  Redirect 301 /feed/            /blog/
+  Redirect 301 /comments/feed/   /blog/
+  Redirect 301 /category/uncategorized/ /blog/
+
+  RedirectMatch 410 ^/wp-admin(/.*)?$
+  RedirectMatch 410 ^/wp-login\.php$
+</IfModule>
+
+ErrorDocument 404 /404/index.html

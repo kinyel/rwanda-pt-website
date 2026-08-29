@@ -1,0 +1,35 @@
+---
+/**
+ * The PrimeTrack mark.
+ *
+ * The source art is a square PNG whose wordmark sits across the middle of a
+ * circular device, so it is used at its natural aspect ratio and sized by
+ * height. `eager` is set in the header because the logo is above the fold on
+ * every page.
+ */
+import { Image } from 'astro:assets';
+import { images } from '../data/images';
+import { useTranslations, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+  height?: number;
+  eager?: boolean;
+  class?: string;
+}
+
+const { locale, height = 44, eager = false, class: className = '' } = Astro.props;
+const t = useTranslations(locale);
+---
+
+<Image
+  src={images.logo}
+  alt={t.common.brand.legalName}
+  height={height}
+  width={height}
+  densities={[1, 2]}
+  loading={eager ? 'eager' : 'lazy'}
+  fetchpriority={eager ? 'high' : 'auto'}
+  class={`h-[var(--logo-h)] w-auto ${className}`}
+  style={`--logo-h:${height}px`}
+/>

@@ -1,0 +1,118 @@
+---
+/**
+ * /solutions/vehicle-security/ — the one genuinely new solution page.
+ *
+ * Follows brief section 7: the customer's problem first, then how PrimeTrack
+ * addresses it, then what actually changes. Every capability described here is
+ * drawn from a product page that already verifies it (PrimeSOLAR tamper alerts
+ * and vibration sensor, STAR independent power, eCTS seals, geofencing, video
+ * evidence). Nothing new is claimed.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import Section from '../components/Section.astro';
+import SectionHeader from '../components/SectionHeader.astro';
+import CTA from '../components/CTA.astro';
+import Icon from '../components/Icon.astro';
+import RelatedLinks from '../components/RelatedLinks.astro';
+import { routes } from '../data/navigation';
+import { breadcrumbSchema, serviceSchema } from '../data/schema';
+import { useTranslations, localizePath, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props as Props;
+const t = useTranslations(locale);
+const s = t.solutions.vehicleSecurity;
+const site = Astro.site ?? new URL('https://primetrack.rw');
+const url = new URL(localizePath(routes.vehicleSecurity, locale), site).href;
+
+const capabilityKeys = ['tamper', 'independent', 'geofence', 'seals', 'evidence'] as const;
+const icons: Record<string, string> = {
+  tamper: 'shield', independent: 'package', geofence: 'truck', seals: 'lock', evidence: 'video',
+};
+
+const description =
+  'Vehicle and asset security in Rwanda: tamper alerts, geofence breaches, independent cargo tracking and electronic seals, with an alert the moment something moves that should not.';
+---
+
+<BaseLayout
+  locale={locale}
+  path={routes.vehicleSecurity}
+  title="Vehicle & Asset Security in Rwanda | PrimeTrack"
+  description={description}
+  schemas={[
+    serviceSchema({ name: 'Vehicle and asset security', description, url }),
+    breadcrumbSchema([
+      { name: t.common.common.home, url: new URL(localizePath(routes.home, locale), site).href },
+      { name: t.solutions.index.eyebrow, url: new URL(localizePath(routes.solutions, locale), site).href },
+      { name: s.eyebrow, url },
+    ]),
+  ]}
+>
+  <PageHero
+    locale={locale}
+    eyebrow={t.solutions.index.eyebrow}
+    title={s.title}
+    lead={s.lead}
+    crumbs={[
+      { name: t.solutions.index.eyebrow, href: routes.solutions },
+      { name: s.eyebrow, href: routes.vehicleSecurity },
+    ]}
+  />
+
+  <Section tone="light">
+    <div class="grid gap-12 lg:grid-cols-[minmax(0,0.4fr)_minmax(0,1fr)] lg:gap-16">
+      <h2 class="text-h2">{s.problemTitle}</h2>
+      <p class="measure-wide text-lead text-ink-700">{s.problemBody}</p>
+    </div>
+  </Section>
+
+  <Section tone="tint">
+    <SectionHeader eyebrow={t.solutions.index.eyebrow} title={s.approachTitle} />
+    <ul class="mt-12 grid gap-x-10 gap-y-9 sm:grid-cols-2">
+      {
+        capabilityKeys.map((key, i) => (
+          <li class="reveal border-t border-ink-200 pt-6" style={`--n:${i % 2}`}>
+            <span class="inline-flex h-9 w-9 items-center justify-center rounded-[0.55rem] bg-prime-50 text-prime-700">
+              <Icon name={icons[key]} size={17} />
+            </span>
+            <h3 class="mt-4 text-h4">{s.capabilities[key].name}</h3>
+            <p class="mt-2 text-[0.9375rem] leading-relaxed text-ink-600">{s.capabilities[key].body}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </Section>
+
+  <Section tone="light">
+    <div class="grid gap-12 lg:grid-cols-[minmax(0,0.4fr)_minmax(0,1fr)] lg:gap-16">
+      <h2 class="text-h2">{s.outcomeTitle}</h2>
+      <ul class="flex flex-col divide-y divide-ink-100">
+        {
+          s.outcomes.map((outcome) => (
+            <li class="flex items-start gap-3.5 py-4 first:pt-0">
+              <svg class="mt-1.5 h-4 w-4 shrink-0 text-prime-600" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="m2.5 8.4 3.5 3.5L13.5 4.4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              <span class="text-lead text-ink-700">{outcome}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </Section>
+
+  <RelatedLinks
+    locale={locale}
+    items={[
+      { href: routes.primesolar, titleKey: 'products.primesolar.name', descriptorKey: 'products.primesolar.menuDescriptor' },
+      { href: routes.containertracking, titleKey: 'products.containertracking.name', descriptorKey: 'products.containertracking.menuDescriptor' },
+      { href: routes.ectss, titleKey: 'products.ectss.name', descriptorKey: 'products.ectss.menuDescriptor' },
+    ]}
+  />
+
+  <CTA locale={locale} title={s.ctaTitle} body={s.ctaBody} />
+</BaseLayout>

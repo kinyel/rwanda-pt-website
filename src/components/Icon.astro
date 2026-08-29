@@ -1,0 +1,61 @@
+---
+/**
+ * A small hand-picked inline SVG icon set.
+ *
+ * Deliberately not a dependency. The site needs eight icons; pulling in an
+ * icon package to get them would ship a whole library's worth of tooling for
+ * a few hundred bytes of path data.
+ *
+ * All icons share one grammar so they read as a set: 24x24 box, 1.7 stroke,
+ * round caps and joins, no fills. Add new ones to `paths` in the same style.
+ */
+interface Props {
+  name: string;
+  size?: number;
+  class?: string;
+}
+
+const { name, size = 20, class: className = '' } = Astro.props as Props;
+
+/** Each entry is the inner markup of a 24x24 stroked icon. */
+const paths: Record<string, string> = {
+  /* Video telematics: a road-facing camera. */
+  video:
+    '<path d="M15 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-3.5"/><path d="m15 12 5.4-3.1a.6.6 0 0 1 .9.5v9.2a.6.6 0 0 1-.9.5L15 16z"/>',
+  /* Solar: panel and sun. */
+  solar:
+    '<path d="M4 15h16"/><path d="m6 15 1.2-5h9.6L18 15"/><path d="M9.6 10 9 15"/><path d="M14.4 10 15 15"/><path d="M12 3v2.5"/><path d="m18.4 5.6-1.3 1.3"/><path d="M5.6 5.6l1.3 1.3"/><path d="M12 18v3"/>',
+  /* Fuel: pump. */
+  fuel:
+    '<path d="M4 20h9V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1z"/><path d="M6.5 9h4"/><path d="M13 11h3.5a1.5 1.5 0 0 1 1.5 1.5V16a1.5 1.5 0 0 0 3 0V9.8a1 1 0 0 0-.3-.7L18 6.5"/><path d="M3 20h11"/>',
+  /* Cargo tag: a box. */
+  package:
+    '<path d="m12 3 8 4.2v9.6L12 21l-8-4.2V7.2z"/><path d="m4.2 7.3 7.8 4 7.8-4"/><path d="M12 11.3V21"/>',
+  /* Fleet: a truck. */
+  truck:
+    '<path d="M3 7.5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1V16H3z"/><path d="M14 10h3.4a1 1 0 0 1 .8.4l2.6 3.3a1 1 0 0 1 .2.6V16h-7z"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>',
+  /* Electronic cargo seal: a padlock. */
+  lock:
+    '<rect x="4.5" y="10.5" width="15" height="9.5" rx="1.6"/><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7"/><path d="M12 14.3v2.2"/>',
+  /* Generic supporting icons. */
+  shield: '<path d="M12 3l7 2.8v5.4c0 4.2-2.9 7.6-7 8.8-4.1-1.2-7-4.6-7-8.8V5.8z"/><path d="m9 12 2.2 2.2L15.5 10"/>',
+  chart: '<path d="M4 20V4"/><path d="M4 20h16"/><path d="M8 20v-5.5"/><path d="M12.5 20V9"/><path d="M17 20v-8"/>',
+};
+
+const inner = paths[name] ?? paths.package;
+---
+
+<svg
+  width={size}
+  height={size}
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.7"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  class={className}
+  aria-hidden="true"
+  focusable="false"
+  set:html={inner}
+/>

@@ -1,0 +1,45 @@
+---
+/**
+ * Hero for every page except the homepage.
+ *
+ * Dark, compact, and carrying the page's single h1 plus breadcrumbs. The
+ * contour wash is the same motif as the homepage hero at much lower intensity,
+ * so inner pages feel related without competing with it.
+ */
+import Breadcrumbs from './Breadcrumbs.astro';
+import type { Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+  eyebrow?: string;
+  title: string;
+  lead?: string;
+  /** Short factual chips, e.g. product specs. */
+  chips?: readonly string[];
+  crumbs?: { name: string; href: string }[];
+}
+
+const { locale, eyebrow, title, lead, chips, crumbs } = Astro.props;
+---
+
+<section data-nav="dark" class="on-dark relative overflow-hidden bg-ink-950 bg-contour-prime">
+  <div class="absolute inset-0 bg-prime-glow" aria-hidden="true"></div>
+  <div class="container-prime relative py-14 sm:py-16 lg:py-20">
+    {crumbs && <Breadcrumbs locale={locale} crumbs={crumbs} tone="dark" class="mb-7" />}
+    {eyebrow && <p class="eyebrow mb-4">{eyebrow}</p>}
+    <h1 class="text-display text-white">{title}</h1>
+    {lead && <p class="mt-5 measure text-lead text-ink-300">{lead}</p>}
+    {
+      chips && chips.length > 0 && (
+        <ul class="mt-8 flex flex-wrap gap-2">
+          {chips.map((chip) => (
+            <li class="rounded-full border border-white/15 px-3.5 py-1.5 text-[0.8125rem] font-semibold text-ink-200">
+              {chip}
+            </li>
+          ))}
+        </ul>
+      )
+    }
+    <slot />
+  </div>
+</section>

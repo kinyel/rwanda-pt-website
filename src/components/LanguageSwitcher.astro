@@ -1,0 +1,108 @@
+---
+/**
+ * English / Kinyarwanda switcher.
+ *
+ * Deliberately NOT a dropdown and NOT an icon. With exactly two languages, a
+ * segmented control shows both options and the current state at a glance,
+ * costs one tap instead of two, and needs no JavaScript to operate.
+ *
+ * It is two ordinary links to the same page in each locale, so it works with
+ * JS disabled, is crawlable, and keeps the visitor on the page they were
+ * reading. Switching needs no JavaScript whatsoever.
+ *
+ * Remembering the choice for a return visit is handled once in BaseLayout via
+ * a delegated listener on `a[data-locale]`, rather than by a script here: this
+ * component renders twice per page (header and footer) and duplicating a
+ * listener per instance is how you end up with handlers firing twice.
+ *
+ * Placement: rendered inside the sticky header at every breakpoint (never
+ * inside the mobile drawer, per the brief) and again in the footer.
+ */
+import { LOCALES, localeMeta, localizePath, useTranslations, interpolate, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+  /** Locale-free path of the current page. */
+  path: string;
+  /**
+   * Where to send the visitor when this page has no version in the other
+   * language. Used by the migrated English-only articles, which point at the
+   * article index rather than at a URL that does not exist.
+   */
+  fallbackPath?: string;
+  /**
+   * `auto` inherits the header's own `--nav-*` tokens, so the control follows
+   * the bar from dark to light with it and needs no state of its own. `light`
+   * and `dark` are fixed, for the footer and anywhere outside the header.
+   */
+  tone?: 'auto' | 'light' | 'dark';
+  /** `compact` uses EN/KIN, `full` uses English/Kinyarwanda. */
+  size?: 'compact' | 'full';
+  class?: string;
+}
+
+const { locale, path, fallbackPath, tone = 'light', size = 'compact', class: className = '' } = Astro.props;
+const t = useTranslations(locale);
+
+const shells = {
+  auto: 'nav-control',
+  dark: 'border-white/15 bg-white/5',
+  light: 'border-ink-200 bg-ink-50',
+};
+
+/* The active chip stays brand orange in every tone: it is the one place in
+   this control where colour carries state, and it should read the same on
+   dark and on light.
+
+   The label is ink, not white. The brand orange is a light colour and white
+   on it is 3.29:1, under the 4.5:1 a 13px label needs. Ink on it is 6.05:1. */
+const activeChip = 'bg-prime-500 text-ink-950';
+const idleChips = {
+  auto: 'text-[color:var(--nav-fg)] hover:bg-[color:var(--nav-chip-hover-bg)] hover:text-[color:var(--nav-fg-strong)]',
+  dark: 'text-ink-300 hover:bg-white/10 hover:text-white',
+  light: 'text-ink-600 hover:bg-white hover:text-ink-900',
+};
+
+const shell = shells[tone];
+const idleChip = idleChips[tone];
+---
+
+<div class={`flex items-center gap-2 ${className}`}>
+  <span class="sr-only" id={`lang-label-${size}`}>{t.common.language.srLabel}</span>
+  <div
+    role="group"
+    aria-labelledby={`lang-label-${size}`}
+    data-language-switcher
+    class={`inline-flex items-center rounded-[--radius-card] border p-0.5 ${shell}`}
+  >
+    {
+      LOCALES.map((code) => {
+        const meta = localeMeta[code];
+        const isActive = code === locale;
+        /* An untranslated page keeps its own language pointing at itself and
+           sends the other language somewhere real. */
+        const href = isActive || !fallbackPath ? localizePath(path, code) : localizePath(fallbackPath, code);
+        return (
+          <a
+            href={href}
+            hreflang={meta.code}
+            lang={meta.code}
+            data-locale={code}
+            aria-current={isActive ? 'true' : undefined}
+            aria-label={
+              isActive
+                ? `${meta.name}. ${t.common.language.current}`
+                : interpolate(t.common.language.switchTo, { language: meta.name })
+            }
+            class={`inline-flex min-h-11 min-w-11 items-center justify-center rounded-[calc(var(--radius-card)-2px)] px-3
+                    text-[0.8125rem] font-bold transition-colors duration-[--duration-theme] ease-[--ease-prime]
+                    sm:min-h-8 sm:min-w-0
+                    ${isActive ? activeChip : idleChip}`}
+          >
+            {size === 'compact' ? meta.short : meta.name}
+          </a>
+        );
+      })
+    }
+  </div>
+</div>

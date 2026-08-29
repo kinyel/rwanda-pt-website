@@ -1,0 +1,24 @@
+---
+/**
+ * Eyebrow + heading + optional lead. Used by nearly every section so the
+ * relationship between the three never drifts from page to page.
+ */
+interface Props {
+  eyebrow?: string;
+  title: string;
+  lead?: string;
+  align?: 'left' | 'center';
+  /** Sections use h2; a page's single h1 is rendered by its hero. */
+  as?: 'h1' | 'h2' | 'h3';
+  class?: string;
+}
+
+const { eyebrow, title, lead, align = 'left', as: Tag = 'h2', class: className = '' } = Astro.props as Props;
+const centered = align === 'center';
+---
+
+<div class={`reveal ${centered ? 'mx-auto text-center' : ''} ${className}`}>
+  {eyebrow && <p class="eyebrow mb-4">{eyebrow}</p>}
+  <Tag class={Tag === 'h1' ? 'text-display' : 'text-h2'}>{title}</Tag>
+  {lead && <p class={`mt-5 text-lead text-ink-600 ${centered ? 'mx-auto measure' : 'measure'}`}>{lead}</p>}
+</div>

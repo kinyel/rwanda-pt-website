@@ -1,0 +1,78 @@
+---
+/**
+ * /analyze-your-fleet/ — the interactive version of the challenge selector.
+ *
+ * On the live site this page holds checkboxes that do nothing. Here the
+ * selection produces a summary, links to the matching part of the system, and
+ * carries the choice through to the contact form.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import Section from '../components/Section.astro';
+import ChallengeSelector from '../components/ChallengeSelector';
+import CTA from '../components/CTA.astro';
+import { routes } from '../data/navigation';
+import { challenges } from '../data/challenges';
+import { breadcrumbSchema } from '../data/schema';
+import { useTranslations, localizePath, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const a = t.companyPages.analyzeFleet;
+const site = Astro.site ?? new URL('https://primetrack.rw');
+const url = new URL(localizePath(routes.analyzeFleet, locale), site).href;
+
+const copy = t.home.challenges.items as Record<string, { label: string; body: string }>;
+
+/* Human-readable destination name for each challenge, resolved server-side. */
+const targetNames: Record<string, string> = {
+  [routes.fleettracking]: t.products.fleettracking.name,
+  [routes.videoTracking]: t.products.videoTracking.name,
+  [routes.primesolar]: t.products.primesolar.name,
+  [routes.fuelmanagement]: t.products.fuelmanagement.name,
+  [routes.containertracking]: t.products.containertracking.name,
+  [routes.drivermonitoring]: t.services.drivermonitoring.name,
+  [routes.fleetAnalytics]: t.services.fleetAnalytics.name,
+};
+
+const items = challenges.map((challenge) => ({
+  key: challenge.key,
+  label: copy[challenge.key].label,
+  body: copy[challenge.key].body,
+  href: localizePath(challenge.href, locale),
+  target: targetNames[challenge.href] ?? '',
+}));
+---
+
+<BaseLayout
+  locale={locale}
+  path={routes.analyzeFleet}
+  title={t.seo.analyzeFleet.title}
+  description={t.seo.analyzeFleet.description}
+  schemas={[
+    breadcrumbSchema([
+      { name: t.common.common.home, url: new URL(localizePath(routes.home, locale), site).href },
+      { name: a.title, url },
+    ]),
+  ]}
+>
+  <PageHero locale={locale} eyebrow={a.eyebrow} title={a.title} lead={a.lead} crumbs={[{ name: a.title, href: routes.analyzeFleet }]} />
+
+  <Section tone="light">
+    <ChallengeSelector
+      client:visible
+      items={items}
+      selectedTitle={a.selectedTitle}
+      emptyState={a.emptyState}
+      ctaLabel={a.ctaTitle}
+      ctaHref={localizePath(routes.contact, locale)}
+      seeAnswer={t.home.challenges.seeAnswer}
+    />
+  </Section>
+
+  <CTA locale={locale} title={a.ctaTitle} body={a.ctaBody} />
+</BaseLayout>

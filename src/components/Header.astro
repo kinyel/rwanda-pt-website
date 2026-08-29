@@ -1,0 +1,301 @@
+---
+/**
+ * The site header.
+ *
+ * Sticky, contrast-aware, and the same on every page.
+ *
+ * THE THREE GLOBAL CONTROLS are arranged as a deliberate set rather than three
+ * bolted-on widgets:
+ *   - Language (EN / KIN) is the loudest of the three, always visible at every
+ *     breakpoint, because it is the one a Rwandan visitor may actually use.
+ *   - Region (RWA) is quiet and collapsed, because switching country is rare.
+ *     It is styled as the language switcher's twin so the two read as a pair.
+ *   - The CTA is the only filled element in the bar, so the eye lands on it and
+ *     everything else recedes.
+ *
+ * On mobile the language switcher stays in the collapsed bar, outside the
+ * drawer, exactly as required. The region switcher and phone number move into
+ * the utility row above it to keep the main bar uncluttered.
+ *
+ * CONTRAST AWARENESS. The bar reads light-on-dark over the dark hero and
+ * dark-on-light over the pale sections below it. It works out which by
+ * observing the sections themselves, never by sampling pixels, reading
+ * computed backgrounds or hardcoding scroll offsets — all three of those break
+ * the moment the copy on a page gets longer.
+ *
+ * Every full-width section declares its intent in the markup instead:
+ *
+ *     <section data-nav="dark">    dark ground, so the header goes light
+ *     <section data-nav="light">   light ground, so the header goes dark
+ *
+ * `Section.astro` emits this from its own `tone`, so most of the site is
+ * covered without any page having to think about it.
+ *
+ * WHY THE SECTIONS AND NOT SENTINELS. The brief asked for a zero-height
+ * sentinel at the top of each section. This observes the sections themselves
+ * through a thin band pinned to the header's lower edge, which is the same
+ * mechanism, the same single observer and the same zero cost per scroll frame,
+ * but it answers one more question: a sentinel only reports as it CROSSES the
+ * line, so on a reload part-way down the page, or after the back button
+ * restores a scroll position, no sentinel crosses anything and the observer has
+ * nothing to say. Observing the sections means whichever one covers the band
+ * reports on the observer's very first callback, whatever the scroll position
+ * is. Same declared intent, same cost, correct on arrival.
+ *
+ * NO FLASH. `data-theme` is rendered server-side from `navTheme`, so the first
+ * paint is already right and hydration changes nothing. With JavaScript off the
+ * header simply stays in that state, which is legible on every page because
+ * every page's first section is the one it was rendered for.
+ */
+import Logo from './Logo.astro';
+import LanguageSwitcher from './LanguageSwitcher.astro';
+import CountrySwitcher from './CountrySwitcher.astro';
+import MainNav, { type NavEntry } from './MainNav';
+import { primaryNav, routes, resolveKey } from '../data/navigation';
+import { company, countries, ACTIVE_COUNTRY } from '../data/company';
+import { useTranslations, localizePath, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+  path: string;
+  /** Set on pages that exist in one language only. See BaseLayout. */
+  switcherFallback?: string;
+  /**
+   * The `data-nav` value of this page's FIRST section, so the bar is correct
+   * on first paint with no flash of the wrong state before hydration.
+   * Defaults to dark: every template except the homepage and the 404 opens on
+   * `PageHero`, which is ink-950.
+   */
+  navTheme?: 'dark' | 'light';
+}
+
+const { locale, path, switcherFallback, navTheme = 'dark' } = Astro.props;
+const t = useTranslations(locale);
+
+/* Labels are resolved here, server-side, so the React island ships no copy and
+   no i18n runtime. */
+const regions = countries.map((country) => ({
+  code: country.code,
+  name: t.common.country.names[country.code],
+  url: country.external ? country.url : localizePath(country.url, locale),
+  active: country.code === ACTIVE_COUNTRY,
+  external: country.external,
+}));
+
+const entries: NavEntry[] = primaryNav.map((group) => ({
+  label: resolveKey(t, group.titleKey),
+  href: group.href ? localizePath(group.href, locale) : undefined,
+  active: group.href ? group.href === path : group.items?.some((i) => i.href === path),
+  intro: group.introKey ? resolveKey(t, group.introKey) : undefined,
+  indexHref: group.indexHref ? localizePath(group.indexHref, locale) : undefined,
+  indexLabel: group.indexLabelKey ? resolveKey(t, group.indexLabelKey) : undefined,
+  rail: group.railKeys?.map((key) => resolveKey(t, key)),
+  items: group.items?.map((item) => ({
+    label: resolveKey(t, item.titleKey),
+    descriptor: item.descriptorKey ? resolveKey(t, item.descriptorKey) : undefined,
+    href: localizePath(item.href, locale),
+    active: item.href === path,
+  })),
+}));
+---
+
+<header class="site-header" data-site-header data-theme={navTheme} data-state="top">
+  <!-- Background, blur and hairline, on their own layer. See global.css for
+       why this is not on the header element itself. -->
+  <div class="site-header-surface" aria-hidden="true"></div>
+
+  <!-- Utility row: region, phone. Secondary information, so it reads quieter. -->
+  <div class="site-header-utility hidden sm:block">
+    <div class="container-prime flex h-10 items-center justify-end gap-4">
+      <a
+        href={`tel:${company.phone.e164}`}
+        class="text-[0.8125rem] font-medium text-[color:var(--nav-fg-muted)] transition-colors
+               duration-[--duration-theme] ease-[--ease-prime] hover:text-[color:var(--nav-fg-strong)]"
+      >
+        {company.phone.display}
+      </a>
+      <span class="h-3.5 w-px bg-[color:var(--nav-rule)]" aria-hidden="true"></span>
+      <CountrySwitcher locale={locale} tone="auto" />
+    </div>
+  </div>
+
+  <!-- Main bar. Fixed height in both themes: nothing here may resize. -->
+  <div class="container-prime flex h-[var(--header-bar-h)] items-center justify-between gap-3">
+    <a
+      href={localizePath(routes.home, locale)}
+      class="site-header-logo shrink-0"
+      aria-label={`${t.common.brand.legalName}. ${t.common.nav.home}`}
+    >
+      <Logo locale={locale} height={40} eager />
+    </a>
+
+    <!-- Nav, controls and CTA share one baseline: 2.5rem for the nav items,
+         2.25rem for the two quiet controls, 2.5rem for the button, all
+         vertically centred on the same row with an even gap rhythm. -->
+    <div class="flex items-center gap-1.5 lg:gap-2.5">
+      <MainNav
+        client:idle
+        entries={entries}
+        ctaLabel={t.common.cta.contactUs}
+        ctaHref={localizePath(routes.contact, locale)}
+        menuLabel={t.common.nav.menu}
+        openLabel={t.common.nav.openMenu}
+        closeLabel={t.common.nav.closeMenu}
+        navLabel={t.common.nav.primaryLabel}
+        railTitle={t.common.nav.trustRailTitle}
+        phoneLabel={company.phone.display}
+        phoneHref={`tel:${company.phone.e164}`}
+        regions={regions}
+        regionLabel={t.common.country.label}
+        regionCurrentLabel={t.common.country.current}
+      />
+
+      <!-- Always visible, every breakpoint, never inside the drawer. -->
+      <LanguageSwitcher locale={locale} path={path} fallbackPath={switcherFallback} tone="auto" />
+
+      <!--
+        The one filled element in the bar, and therefore the only place the eye
+        is meant to land.
+
+        Its label is ink-950, not white. The brand orange is a LIGHT colour
+        (relative luminance 0.27): white on it is 3.29:1, which is fine for a
+        large display button and short of the 4.5:1 that a 15px label needs.
+        Ink on the same orange is 6.05:1, and on the prime-400 hover it is
+        7.79:1, so the button gets brighter and MORE legible under the pointer.
+        Nothing about the fill changes: this stays the brand orange at full
+        strength on both grounds.
+      -->
+      <a
+        href={localizePath(routes.contact, locale)}
+        class="hidden h-10 shrink-0 items-center rounded-[--radius-card] bg-prime-500 px-5 text-[0.9375rem]
+               font-bold text-ink-950 transition-colors duration-[--duration-base] ease-[--ease-prime]
+               hover:bg-prime-400 lg:inline-flex"
+      >
+        {t.common.cta.contactUs}
+      </a>
+    </div>
+  </div>
+</header>
+
+<script>
+  /**
+   * Keeps `data-theme` and `data-state` on the header in step with the page.
+   *
+   * Two IntersectionObservers, no scroll listener, nothing per frame.
+   *
+   *   1. THEME. One observer watches every `[data-nav]` section through a thin
+   *      band pinned to the header's lower edge. Whichever section covers that
+   *      band is the one currently passing under the bar, and its `data-nav`
+   *      value is the theme.
+   *
+   *      HYSTERESIS is the band's own height. While a section boundary is
+   *      inside the band BOTH sections intersect it, and the rule in that case
+   *      is to keep whatever the header already shows. So the switch happens
+   *      once the boundary has fully cleared the band, and a reader hovering
+   *      exactly on a seam gets a stable header instead of a flickering one.
+   *      With no dead zone a single pixel of scroll jitter would flip it.
+   *
+   *   2. SCROLLED. One observer watches a short sentinel pinned to the top of
+   *      the DOCUMENT (not to the header, which never moves). While it is in
+   *      view the page is at rest and the bar is bare; once it leaves, the bar
+   *      takes a background, a hairline and a restrained blur.
+   *
+   * Both observers are rebuilt on resize, because the band's position is
+   * derived from the header's height and that changes at two breakpoints.
+   */
+  const BAND = 12; // px of dead zone at the boundary — see HYSTERESIS above.
+
+  function initHeader(header: HTMLElement) {
+    const sections = Array.from(document.querySelectorAll<HTMLElement>('[data-nav]'));
+    const covering = new Set<HTMLElement>();
+    let themeObserver: IntersectionObserver | undefined;
+
+    const applyTheme = () => {
+      const current = header.dataset.theme;
+
+      /* Still covering the band: hold. This is the hysteresis, and it is also
+         what keeps the header steady in the gap between two sections. */
+      for (const section of covering) {
+        if (section.dataset.nav === current) return;
+      }
+
+      const next = covering.values().next().value?.dataset.nav;
+      if (next && next !== current) header.dataset.theme = next;
+    };
+
+    const observeSections = () => {
+      themeObserver?.disconnect();
+      covering.clear();
+      if (sections.length === 0) return;
+
+      /* A BAND-tall strip of the viewport sitting immediately below the bar.
+         Everything above and below it is cropped out by the margins, so a
+         section "intersects" only while it is genuinely under the header. */
+      const top = header.getBoundingClientRect().height;
+      const bottom = Math.max(0, window.innerHeight - top - BAND);
+
+      themeObserver = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            const el = entry.target as HTMLElement;
+            if (entry.isIntersecting) covering.add(el);
+            else covering.delete(el);
+          }
+          applyTheme();
+        },
+        { rootMargin: `-${top}px 0px -${bottom}px 0px`, threshold: 0 },
+      );
+
+      for (const section of sections) themeObserver.observe(section);
+    };
+
+    /* At-rest vs scrolled. */
+    const sentinel = document.querySelector('[data-nav-scroll-sentinel]');
+    if (sentinel) {
+      new IntersectionObserver(
+        ([entry]) => {
+          header.dataset.state = entry.isIntersecting ? 'top' : 'scrolled';
+        },
+        { threshold: 0 },
+      ).observe(sentinel);
+    }
+
+    observeSections();
+
+    /* Hand over to the crossfade. `data-theme` was rendered from the first
+       section on the page, so if this page was loaded part-way down, the
+       callbacks above have just corrected it — and that correction has to be
+       instant rather than a visible fade from the wrong state. Until this
+       attribute is set, --duration-theme is 0ms; see global.css.
+
+       A double rAF puts this after the frame the corrections are painted in,
+       with a timeout behind it because rAF never fires in a background tab and
+       the bar must not be left without its transition. */
+    const ready = () => header.setAttribute('data-nav-ready', '');
+    requestAnimationFrame(() => requestAnimationFrame(ready));
+    window.setTimeout(ready, 200);
+
+    /* The band is derived from the header's height, which changes at sm and
+       lg, so the observer is rebuilt when the viewport is resized. Debounced:
+       a resize drag would otherwise tear down and rebuild it per frame. */
+    let resizeTimer = 0;
+    window.addEventListener(
+      'resize',
+      () => {
+        window.clearTimeout(resizeTimer);
+        resizeTimer = window.setTimeout(observeSections, 150);
+      },
+      { passive: true },
+    );
+
+    /* Restored from the back/forward cache: the page comes back with its old
+       scroll position and its old DOM, so re-run the observers rather than
+       trusting whatever state the bar was left in. */
+    window.addEventListener('pageshow', (event) => {
+      if ((event as PageTransitionEvent).persisted) observeSections();
+    });
+  }
+
+  const header = document.querySelector<HTMLElement>('[data-site-header]');
+  if (header) initHeader(header);
+</script>

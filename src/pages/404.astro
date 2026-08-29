@@ -1,0 +1,71 @@
+---
+/**
+ * Not found.
+ *
+ * Also the destination for the VRAS navigation entry: /vras/ on the live site
+ * returns a database error with no recoverable content, and per the client's
+ * instruction the menu item points here rather than to invented copy. See
+ * docs/handoff.md.
+ *
+ * noindex, follow: the page itself should never rank, but its links should
+ * still be crawled so a visitor arriving on a dead legacy URL is recovered.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Section from '../components/Section.astro';
+import Button from '../components/Button.astro';
+import { primaryNav, productNav, routes, resolveKey } from '../data/navigation';
+import { useTranslations, localizePath } from '../i18n';
+
+const locale = 'en' as const;
+const t = useTranslations(locale);
+
+const suggestions = [
+  ...primaryNav.filter((entry) => entry.href).map((entry) => ({ titleKey: entry.titleKey, href: entry.href! })),
+  ...productNav.slice(0, 3).map((item) => ({ titleKey: item.titleKey, href: item.href })),
+];
+---
+
+<!--
+  `path` is the homepage rather than /404/ on purpose. A 404 is served by the
+  host at whatever URL the visitor mistyped, so it has no URL of its own: using
+  the homepage gives the canonical, the hreflang pair and the language switcher
+  a real destination instead of a path that resolves nowhere. The page stays
+  noindex regardless.
+-->
+<!-- The only page on the site that opens on a light section rather than on
+     PageHero, so it is the only one that has to say so. -->
+<BaseLayout
+  locale={locale}
+  path={routes.home}
+  title={t.seo.notFound.title}
+  description={t.seo.notFound.description}
+  navTheme="light"
+  noindex
+>
+  <Section tone="light" space="lg">
+    <p class="text-stat leading-none text-prime-100">{t.common.notFound.code}</p>
+    <h1 class="mt-6 text-display">{t.common.notFound.title}</h1>
+    <p class="mt-5 measure text-lead text-ink-600">{t.common.notFound.body}</p>
+
+    <Button href={localizePath(routes.home, locale)} variant="primary" size="lg" class="mt-9">
+      {t.common.cta.backHome}
+    </Button>
+
+    <h2 class="mt-16 text-label uppercase text-ink-400">{t.common.notFound.suggestionsTitle}</h2>
+    <ul class="mt-5 flex flex-wrap gap-2">
+      {
+        suggestions.map((item) => (
+          <li>
+            <a
+              href={localizePath(item.href, locale)}
+              class="inline-flex min-h-11 items-center rounded-[--radius-card] border border-ink-200 px-4
+                     font-semibold text-ink-800 transition-colors duration-[--duration-fast] hover:border-prime-300 hover:text-prime-700"
+            >
+              {resolveKey(t, item.titleKey)}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </Section>
+</BaseLayout>

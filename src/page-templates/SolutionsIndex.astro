@@ -1,0 +1,77 @@
+---
+/**
+ * /solutions/ — the five outcome areas as a hub.
+ *
+ * Four of the five link to pages that already existed; only vehicle and asset
+ * security is new. That is the point of the restructure: a solution-first front
+ * door onto pages that already carry ranking history.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import Section from '../components/Section.astro';
+import CTA from '../components/CTA.astro';
+import Icon from '../components/Icon.astro';
+import { routes, solutionNav, resolveKey } from '../data/navigation';
+import { breadcrumbSchema } from '../data/schema';
+import { useTranslations, localizePath, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props as Props;
+const t = useTranslations(locale);
+const site = Astro.site ?? new URL('https://primetrack.rw');
+const url = new URL(localizePath(routes.solutions, locale), site).href;
+
+const outcomeKeys = ['fleetTracking', 'videoTelematics', 'fuelMonitoring', 'vehicleSecurity', 'fleetAnalytics'] as const;
+const icons = ['truck', 'video', 'fuel', 'shield', 'chart'];
+---
+
+<BaseLayout
+  locale={locale}
+  path={routes.solutions}
+  title="Fleet Management Solutions in Rwanda | PrimeTrack"
+  description="Fleet tracking, AI video telematics, fuel monitoring, vehicle and asset security, and fleet analytics for operators across Rwanda, on one platform."
+  schemas={[
+    breadcrumbSchema([
+      { name: t.common.common.home, url: new URL(localizePath(routes.home, locale), site).href },
+      { name: t.solutions.index.eyebrow, url },
+    ]),
+  ]}
+>
+  <PageHero
+    locale={locale}
+    eyebrow={t.solutions.index.eyebrow}
+    title={t.solutions.index.pageTitle}
+    lead={t.solutions.index.lead}
+    crumbs={[{ name: t.solutions.index.eyebrow, href: routes.solutions }]}
+  />
+
+  <Section tone="light">
+    <ul class="flex flex-col divide-y divide-ink-100">
+      {
+        solutionNav.map((item, i) => (
+          <li class="reveal" style={`--n:${i % 3}`}>
+            <a
+              href={localizePath(item.href, locale)}
+              class="group grid items-center gap-6 py-8 sm:grid-cols-[auto_minmax(0,0.9fr)_minmax(0,1fr)] sm:gap-10"
+            >
+              <span class="inline-flex h-11 w-11 items-center justify-center rounded-[0.6rem] bg-prime-50 text-prime-700
+                           transition-colors duration-[--duration-base] group-hover:bg-prime-500 group-hover:text-white">
+                <Icon name={icons[i]} size={20} />
+              </span>
+              <span>
+                <span class="block text-h3 text-ink-950 group-hover:text-prime-700">{resolveKey(t, item.titleKey)}</span>
+                <span class="mt-1.5 block text-[0.9375rem] text-ink-500">{resolveKey(t, item.descriptorKey!)}</span>
+              </span>
+              <span class="text-lead text-ink-700">{t.solutions.items[outcomeKeys[i]].outcome}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </Section>
+
+  <CTA locale={locale} title={t.home.finalCta.title} body={t.home.finalCta.body} />
+</BaseLayout>
