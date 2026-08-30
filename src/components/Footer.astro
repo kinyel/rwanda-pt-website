@@ -191,9 +191,7 @@ const socialPaths: Record<string, string> = {
               />
               <button
                 type="submit"
-                class="inline-flex min-h-11 items-center justify-center rounded-[--radius-card] bg-prime-500 px-5
-                       text-[0.9375rem] font-semibold text-white transition-colors duration-[--duration-base]
-                       ease-[--ease-prime] hover:bg-prime-600"
+                class="btn btn-md btn-primary"
               >
                 {t.common.footer.subscribe}
               </button>
@@ -201,8 +199,7 @@ const socialPaths: Record<string, string> = {
           ) : (
             <a
               href={`mailto:${company.email}?subject=PrimeTIPS%20subscription`}
-              class="mt-4 inline-flex min-h-11 items-center rounded-[--radius-card] border border-white/15 px-4
-                     text-[0.9375rem] font-semibold text-ink-200 hover:border-white/30 hover:text-white"
+              class="btn btn-md btn-secondaryOnDark mt-4"
             >
               {t.common.footer.subscribe}
             </a>

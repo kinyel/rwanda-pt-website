@@ -193,6 +193,19 @@
   html {
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
+
+    /* Declared, and deliberately only `light`.
+
+       Stating nothing leaves it to the browser. Chrome's Auto Dark Mode, which
+       a lot of Android users have on, algorithmically inverts pages that state
+       no preference, and this one is mostly white surfaces with deliberately
+       dark sections cut into them: exactly the case that comes out worst from
+       an automatic inversion. `light` opts out of it.
+
+       Not `light dark`, because there is no dark theme to switch to. The dark
+       sections are design, not a mode. Form controls, scrollbars and spellcheck
+       underlines render for a light page as a result. */
+    color-scheme: light;
     /* Clears the sticky header on anchor jumps. Derived from --header-h
        rather than being a fixed 6rem: the header is 7.5rem at lg, so the flat
        value landed anchor targets 1.5rem underneath the bar on exactly the
@@ -247,6 +260,611 @@
    Only patterns repeated across many pages live here. Anything used once
    stays in its own component file.                                          */
 @layer components {
+  /* --- Buttons -----------------------------------------------------------
+     One button system, defined here rather than in Button.astro, because the
+     contact form is a React island and Astro's scoped styles cannot reach it.
+     Both now render the same classes and cannot drift apart.
+
+     WHAT MAKES THESE READ AS SOLID RATHER THAN AS COLOURED RECTANGLES:
+       1. A vertical gradient, not a flat fill. Real objects are lit from
+          above, so the plate is a shade lighter at the top than at the bottom.
+          The shift is small on purpose: 6% either side of the brand orange, so
+          the colour still reads as #f35d01 and not as a different orange.
+       2. A one-pixel inset highlight along the top edge, which is the lit lip
+          of that plate.
+       3. A shadow tinted with the button's own colour rather than grey. A grey
+          shadow under a saturated fill reads as dirt; a tinted one reads as
+          the surface bouncing light.
+     On hover the button lifts a pixel and the shadow deepens and spreads,
+     which is the plate coming toward you. On press it returns flat and the
+     shadow collapses, so the click has somewhere to land.
+
+     CONTRAST. White on prime-500 is 3.30:1. That clears WCAG 1.4.11 for the
+     button as a UI component, and it is the brand orange sampled from the live
+     site, but it is under the 4.5:1 that label text at this size wants. The
+     gradient's lower stop is darker than prime-500, which helps a little and
+     does not fix it. Moving the fill to a prime-600 → prime-700 gradient
+     reaches 4.5:1; it is a visibly deeper, more burnt orange, so it is a brand
+     call rather than a code one. Left as brand orange deliberately. */
+  .btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: var(--radius-card);
+    font-weight: 600;
+    /* Set explicitly, and tight enough that the label never drives the height.
+       Every button's height then comes from its size's `min-height` alone, so a
+       bordered variant and a borderless one standing side by side are the same
+       height. Inheriting the body's 1.68 made `secondary` 2px taller than
+       `primary`, which is exactly the pair that appears together most often. */
+    line-height: 1.2;
+    text-align: center;
+    text-wrap: balance;
+    white-space: nowrap;
+    transition:
+      background-color var(--duration-base) var(--ease-prime),
+      background-image var(--duration-base) var(--ease-prime),
+      border-color var(--duration-base) var(--ease-prime),
+      box-shadow var(--duration-base) var(--ease-prime),
+      color var(--duration-base) var(--ease-prime),
+      transform var(--duration-base) var(--ease-prime);
+  }
+
+  /* Long labels in Kinyarwanda must wrap rather than blow the layout open. */
+  @media (width < 40rem) {
+    .btn { white-space: normal; }
+  }
+
+  .btn:disabled,
+  .btn[aria-disabled='true'] {
+    pointer-events: none;
+    opacity: 0.55;
+    box-shadow: none;
+    transform: none;
+  }
+
+  /* min-h keeps every button at or above the 44px touch target. */
+  /* `sm` is for the header bar only, where the 44px target does not apply
+     because the bar itself is not a touch-primary surface and the same action
+     is a full-width 52px button inside the drawer. */
+  .btn-sm { min-height: 2.5rem; padding: 0.4375rem 1.25rem; font-size: 0.9375rem; }
+  .btn-md { min-height: 2.75rem; padding: 0.625rem 1.25rem; font-size: 0.9375rem; }
+  .btn-lg { min-height: 3.25rem; padding: 0.875rem 1.75rem; font-size: 1.0625rem; }
+
+  /* The arrow or icon a button may carry leans into the direction of travel. */
+  .btn svg {
+    flex: none;
+    transition: transform var(--duration-base) var(--ease-prime);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .btn:hover svg { transform: translateX(2px); }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .btn-primary:hover,
+    .btn-primaryInk:hover,
+    .btn-onDark:hover,
+    .btn-secondary:hover,
+    .btn-secondaryOnDark:hover {
+      transform: translateY(-1px);
+    }
+    .btn:active { transform: translateY(0); }
+  }
+
+  /* --- primary: the brand plate --- */
+  .btn-primary {
+    color: #fff;
+    /* The brand orange is the TOP of the plate and the lightest point in it.
+       Nothing in the gradient is lighter than #f35d01, so no part of this
+       button is a worse ground for its white label than the flat fill it
+       replaced. An earlier version put a lighter stop at the top for a glossier
+       plate and took the label from 3.29:1 down to 2.79:1 across its upper
+       half, which is a real regression traded for a highlight nobody asked
+       for. Depth comes from the darker foot and the inset lip instead. */
+    background-image: linear-gradient(180deg, var(--color-prime-500) 0%, #e65601 62%, #d94f00 100%);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.24),
+      0 1px 2px rgb(107 38 0 / 0.24),
+      0 8px 18px -8px rgb(243 93 1 / 0.5);
+  }
+  .btn-primary:hover {
+    background-image: linear-gradient(180deg, var(--color-prime-500) 0%, #ee5901 62%, #e05301 100%);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.3),
+      0 2px 4px rgb(107 38 0 / 0.2),
+      0 14px 28px -10px rgb(243 93 1 / 0.55);
+  }
+  .btn-primary:active {
+    background-image: linear-gradient(180deg, var(--color-prime-600) 0%, var(--color-prime-600) 100%);
+    box-shadow:
+      inset 0 1px 2px rgb(107 38 0 / 0.3),
+      0 1px 1px rgb(107 38 0 / 0.18);
+  }
+
+  /* --- primaryInk: the same orange plate, ink label -----------------------
+     Used where the label is small and the contrast matters more than the
+     convention: the header bar CTA and the mobile drawer CTA. White on the
+     brand orange is 3.29:1; ink-950 on the same orange is 6.05:1, and 7.79:1
+     against the lighter hover, so the button gets brighter and MORE legible
+     under the pointer. The fill is identical, so the two variants read as the
+     same button. This pairing already existed in the header and the drawer
+     before the buttons were unified; making it a named variant is what stops
+     it drifting back into two hand-written copies. */
+  .btn-primaryInk {
+    color: var(--color-ink-950);
+    background-image: linear-gradient(180deg, #ff7a20 0%, var(--color-prime-500) 52%, #e75802 100%);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.32),
+      0 1px 2px rgb(107 38 0 / 0.24),
+      0 8px 18px -8px rgb(243 93 1 / 0.5);
+  }
+  .btn-primaryInk:hover {
+    background-image: linear-gradient(180deg, #ff9548 0%, var(--color-prime-400) 52%, #f96f12 100%);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.4),
+      0 2px 4px rgb(107 38 0 / 0.2),
+      0 14px 28px -10px rgb(243 93 1 / 0.55);
+  }
+  .btn-primaryInk:active {
+    background-image: linear-gradient(180deg, var(--color-prime-500) 0%, var(--color-prime-500) 100%);
+    box-shadow:
+      inset 0 1px 2px rgb(107 38 0 / 0.3),
+      0 1px 1px rgb(107 38 0 / 0.18);
+  }
+
+  /* --- secondary: the real alternative on a light ground --- */
+  .btn-secondary {
+    color: var(--color-ink-900);
+    background-image: linear-gradient(180deg, #fff 0%, var(--color-ink-50) 100%);
+    /* ink-300, not ink-200. The old border was 1.51:1 against the page behind
+       it, which is a boundary you have to know is there. This is 2.17:1 and
+       crisper to look at. It still does not reach the 3:1 that WCAG 1.4.11
+       wants of a boundary that is the ONLY thing identifying a control; here
+       it is not, because the plate carries a fill and a shadow of its own. */
+    border: 1px solid var(--color-ink-300);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.9),
+      0 1px 2px rgb(8 9 11 / 0.05),
+      0 6px 14px -8px rgb(8 9 11 / 0.16);
+  }
+  .btn-secondary:hover {
+    border-color: var(--color-ink-400);
+    background-image: linear-gradient(180deg, #fff 0%, #fff 100%);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.9),
+      0 2px 4px rgb(8 9 11 / 0.05),
+      0 12px 24px -10px rgb(8 9 11 / 0.2);
+  }
+  .btn-secondary:active {
+    background-image: linear-gradient(180deg, var(--color-ink-50) 0%, var(--color-ink-50) 100%);
+    box-shadow: inset 0 1px 2px rgb(8 9 11 / 0.08);
+  }
+
+  /* --- ghost: tertiary, inside dense areas --- */
+  .btn-ghost {
+    color: var(--color-prime-700);
+  }
+  .btn-ghost:hover {
+    background-color: var(--color-prime-50);
+    color: var(--color-prime-800);
+  }
+  .btn-ghost:active { background-color: var(--color-prime-100); }
+
+  /* --- onDark: the primary equivalent on ink --- */
+  .btn-onDark {
+    color: var(--color-ink-950);
+    background-image: linear-gradient(180deg, #fff 0%, #f2f4f7 100%);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.9),
+      0 1px 2px rgb(0 0 0 / 0.4),
+      0 10px 22px -10px rgb(0 0 0 / 0.6);
+  }
+  .btn-onDark:hover {
+    background-image: linear-gradient(180deg, #fff 0%, var(--color-prime-50) 100%);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.9),
+      0 2px 5px rgb(0 0 0 / 0.35),
+      0 16px 30px -12px rgb(0 0 0 / 0.62);
+  }
+  .btn-onDark:active {
+    background-image: linear-gradient(180deg, #f2f4f7 0%, #f2f4f7 100%);
+    box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.18);
+  }
+
+  /* --- secondaryOnDark: an outline, so the orange primary keeps the weight.
+         White at 30% is 3.4:1 on ink-950, so the boundary itself clears
+         WCAG 1.4.11, with the label at 19:1. --- */
+  .btn-secondaryOnDark {
+    color: #fff;
+    border: 1px solid rgb(255 255 255 / 0.3);
+    background-image: linear-gradient(180deg, rgb(255 255 255 / 0.1) 0%, rgb(255 255 255 / 0.03) 100%);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12);
+  }
+  .btn-secondaryOnDark:hover {
+    border-color: rgb(255 255 255 / 0.58);
+    background-image: linear-gradient(180deg, rgb(255 255 255 / 0.18) 0%, rgb(255 255 255 / 0.08) 100%);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.18),
+      0 10px 22px -12px rgb(0 0 0 / 0.7);
+  }
+  .btn-secondaryOnDark:active {
+    background-image: linear-gradient(180deg, rgb(255 255 255 / 0.08) 0%, rgb(255 255 255 / 0.08) 100%);
+    box-shadow: none;
+  }
+
+  /* --- Form fields -------------------------------------------------------
+     The contact form is a React island, so like the buttons its look lives
+     here rather than in the component, where Astro's scoped styles could not
+     reach it.
+
+     THE FLOATING LABEL. A field's label starts sitting where the placeholder
+     would and rises into the top of the box once the field has focus or
+     content. That is one line of text per field instead of two, which is what
+     lets a seven-field form read as short, and the label never leaves: the
+     usual objection to placeholder-as-label, that the question disappears the
+     moment you start answering it, does not apply.
+
+     The lift is driven by `:placeholder-shown`, so it needs each input to
+     carry `placeholder=" "`. That single space is load-bearing.
+
+     THE FOCUS RULE. Focus fills the field white, warms the border, and draws a
+     two-pixel orange rule across its foot. Same gesture as the rule on the
+     industry wall and the read head in the hero, so the whole site agrees on
+     what "this one" looks like. */
+  .field {
+    position: relative;
+  }
+
+  .field-box {
+    position: relative;
+    border-radius: var(--radius-card);
+    border: 1px solid var(--color-ink-200);
+    background-color: var(--color-ink-50);
+    transition:
+      background-color var(--duration-base) var(--ease-prime),
+      border-color var(--duration-base) var(--ease-prime),
+      box-shadow var(--duration-base) var(--ease-prime);
+  }
+  .field-box:hover {
+    border-color: var(--color-ink-300);
+  }
+  .field-box:focus-within {
+    background-color: var(--color-white);
+    border-color: var(--color-prime-500);
+    box-shadow: 0 1px 2px rgb(8 9 11 / 0.04), 0 10px 24px -14px rgb(243 93 1 / 0.5);
+  }
+  .field-box.is-invalid {
+    border-color: var(--color-signal-700);
+    background-color: color-mix(in oklab, var(--color-signal-100) 45%, var(--color-white));
+  }
+
+  /* Sits inside the border so the rounded corners never clip it oddly. */
+  .field-box::after {
+    content: '';
+    position: absolute;
+    inset-inline: -1px;
+    bottom: -1px;
+    height: 2px;
+    border-end-start-radius: var(--radius-card);
+    border-end-end-radius: var(--radius-card);
+    background-image: linear-gradient(90deg, var(--color-prime-500), var(--color-amber-500));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--duration-slow) var(--ease-prime);
+  }
+  .field-box:focus-within::after {
+    transform: scaleX(1);
+  }
+
+  .field-input {
+    width: 100%;
+    border: 0;
+    border-radius: inherit;
+    background: transparent;
+    padding: 1.55rem 0.95rem 0.5rem;
+    font: inherit;
+    font-size: 1rem;
+    color: var(--color-ink-900);
+    outline: none;
+  }
+  textarea.field-input {
+    padding-top: 1.7rem;
+    line-height: 1.6;
+    resize: vertical;
+    min-height: 8.5rem;
+  }
+  /* The placeholder is only ever a single space, holding the label's lift
+     open. Hiding it stops a stray space rendering in some browsers. */
+  .field-input::placeholder {
+    color: transparent;
+  }
+  .field-input:focus::placeholder {
+    color: var(--color-ink-400);
+  }
+
+  .field-label {
+    position: absolute;
+    left: 1rem;
+    top: 0.95rem;
+    z-index: 1;
+    font-size: 1rem;
+    line-height: 1.2;
+    color: var(--color-ink-500);
+    pointer-events: none;
+    transform-origin: left top;
+    transition:
+      transform var(--duration-base) var(--ease-prime),
+      color var(--duration-base) var(--ease-prime);
+  }
+  .field-input:focus ~ .field-label,
+  .field-input:not(:placeholder-shown) ~ .field-label {
+    transform: translateY(-0.62rem) scale(0.75);
+  }
+  .field-input:focus ~ .field-label {
+    color: var(--color-prime-700);
+  }
+  .field-box.is-invalid .field-label {
+    color: var(--color-signal-700);
+  }
+
+  .field-error {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-signal-700);
+  }
+
+  /* --- Choice chips ------------------------------------------------------
+     A radio group that looks like a row of pills. The input itself stays in
+     the DOM and keeps the keyboard behaviour of a real radio group, including
+     arrow-key navigation, and is only visually replaced. */
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    min-inline-size: 0;
+  }
+  .chip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.5rem;
+    padding: 0.4rem 0.95rem;
+    border-radius: 999px;
+    border: 1px solid var(--color-ink-200);
+    background-color: var(--color-white);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--color-ink-700);
+    cursor: pointer;
+    transition:
+      background-color var(--duration-fast) var(--ease-prime),
+      border-color var(--duration-fast) var(--ease-prime),
+      color var(--duration-fast) var(--ease-prime);
+  }
+  .chip:hover {
+    border-color: var(--color-prime-300);
+    background-color: var(--color-prime-50);
+  }
+  .chip input {
+    position: absolute;
+    opacity: 0;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    cursor: pointer;
+  }
+  .chip:has(input:checked) {
+    border-color: var(--color-prime-500);
+    background-color: var(--color-prime-500);
+    color: var(--color-white);
+  }
+  .chip:has(input:focus-visible) {
+    outline: 2px solid var(--color-prime-700);
+    outline-offset: 2px;
+  }
+
+  /* --- International phone field ---------------------------------------- */
+  .phone-shell {
+    display: flex;
+    align-items: stretch;
+    border-radius: var(--radius-card);
+    border: 1px solid var(--color-ink-200);
+    background-color: var(--color-ink-50);
+    transition:
+      background-color var(--duration-base) var(--ease-prime),
+      border-color var(--duration-base) var(--ease-prime),
+      box-shadow var(--duration-base) var(--ease-prime);
+  }
+  .phone-shell:hover { border-color: var(--color-ink-300); }
+  .phone-shell:focus-within {
+    background-color: var(--color-white);
+    border-color: var(--color-prime-500);
+    box-shadow: 0 1px 2px rgb(8 9 11 / 0.04), 0 10px 24px -14px rgb(243 93 1 / 0.5);
+  }
+  .phone-shell.is-invalid { border-color: var(--color-signal-700); }
+
+  .phone-country {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding-inline: 0.85rem 0.6rem;
+    border: 0;
+    border-start-start-radius: var(--radius-card);
+    border-end-start-radius: var(--radius-card);
+    background: transparent;
+    font: inherit;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--color-ink-800);
+    cursor: pointer;
+  }
+  .phone-country:hover { color: var(--color-prime-700); }
+  .phone-flag {
+    font-size: 1.15rem;
+    line-height: 1;
+    /* The emoji font, so a flag renders as a flag rather than as two letters
+       on the platforms that have the glyphs. */
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  }
+  .phone-dial { font-variant-numeric: tabular-nums; }
+  .phone-caret { opacity: 0.5; }
+  .phone-country[aria-expanded='true'] .phone-caret { transform: rotate(180deg); }
+
+  .phone-divider {
+    width: 1px;
+    margin-block: 0.7rem;
+    background-color: var(--color-ink-200);
+  }
+
+  /* Holds the label and the sample number over the number entry alone, so
+     neither has to account for the country button's width. */
+  .phone-entry {
+    position: relative;
+    display: block;
+    flex: 1;
+    min-width: 0;
+  }
+  .phone-input {
+    display: block;
+    width: 100%;
+    border: 0;
+    background: transparent;
+    padding: 1.55rem 0.95rem 0.5rem;
+    font: inherit;
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+    color: var(--color-ink-900);
+    outline: none;
+  }
+  .phone-input::placeholder { color: transparent; }
+
+  .phone-label {
+    position: absolute;
+    left: 0.95rem;
+    top: 0.95rem;
+    font-size: 1rem;
+    line-height: 1.2;
+    color: var(--color-ink-500);
+    pointer-events: none;
+    white-space: nowrap;
+    transform-origin: left top;
+    transition:
+      transform var(--duration-base) var(--ease-prime),
+      color var(--duration-base) var(--ease-prime);
+  }
+  .phone-optional { color: var(--color-ink-400); }
+  .phone-input:focus ~ .phone-label,
+  .phone-input:not(:placeholder-shown) ~ .phone-label {
+    transform: translateY(-0.62rem) scale(0.75);
+  }
+  .phone-input:focus ~ .phone-label { color: var(--color-prime-700); }
+  .phone-shell.is-invalid .phone-label { color: var(--color-signal-700); }
+
+  /* The sample number only appears once the label has moved out of its way. */
+  .phone-hint {
+    position: absolute;
+    left: 0.95rem;
+    bottom: 0.5rem;
+    font-size: 1rem;
+    line-height: 1.2;
+    letter-spacing: 0.02em;
+    color: var(--color-ink-300);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--duration-base) var(--ease-prime);
+  }
+  .phone-input:focus:placeholder-shown ~ .phone-hint { opacity: 1; }
+
+  .phone-pop {
+    position: absolute;
+    z-index: 30;
+    top: calc(100% + 0.4rem);
+    left: 0;
+    width: min(22rem, 100%);
+    border-radius: var(--radius-card);
+    border: 1px solid var(--color-ink-200);
+    background-color: var(--color-white);
+    box-shadow: var(--shadow-menu);
+    overflow: clip;
+  }
+  .phone-search {
+    width: 100%;
+    border: 0;
+    border-bottom: 1px solid var(--color-ink-100);
+    padding: 0.7rem 0.9rem;
+    font: inherit;
+    font-size: 0.9375rem;
+    outline: none;
+  }
+  .phone-search:focus { border-bottom-color: var(--color-prime-500); }
+
+  .phone-list {
+    max-height: 15rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .phone-option {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 0.9rem;
+    font-size: 0.9375rem;
+    cursor: pointer;
+  }
+  .phone-option.is-active { background-color: var(--color-prime-50); }
+  .phone-option.is-chosen { font-weight: 700; }
+  .phone-option.is-last-priority { border-bottom: 1px solid var(--color-ink-100); }
+  .phone-option-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--color-ink-800);
+  }
+  .phone-option-dial {
+    font-variant-numeric: tabular-nums;
+    color: var(--color-ink-500);
+  }
+  .phone-empty {
+    padding: 0.9rem;
+    font-size: 0.9375rem;
+    color: var(--color-ink-500);
+  }
+
+  /* --- The sent state ----------------------------------------------------
+     The tick draws itself once. `both` is safe here because it runs on the
+     document timeline the instant the panel mounts, rather than waiting on a
+     scroll position that a background tab would never reach. */
+  .sent-tick circle { stroke-dasharray: 170; stroke-dashoffset: 0; }
+  .sent-tick path { stroke-dasharray: 40; stroke-dashoffset: 0; }
+  @media (prefers-reduced-motion: no-preference) {
+    .sent-tick circle {
+      animation: sent-ring 620ms var(--ease-prime) both;
+    }
+    .sent-tick path {
+      animation: sent-check 380ms var(--ease-prime) 380ms both;
+    }
+    @keyframes sent-ring {
+      from { stroke-dashoffset: 170; }
+      to { stroke-dashoffset: 0; }
+    }
+    @keyframes sent-check {
+      from { stroke-dashoffset: 40; }
+      to { stroke-dashoffset: 0; }
+    }
+  }
+
   /* --- Page shells -------------------------------------------------------
      Two shells, one fluid gutter. `container-prime` is the default;
      `container-wide` is for full-bleed visual sections such as the hero.

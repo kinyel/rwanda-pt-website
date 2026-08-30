@@ -114,8 +114,15 @@ export const common = {
   },
 
   form: {
-    name: 'Name',
+    /* Labels float inside their field rather than sitting above it, so each one
+       doubles as the placeholder and the field needs no second line of text. */
+    name: 'Your name',
     namePlaceholder: 'Your full name',
+    email: 'Email address',
+    phone: 'Phone number',
+    /* The old single "email or phone" field is gone. Splitting it means the
+       phone can have a country selector and the email can be validated, and it
+       stops a reply going to whichever one the visitor happened to pick. */
     contactField: 'Email or phone number',
     contactPlaceholder: 'So we can reply to you',
     company: 'Company',
@@ -134,7 +141,50 @@ export const common = {
     errorBody: 'Something went wrong on the way. Please try again, or reach us directly on WhatsApp or by email.',
     validationName: 'Please enter your name.',
     validationContact: 'Please enter an email address or phone number so we can reply.',
+    validationEmail: 'Please enter an email address we can reply to.',
+    validationEmailFormat: 'That does not look like an email address.',
     validationMessage: 'Please tell us a little about what you need.',
+
+    /** The topic chips. Each maps to a real part of the range. */
+    topicLegend: 'What is this about?',
+    topics: {
+      tracking: 'Vehicle tracking',
+      fuel: 'Fuel monitoring',
+      video: 'Video and cameras',
+      cargo: 'Cargo and containers',
+      support: 'Existing customer',
+      other: 'Something else',
+    },
+
+    /** Fleet size, as bands rather than a number nobody knows exactly. */
+    fleetLegend: 'How many vehicles?',
+    fleetBands: {
+      small: '1 to 5',
+      mid: '6 to 20',
+      large: '21 to 50',
+      xl: 'Over 50',
+    },
+
+    /** International phone field. */
+    phoneCountry: 'Country code',
+    phoneSearch: 'Search countries',
+    phoneNoMatches: 'No country matches that',
+    phonePlaceholder: '788 123 456',
+    validationPhone: 'That does not look like a complete number for the country selected.',
+
+    /** Shown under the message box. */
+    charactersLeft: '{n} characters left',
+    /** Reassurance under the submit button. */
+    privacyNote: 'We use your details to answer your enquiry and nothing else.',
+    /** The success panel's second line, above the direct routes. */
+    successNext: 'What happens next',
+    successSteps: [
+      'A specialist reads your message and works out what you actually need.',
+      'We come back with a recommendation and pricing, usually the same working day.',
+      'If it is urgent, PrimeCARE answers WhatsApp around the clock.',
+    ],
+    sendAnother: 'Send another message',
+
     /** Rendered when PUBLIC_FORMSPREE_ID has not been set. */
     unconfiguredTitle: 'Form not yet connected',
     unconfiguredBody:

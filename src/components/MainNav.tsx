@@ -686,16 +686,14 @@ export default function MainNav({
               <a
                 href={ctaHref}
                 onClick={() => closeDrawer(false)}
-                className="inline-flex min-h-13 items-center justify-center rounded-[--radius-card] bg-prime-500 px-6
-                           text-[1.0625rem] font-bold text-ink-950"
+                className="btn btn-lg btn-primaryInk font-bold"
               >
                 {ctaLabel}
               </a>
               <a
                 href={phoneHref}
-                className="inline-flex min-h-13 items-center justify-center rounded-[--radius-card]
-                           border border-[color:var(--nav-chip-border)] bg-[color:var(--nav-chip-bg)] px-6
-                           text-[1.0625rem] font-bold text-[color:var(--nav-fg-strong)]"
+                className="btn btn-lg font-bold border border-[color:var(--nav-chip-border)]
+                           bg-[color:var(--nav-chip-bg)] text-[color:var(--nav-fg-strong)]"
               >
                 {phoneLabel}
               </a>

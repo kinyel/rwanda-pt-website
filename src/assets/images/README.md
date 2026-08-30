@@ -19,72 +19,22 @@ the build do the optimising: do not pre-compress to the target file size.
 
 ## Still needed
 
-**14 images are placeholders.** Each currently renders as a grey plate
+**4 images are placeholders.** Each currently renders as a grey plate
 printed with its own filename and target size, so nothing can ship looking like real
 content by mistake. During `npm run dev` they also carry an orange "Placeholder" badge.
 
 | # | Filename | Size (px) | Aspect | Format | Where it appears |
 | --- | --- | --- | --- | --- | --- |
-| 1 | `home/home-hero-fleet.jpg` | 2400 x 1600 | 3:2 | JPG | Homepage hero background |
-| 2 | `home/home-video-telematics.jpg` | 1600 x 1200 | 4:3 | JPG | Homepage, AI video telematics feature section |
-| 3 | `home/home-fuel-monitoring.jpg` | 1600 x 1200 | 4:3 | JPG | Homepage, fuel monitoring feature section |
-| 4 | `home/home-mobile-apps.jpg` | 1200 x 1500 | 4:5 | JPG | Homepage, platform capabilities section |
-| 5 | `products/products-solar-tracker.jpg` | 1600 x 1200 | 4:3 | JPG | Solar Trackers product page and product cards |
-| 6 | `products/products-fuel-sensor.jpg` | 1600 x 1200 | 4:3 | JPG | Fuel Trackers product page and product cards |
-| 7 | `products/products-star-tracker.jpg` | 1600 x 1200 | 4:3 | JPG | STAR Trackers product page and product cards |
-| 8 | `products/products-fleet-tracker.jpg` | 1600 x 1200 | 4:3 | JPG | Fleet Trackers product page and product cards |
-| 9 | `services/services-fleet-analytics.jpg` | 1600 x 1100 | 16:11 | JPG | Fleet Analytics service page hero |
-| 10 | `services/services-driver-monitoring.jpg` | 1600 x 1100 | 16:11 | JPG | Driver Monitoring service page hero |
-| 11 | `services/services-api-integration.jpg` | 1600 x 1100 | 16:11 | JPG | API Integrations service page hero |
-| 12 | `company/company-office-kigali.jpg` | 1600 x 1100 | 16:11 | JPG | Contact page |
-| 13 | `company/company-installation.jpg` | 1600 x 1100 | 16:11 | JPG | Why Choose PrimeTrack page |
-| 14 | `og/og-primetrack-rwanda.jpg` | 1200 x 630 | 1.91:1 | JPG | Open Graph and Twitter card fallback, every page |
+| 1 | `home/home-hero-fleet.jpg` | 2400 x 1600 | 3:2 | JPG | NOT CURRENTLY USED. The homepage hero is now the scroll-driven route graphic in HeroJourney.astro, which needs no photograph. The slot is kept in case a photographic hero is ever wanted again; nothing is missing from the site while it is empty. |
+| 2 | `company/company-office-kigali.jpg` | 1600 x 1100 | 16:11 | JPG | Contact page |
+| 3 | `company/company-installation.jpg` | 1600 x 1100 | 16:11 | JPG | Why Choose PrimeTrack page |
+| 4 | `og/og-primetrack-rwanda.jpg` | 1200 x 630 | 1.91:1 | JPG | Open Graph and Twitter card fallback, every page |
 
 ### What each one should show
 
 **`home/home-hero-fleet.jpg`**
 
 A commercial vehicle or small fleet on a Rwandan road. Kigali arterial, a provincial highway, or a depot yard. Wide framing with room on the left for the headline. Shot in daylight, no heavy filters. Should read as a working vehicle, not a showroom shot.
-
-**`home/home-video-telematics.jpg`**
-
-Driver's-eye or in-cab view showing a road-facing camera in position, or a control-room screen with a live vehicle feed. Must not be a fabricated software interface.
-
-**`home/home-fuel-monitoring.jpg`**
-
-A truck refuelling, a fuel tank sensor being fitted, or a depot fuel bay. Real hands-on work rather than a stock photo of a fuel gauge.
-
-**`home/home-mobile-apps.jpg`**
-
-A phone held in hand showing the PrimeTrack mobile app. Portrait orientation. Use a real screenshot of the real app, never a mocked-up interface.
-
-**`products/products-solar-tracker.jpg`**
-
-The actual PrimeSOLAR device. The image currently on the live site is a generic solar power bank, not a tracker, so it is deliberately not carried over. A photo of the real unit, ideally mounted on a truck, is needed.
-
-**`products/products-fuel-sensor.jpg`**
-
-A capacitive fuel level sensor or in-line flow meter, either as a product shot or installed in a tank. Close, technical framing.
-
-**`products/products-star-tracker.jpg`**
-
-A STAR tracker unit, ideally magnetised onto a shipping container so the scale and the mounting are both obvious.
-
-**`products/products-fleet-tracker.jpg`**
-
-The GPS tracking unit itself, or an installer fitting one behind a dashboard. Should communicate hardware rather than software.
-
-**`services/services-fleet-analytics.jpg`**
-
-A fleet manager working across the PrimeTrack platform, or a control room in use. Real screens only, never an invented dashboard.
-
-**`services/services-driver-monitoring.jpg`**
-
-A professional driver at the wheel of a commercial vehicle, shot respectfully. A driver briefing or coaching session also works.
-
-**`services/services-api-integration.jpg`**
-
-Technical or operational team working with fleet data on desktop systems. Avoid the abstract code-on-a-screen cliche.
 
 **`company/company-office-kigali.jpg`**
 
@@ -105,14 +55,20 @@ Real assets carried over from the live site or supplied already.
 | Filename | Size (px) | On disk | Notes |
 | --- | --- | --- | --- |
 | `brand/primetrack-logo.png` | 2221 x 2221 | 398KB | Good as is |
-| `products/products-video-tracker.jpg` | 573 x 435 | 26KB | Usable, but a better version is worth supplying |
+| `home/home-video-telematics.jpg` | 1224 x 1285 | 114KB | Good as is |
+| `home/home-fuel-monitoring.jpg` | 1637 x 961 | 221KB | Good as is |
+| `home/home-mobile-apps.jpg` | 1591 x 989 | 81KB | Good as is |
+| `products/products-video-tracker.jpg` | 1024 x 778 | 63KB | Good as is |
+| `products/products-solar-tracker.jpg` | 1200 x 801 | 101KB | Good as is |
+| `products/products-fuel-sensor.jpg` | 1536 x 1024 | 148KB | Good as is |
+| `products/products-star-tracker.jpg` | 1024 x 729 | 58KB | Good as is |
+| `products/products-fleet-tracker.jpg` | 1672 x 941 | 167KB | Good as is |
 | `products/products-ects.png` | 458 x 544 | 133KB | Usable, but a better version is worth supplying |
+| `services/services-fleet-analytics.jpg` | 1549 x 1015 | 294KB | Good as is |
+| `services/services-driver-monitoring.jpg` | 1376 x 768 | 111KB | Good as is |
+| `services/services-api-integration.jpg` | 1664 x 945 | 104KB | Good as is |
 
 ### Worth upgrading when you can
-
-**`products/products-video-tracker.jpg`**
-
-Dashcam and DVR unit. Carried over from the live site. Low resolution and generic; replacing it with a photo of the actual Ai-PRIME hardware would be a clear improvement.
 
 **`products/products-ects.png`**
 

@@ -49,9 +49,22 @@ export default defineConfig({
      * form go dead while the production build stays fine, which makes it a
      * genuinely confusing bug to meet. Naming the runtimes here keeps the
      * optimizer's output stable across restarts and dependency changes.
+     *
+     * `@formspree/react` is listed for the same reason and a sharper one: it
+     * takes React as a peer dependency, so if the optimizer pre-bundles it on
+     * a different pass from the app's own React the island ends up holding two
+     * copies and dies with "Invalid hook call". Naming it here pins both to
+     * one instance.
      */
     optimizeDeps: {
-      include: ['react', 'react-dom', 'react-dom/client', 'react/jsx-runtime', 'react/jsx-dev-runtime'],
+      include: [
+        'react',
+        'react-dom',
+        'react-dom/client',
+        'react/jsx-runtime',
+        'react/jsx-dev-runtime',
+        '@formspree/react',
+      ],
     },
   },
 });

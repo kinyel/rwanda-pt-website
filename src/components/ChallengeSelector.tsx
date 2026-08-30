@@ -108,9 +108,7 @@ export default function ChallengeSelector({ items, selectedTitle, emptyState, ct
 
             <a
               href={ctaWithSelection}
-              className="mt-7 inline-flex min-h-13 items-center justify-center rounded-[--radius-card] bg-prime-500 px-7
-                         text-[1.0625rem] font-semibold text-white transition-colors duration-[--duration-base]
-                         ease-[--ease-prime] hover:bg-prime-600"
+              className="btn btn-lg btn-primary mt-7"
             >
               {ctaLabel}
             </a>

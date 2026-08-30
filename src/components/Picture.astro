@@ -25,6 +25,17 @@ interface Props {
   widths?: number[];
   sizes?: string;
   eager?: boolean;
+  /**
+   * Overrides the box's aspect ratio. Leave it off, which is the normal case:
+   * the box then takes the SOURCE image's own ratio, so `object-cover` has
+   * nothing to crop and the picture is shown whole.
+   *
+   * This matters more than it looks. Several of the real images are
+   * PrimeTrack's own marketing boards with headings, callouts and figures
+   * printed into them. Forcing one house ratio onto every slot cropped the
+   * type straight off the edge. Pass this only when a layout genuinely needs a
+   * fixed box and the image is a photograph that can take the crop.
+   */
   aspect?: string;
   class?: string;
   wrapperClass?: string;
@@ -55,9 +66,12 @@ const usableWidths = [...new Set(widths.filter((w) => w <= src.width).concat(Mat
 );
 
 const showBadge = import.meta.env.DEV && isPlaceholder(imageKey);
+
+/* The source's own ratio unless a caller insists otherwise. */
+const boxAspect = aspect ?? `${src.width} / ${src.height}`;
 ---
 
-<div class={`relative overflow-hidden ${wrapperClass}`} style={aspect ? `aspect-ratio:${aspect}` : undefined}>
+<div class={`relative overflow-hidden ${wrapperClass}`} style={`aspect-ratio:${boxAspect}`}>
   <AstroPicture
     src={src}
     alt={resolvedAlt}

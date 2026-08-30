@@ -21,106 +21,105 @@
       "height": 1600,
       "format": "jpg",
       "aspect": "3:2",
-      "usedOn": "Homepage hero background",
+      "usedOn": "NOT CURRENTLY USED. The homepage hero is now the scroll-driven route graphic in HeroJourney.astro, which needs no photograph. The slot is kept in case a photographic hero is ever wanted again; nothing is missing from the site while it is empty.",
       "purpose": "A commercial vehicle or small fleet on a Rwandan road. Kigali arterial, a provincial highway, or a depot yard. Wide framing with room on the left for the headline. Shot in daylight, no heavy filters. Should read as a working vehicle, not a showroom shot.",
       "maxKb": 320
     },
     {
       "key": "homeVideoTelematics",
       "file": "home/home-video-telematics.jpg",
-      "status": "placeholder",
-      "width": 1600,
-      "height": 1200,
+      "status": "real",
+      "width": 1224,
+      "height": 1285,
       "format": "jpg",
-      "aspect": "4:3",
+      "aspect": "0.953:1",
       "usedOn": "Homepage, AI video telematics feature section",
-      "purpose": "Driver's-eye or in-cab view showing a road-facing camera in position, or a control-room screen with a live vehicle feed. Must not be a fabricated software interface.",
-      "maxKb": 240
+      "purpose": "Road-facing dash camera mounted on a windscreen, its screen showing the live forward view. Supplied by PrimeTrack, August 2026.",
+      "maxKb": 320
     },
     {
       "key": "homeFuelMonitoring",
       "file": "home/home-fuel-monitoring.jpg",
-      "status": "placeholder",
-      "width": 1600,
-      "height": 1200,
+      "status": "real",
+      "width": 1637,
+      "height": 961,
       "format": "jpg",
-      "aspect": "4:3",
+      "aspect": "1.703:1",
       "usedOn": "Homepage, fuel monitoring feature section",
-      "purpose": "A truck refuelling, a fuel tank sensor being fitted, or a depot fuel bay. Real hands-on work rather than a stock photo of a fuel gauge.",
-      "maxKb": 240
+      "purpose": "PrimeTrack fuel tank monitoring board: a branded tanker, the tank sensor, and the platform view with refuelling and fuel-drain events called out. Marketing artwork with printed type, so it must never be cropped to a house ratio.",
+      "maxKb": 320
     },
     {
       "key": "homeMobileApps",
       "file": "home/home-mobile-apps.jpg",
-      "status": "placeholder",
-      "width": 1200,
-      "height": 1500,
+      "status": "real",
+      "width": 1591,
+      "height": 989,
       "format": "jpg",
-      "aspect": "4:5",
+      "aspect": "1.609:1",
       "usedOn": "Homepage, platform capabilities section",
-      "purpose": "A phone held in hand showing the PrimeTrack mobile app. Portrait orientation. Use a real screenshot of the real app, never a mocked-up interface.",
-      "maxKb": 200
+      "purpose": "Two real screenshots of the PrimeTrack mobile app side by side: the live vehicle map and the reports list. A genuine app capture, not a mock-up. NOTE: the status bar reads MTN NG, a Nigerian carrier.",
+      "maxKb": 320
     },
     {
       "key": "productVideoTracker",
       "file": "products/products-video-tracker.jpg",
       "status": "real",
-      "width": 573,
-      "height": 435,
+      "width": 1024,
+      "height": 778,
       "format": "jpg",
-      "aspect": "4:3",
+      "aspect": "1.316:1",
       "usedOn": "Video Trackers product page and product cards",
-      "purpose": "Dashcam and DVR unit. Carried over from the live site. Low resolution and generic; replacing it with a photo of the actual Ai-PRIME hardware would be a clear improvement.",
-      "maxKb": 200,
-      "replaceRecommended": true
+      "purpose": "PrimeTrack video telematics dash camera and DVR unit, front and rear faces, with the recorded forward view on the screen. Higher-resolution replacement for the low-res version carried over from the live site.",
+      "maxKb": 320
     },
     {
       "key": "productSolarTracker",
       "file": "products/products-solar-tracker.jpg",
-      "status": "placeholder",
-      "width": 1600,
-      "height": 1200,
+      "status": "real",
+      "width": 1200,
+      "height": 801,
       "format": "jpg",
-      "aspect": "4:3",
+      "aspect": "1.498:1",
       "usedOn": "Solar Trackers product page and product cards",
-      "purpose": "The actual PrimeSOLAR device. The image currently on the live site is a generic solar power bank, not a tracker, so it is deliberately not carried over. A photo of the real unit, ideally mounted on a truck, is needed.",
-      "maxKb": 220
+      "purpose": "A tractor unit at dusk with location pins above it. Illustrative rather than a photograph of the PrimeSOLAR device itself, so a shot of the real unit would still be an improvement.",
+      "maxKb": 320
     },
     {
       "key": "productFuelSensor",
       "file": "products/products-fuel-sensor.jpg",
-      "status": "placeholder",
-      "width": 1600,
-      "height": 1200,
+      "status": "real",
+      "width": 1536,
+      "height": 1024,
       "format": "jpg",
-      "aspect": "4:3",
+      "aspect": "1.5:1",
       "usedOn": "Fuel Trackers product page and product cards",
-      "purpose": "A capacitive fuel level sensor or in-line flow meter, either as a product shot or installed in a tank. Close, technical framing.",
-      "maxKb": 220
+      "purpose": "PrimeTrack fuel monitoring board: the capacitive tank probe and its harness beside the platform fuel view. Marketing artwork with printed type; do not crop.",
+      "maxKb": 320
     },
     {
       "key": "productStarTracker",
       "file": "products/products-star-tracker.jpg",
-      "status": "placeholder",
-      "width": 1600,
-      "height": 1200,
+      "status": "real",
+      "width": 1024,
+      "height": 729,
       "format": "jpg",
-      "aspect": "4:3",
+      "aspect": "1.405:1",
       "usedOn": "STAR Trackers product page and product cards",
-      "purpose": "A STAR tracker unit, ideally magnetised onto a shipping container so the scale and the mounting are both obvious.",
-      "maxKb": 220
+      "purpose": "A stand-alone rechargeable tracker unit, showing the case and its ports. A shot of one magnetised to a container would still add scale.",
+      "maxKb": 320
     },
     {
       "key": "productFleetTracker",
       "file": "products/products-fleet-tracker.jpg",
-      "status": "placeholder",
-      "width": 1600,
-      "height": 1200,
+      "status": "real",
+      "width": 1672,
+      "height": 941,
       "format": "jpg",
-      "aspect": "4:3",
+      "aspect": "1.777:1",
       "usedOn": "Fleet Trackers product page and product cards",
-      "purpose": "The GPS tracking unit itself, or an installer fitting one behind a dashboard. Should communicate hardware rather than software.",
-      "maxKb": 220
+      "purpose": "PrimeTrack fleet board: a convoy at dusk under the line Smarter Fleet, Stronger Business, with the four capability callouts. Marketing artwork with printed type; do not crop.",
+      "maxKb": 320
     },
     {
       "key": "productEcts",
@@ -138,38 +137,38 @@
     {
       "key": "serviceFleetAnalytics",
       "file": "services/services-fleet-analytics.jpg",
-      "status": "placeholder",
-      "width": 1600,
-      "height": 1100,
+      "status": "real",
+      "width": 1549,
+      "height": 1015,
       "format": "jpg",
-      "aspect": "16:11",
+      "aspect": "1.526:1",
       "usedOn": "Fleet Analytics service page hero",
-      "purpose": "A fleet manager working across the PrimeTrack platform, or a control room in use. Real screens only, never an invented dashboard.",
-      "maxKb": 240
+      "purpose": "A real screenshot of the PrimeTrack GPS tracking and telematics platform: live map, vehicle detail panel and speed and fuel gauges. NOTE: the vehicle shown is in Lagos and its IMEI, SIM number and plate are legible.",
+      "maxKb": 320
     },
     {
       "key": "serviceDriverMonitoring",
       "file": "services/services-driver-monitoring.jpg",
-      "status": "placeholder",
-      "width": 1600,
-      "height": 1100,
+      "status": "real",
+      "width": 1376,
+      "height": 768,
       "format": "jpg",
-      "aspect": "16:11",
+      "aspect": "1.792:1",
       "usedOn": "Driver Monitoring service page hero",
-      "purpose": "A professional driver at the wheel of a commercial vehicle, shot respectfully. A driver briefing or coaching session also works.",
-      "maxKb": 240
+      "purpose": "Over-the-shoulder view of a professional driver at the wheel of a truck on an open road.",
+      "maxKb": 320
     },
     {
       "key": "serviceApiIntegration",
       "file": "services/services-api-integration.jpg",
-      "status": "placeholder",
-      "width": 1600,
-      "height": 1100,
+      "status": "real",
+      "width": 1664,
+      "height": 945,
       "format": "jpg",
-      "aspect": "16:11",
+      "aspect": "1.761:1",
       "usedOn": "API Integrations service page hero",
-      "purpose": "Technical or operational team working with fleet data on desktop systems. Avoid the abstract code-on-a-screen cliche.",
-      "maxKb": 240
+      "purpose": "PrimeTrack API board: an open hand under an API panel ringed with integration icons, under the line Connect. Integrate. Empower. Marketing artwork with printed type; do not crop.",
+      "maxKb": 320
     },
     {
       "key": "companyOffice",
@@ -209,15 +208,55 @@
     }
   ],
   "clients": [
-    { "key": "savvy", "file": "clients/client-savvy.jpg", "name": "SAVVY" },
-    { "key": "softPackaging", "file": "clients/client-soft-packaging.jpg", "name": "Soft Packaging" },
-    { "key": "unhcr", "file": "clients/client-unhcr.png", "name": "UNHCR" },
-    { "key": "westernSeed", "file": "clients/client-western-seed.png", "name": "Western Seed" },
-    { "key": "africanEnterprise", "file": "clients/client-african-enterprise.png", "name": "African Enterprise" },
-    { "key": "afriglobal", "file": "clients/client-afriglobal-group.png", "name": "Afriglobal Group" },
-    { "key": "apmTerminals", "file": "clients/client-apm-terminals.jpg", "name": "APM Terminals" },
-    { "key": "cadbury", "file": "clients/client-cadbury.png", "name": "Cadbury" },
-    { "key": "ecogas", "file": "clients/client-ecogas.png", "name": "ECOGAS" },
-    { "key": "iPosita", "file": "clients/client-i-posita.jpg", "name": "I-Posita" }
+    {
+      "key": "savvy",
+      "file": "clients/client-savvy.jpg",
+      "name": "SAVVY"
+    },
+    {
+      "key": "softPackaging",
+      "file": "clients/client-soft-packaging.jpg",
+      "name": "Soft Packaging"
+    },
+    {
+      "key": "unhcr",
+      "file": "clients/client-unhcr.png",
+      "name": "UNHCR"
+    },
+    {
+      "key": "westernSeed",
+      "file": "clients/client-western-seed.png",
+      "name": "Western Seed"
+    },
+    {
+      "key": "africanEnterprise",
+      "file": "clients/client-african-enterprise.png",
+      "name": "African Enterprise"
+    },
+    {
+      "key": "afriglobal",
+      "file": "clients/client-afriglobal-group.png",
+      "name": "Afriglobal Group"
+    },
+    {
+      "key": "apmTerminals",
+      "file": "clients/client-apm-terminals.jpg",
+      "name": "APM Terminals"
+    },
+    {
+      "key": "cadbury",
+      "file": "clients/client-cadbury.png",
+      "name": "Cadbury"
+    },
+    {
+      "key": "ecogas",
+      "file": "clients/client-ecogas.png",
+      "name": "ECOGAS"
+    },
+    {
+      "key": "iPosita",
+      "file": "clients/client-i-posita.jpg",
+      "name": "I-Posita"
+    }
   ]
 }

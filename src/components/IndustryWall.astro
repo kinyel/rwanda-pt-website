@@ -2,19 +2,28 @@
 /**
  * The industry wall: the eight verticals, directly under the hero.
  *
- * THE IDEA. A flat four-by-two grid of equal cards would say "here is a list".
- * These tiles are woven instead: the second and fourth columns sit lower than
- * the first and third, so the block reads as a moving formation rather than a
- * table. Each tile carries a large ghosted numeral, which gives the section
- * editorial weight without adding any decoration that means nothing.
+ * THE IDEA. Not eight cards, one wall. The tiles share a single bordered panel
+ * and are separated by hairlines rather than by gaps, so the block reads as one
+ * object with eight compartments instead of eight things that happen to be near
+ * each other. A wall of separate cards on a white page is mostly the white
+ * page; this is a surface.
  *
- * The attention-catching part is restraint plus one good move: an orange rule
- * that draws across the top of a tile on hover or focus, in the direction of
- * travel. Nothing bounces, nothing spins, and nothing hijacks the scroll. The
- * page already has two pinned sections; a third would be exhausting.
+ * The earlier version staggered alternate columns down by 2.25rem to avoid
+ * looking like a table. It did avoid that, but it also made the section
+ * restless and gave every tile a different baseline to read from. The lattice
+ * gets the same "not a list" quality out of construction rather than out of
+ * displacement, and it holds still.
  *
- * Entrance is the shared `.reveal-soft` staggered by column, so the wall
- * assembles left to right as it arrives.
+ * The attention is in one move, not several: the compartment under the pointer
+ * lights, an orange rule draws across the top of it in the direction of travel,
+ * and its icon fills. Nothing lifts, because a tile lifting out of a lattice
+ * breaks the very lines that make it a lattice. Nothing bounces, nothing spins,
+ * and nothing hijacks the scroll. The page already has two pinned sections; a
+ * third would be exhausting.
+ *
+ * Entrance is a stagger by column, so the wall lights up left to right as it
+ * arrives. It fades only. Anything that MOVES on entrance would slide out from
+ * under the panel's clip and show the hairline colour behind it.
  *
  * Every tile is a real link to its industry page, so this section carries eight
  * internal links to sector pages rather than being decorative.
@@ -38,7 +47,7 @@ const items = t.industries.items as Record<string, { name: string; summary: stri
       const copy = items[industry.key];
       return (
         <li class="industry-cell" style={`--n:${i % 4}`}>
-          <a href={localizePath(industryPath(industry.slug), locale)} class="industry-tile reveal-soft">
+          <a href={localizePath(industryPath(industry.slug), locale)} class="industry-tile">
             <span class="industry-rule" aria-hidden="true" />
             <span class="industry-index" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
 
@@ -62,35 +71,28 @@ const items = t.industries.items as Record<string, { name: string; summary: stri
 </ul>
 
 <style>
+  /* The lattice. `gap: 1px` over a hairline-coloured panel is what draws the
+     dividers: every cell paints white on top, and the 1px the grid leaves
+     between them is the only place the panel shows through. One declaration
+     instead of eight borders that would double up wherever two tiles meet. */
   .industry-wall {
     display: grid;
-    gap: 1rem;
     grid-template-columns: 1fr;
+    gap: 1px;
+    background-color: var(--color-ink-100);
+    border: 1px solid var(--color-ink-100);
+    border-radius: var(--radius-panel);
+    /* `clip`, never `hidden`. `hidden` would make this a scroll container, and
+       the tiles' entrance is timed against the nearest scrollport. */
+    overflow: clip;
   }
 
   @media (width >= 40rem) {
-    .industry-wall {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 1.25rem;
-    }
+    .industry-wall { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 
   @media (width >= 64rem) {
-    .industry-wall {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      column-gap: 1.25rem;
-      row-gap: 2rem;
-    }
-
-    /* The weave. Even columns drop, so the eight tiles read as a formation in
-       motion rather than a table of contents.
-
-       It sits on the cell while the scroll reveal sits on the tile inside it,
-       because both are transforms and an element only has one. Putting them on
-       the same element meant the reveal silently flattened the weave. */
-    .industry-cell:nth-child(2n) {
-      transform: translateY(2.25rem);
-    }
+    .industry-wall { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   }
 
   .industry-cell {
@@ -102,29 +104,19 @@ const items = t.industries.items as Record<string, { name: string; summary: stri
     display: flex;
     flex: 1;
     flex-direction: column;
-    height: 100%;
     padding: 1.75rem 1.5rem 1.5rem;
-    overflow: hidden;
-    border: 1px solid var(--color-ink-100);
-    border-radius: var(--radius-panel);
     background-color: var(--color-white);
-    transition:
-      border-color var(--duration-base) var(--ease-prime),
-      box-shadow var(--duration-base) var(--ease-prime),
-      transform var(--duration-base) var(--ease-prime);
+    transition: background-color var(--duration-base) var(--ease-prime);
   }
 
   .industry-tile:hover,
   .industry-tile:focus-visible {
-    border-color: var(--color-ink-200);
-    box-shadow: var(--shadow-lift);
+    background-color: var(--color-prime-50);
   }
 
-  @media (prefers-reduced-motion: no-preference) {
-    .industry-tile:hover,
-    .industry-tile:focus-visible {
-      transform: translateY(-3px);
-    }
+  /* The focus ring is drawn inside, because the panel clips anything outside. */
+  .industry-tile:focus-visible {
+    outline-offset: -3px;
   }
 
   /* The one move: a rule that draws across the top, in the direction of travel. */
@@ -157,7 +149,7 @@ const items = t.industries.items as Record<string, { name: string; summary: stri
   }
   .industry-tile:hover .industry-index,
   .industry-tile:focus-visible .industry-index {
-    color: var(--color-prime-50);
+    color: var(--color-prime-100);
   }
 
   .industry-icon {
@@ -173,6 +165,7 @@ const items = t.industries.items as Record<string, { name: string; summary: stri
     color: var(--color-prime-700);
     transition:
       background-color var(--duration-base) var(--ease-prime),
+      border-color var(--duration-base) var(--ease-prime),
       color var(--duration-base) var(--ease-prime);
   }
   .industry-tile:hover .industry-icon,
@@ -212,6 +205,22 @@ const items = t.industries.items as Record<string, { name: string; summary: stri
     .industry-tile:hover .industry-go,
     .industry-tile:focus-visible .industry-go {
       transform: translateX(4px);
+    }
+  }
+
+  /* Entrance. Opacity only: see the note at the top of this file. The shared
+     `.reveal-soft` cannot be used because it also translates. */
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .industry-tile {
+        animation: industry-tile-in linear both;
+        animation-timeline: view();
+        animation-range: entry 2% cover calc(22% + var(--n, 0) * 5%);
+      }
+      @keyframes industry-tile-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
     }
   }
 </style>
