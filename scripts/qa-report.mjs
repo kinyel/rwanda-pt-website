@@ -60,7 +60,14 @@ for (const file of pages) {
   if (!desc) errors.push(at('missing meta description'));
   else if (desc.length > 165) warnings.push(at(`meta description is ${desc.length} chars`));
 
-  if (!/<link[^>]+rel=["']canonical["']/i.test(html)) errors.push(at('missing canonical'));
+  /* A canonical asserts that this content lives at this address. A noindex
+     page is asserting the opposite, and the 404 in particular is served at
+     every unmatched URL, so it must not name one. The rule applies to pages
+     that are meant to rank. */
+  const isNoindex = /<meta[^>]+name=["']robots["'][^>]+content=["'][^"']*noindex/i.test(html);
+  const hasCanonical = /<link[^>]+rel=["']canonical["']/i.test(html);
+  if (!isNoindex && !hasCanonical) errors.push(at('missing canonical'));
+  if (isNoindex && hasCanonical) errors.push(at('noindex page declares a canonical'));
 
   /* --- Headings --- */
   const h1s = [...html.matchAll(/<h1\b[^>]*>([\s\S]*?)<\/h1>/gi)];
