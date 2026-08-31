@@ -13,6 +13,7 @@
     "check:content": "node scripts/check-content.mjs",
     "images:placeholders": "node scripts/generate-placeholders.mjs",
     "images:favicons": "node scripts/generate-favicons.mjs",
+    "images:og": "node scripts/generate-og.mjs",
     "images:readme": "node scripts/images-readme.mjs",
     "i18n:status": "node scripts/translation-status.mjs",
     "qa": "node scripts/qa-report.mjs",
@@ -27,6 +28,7 @@
     "astro": "^7.2.9",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "sharp": "^0.35.4",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
