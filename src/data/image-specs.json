@@ -197,13 +197,13 @@
     {
       "key": "ogDefault",
       "file": "og/og-primetrack-rwanda.jpg",
-      "status": "placeholder",
+      "status": "real",
       "width": 1200,
       "height": 630,
       "format": "jpg",
       "aspect": "1.91:1",
       "usedOn": "Open Graph and Twitter card fallback, every page",
-      "purpose": "Social share card. Logo plus a short line of text on a dark background works well. Must stay legible when scaled down to a thumbnail.",
+      "purpose": "The social share card, shown whenever a primetrack.rw link is pasted into WhatsApp, LinkedIn, Slack, X or iMessage. The PrimeTrack logo centred on white, generated from the logo by scripts/generate-og.mjs. White rather than the brand ink because the wordmark and inner arc are black and would vanish on a dark ground; a dark card would need a knockout version of the logo, which does not exist in this repo. Re-run the script after any logo change.",
       "maxKb": 180
     }
   ],

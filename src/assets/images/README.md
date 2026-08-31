@@ -19,7 +19,7 @@ the build do the optimising: do not pre-compress to the target file size.
 
 ## Still needed
 
-**4 images are placeholders.** Each currently renders as a grey plate
+**3 images are placeholders.** Each currently renders as a grey plate
 printed with its own filename and target size, so nothing can ship looking like real
 content by mistake. During `npm run dev` they also carry an orange "Placeholder" badge.
 
@@ -28,7 +28,6 @@ content by mistake. During `npm run dev` they also carry an orange "Placeholder"
 | 1 | `home/home-hero-fleet.jpg` | 2400 x 1600 | 3:2 | JPG | NOT CURRENTLY USED. The homepage hero is now the scroll-driven route graphic in HeroJourney.astro, which needs no photograph. The slot is kept in case a photographic hero is ever wanted again; nothing is missing from the site while it is empty. |
 | 2 | `company/company-office-kigali.jpg` | 1600 x 1100 | 16:11 | JPG | Contact page |
 | 3 | `company/company-installation.jpg` | 1600 x 1100 | 16:11 | JPG | Why Choose PrimeTrack page |
-| 4 | `og/og-primetrack-rwanda.jpg` | 1200 x 630 | 1.91:1 | JPG | Open Graph and Twitter card fallback, every page |
 
 ### What each one should show
 
@@ -43,10 +42,6 @@ The PrimeTrack Rwanda office at Yyussa City Centre, Kigali, or the team at work 
 **`company/company-installation.jpg`**
 
 A PrimeTrack technician fitting or servicing a device on a customer vehicle. This is the single strongest credibility image on the site: it shows real people doing the actual work.
-
-**`og/og-primetrack-rwanda.jpg`**
-
-Social share card. Logo plus a short line of text on a dark background works well. Must stay legible when scaled down to a thumbnail.
 
 ## Already in place
 
@@ -64,9 +59,10 @@ Real assets carried over from the live site or supplied already.
 | `products/products-star-tracker.jpg` | 1024 x 729 | 58KB | Good as is |
 | `products/products-fleet-tracker.jpg` | 1672 x 941 | 167KB | Good as is |
 | `products/products-ects.png` | 458 x 544 | 133KB | Usable, but a better version is worth supplying |
-| `services/services-fleet-analytics.jpg` | 1549 x 1015 | 294KB | Good as is |
+| `services/services-fleet-analytics.jpg` | 1549 x 1015 | 4KB | Good as is |
 | `services/services-driver-monitoring.jpg` | 1376 x 768 | 111KB | Good as is |
 | `services/services-api-integration.jpg` | 1664 x 945 | 104KB | Good as is |
+| `og/og-primetrack-rwanda.jpg` | 1200 x 630 | 33KB | Good as is |
 
 ### Worth upgrading when you can
 
