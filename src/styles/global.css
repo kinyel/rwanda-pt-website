@@ -952,7 +952,6 @@
     padding: 0.75rem;
   }
   .cookie-banner-inner {
-    position: relative;
     max-width: 64rem;
     margin-inline: auto;
     display: flex;
@@ -963,24 +962,6 @@
     border-radius: var(--radius-panel);
     background-color: var(--color-white);
     box-shadow: var(--shadow-menu);
-    overflow: hidden;
-  }
-
-  /* The one flourish: the same orange hairline that marks a live industry tile
-     and the report read head, drawn along the top edge. It says the notice
-     belongs to this site rather than to a consent vendor. */
-  .cookie-banner-inner::before {
-    content: '';
-    position: absolute;
-    inset-inline: 0;
-    top: 0;
-    height: 2px;
-    background-image: linear-gradient(
-      90deg,
-      var(--color-prime-500),
-      var(--color-amber-500) 62%,
-      transparent
-    );
   }
 
   /* THE ENTRANCE.

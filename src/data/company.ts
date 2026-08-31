@@ -110,9 +110,23 @@ export const clients = [
 export const primeValues = ['performance', 'reliability', 'innovation', 'multifunction', 'efficiency'] as const;
 
 /* --- Formspree ------------------------------------------------------------
-   Set PUBLIC_FORMSPREE_ID in .env to the form's ID (the part after
-   https://formspree.io/f/). Until it is set the contact form renders in a
-   clearly-labelled unconfigured state rather than silently discarding
-   submissions. See README.md. */
-export const FORMSPREE_ID: string = import.meta.env.PUBLIC_FORMSPREE_ID ?? '';
+   The live form ID, with PUBLIC_FORMSPREE_ID able to override it.
+
+   WHY THIS IS COMMITTED RATHER THAN ENV-ONLY. It is not a secret and cannot be
+   one: the ID is the POST target of the contact form and the footer signup, so
+   it ships inside the HTML and JS of every deployed page and is readable with
+   View Source. Keeping it out of the repo bought no security at all, and it
+   cost the live site its contact form, because `.env` is gitignored (rightly)
+   and the deploy therefore built with the ID undefined. The form was then
+   replaced at BUILD time by the unconfigured notice, on every page, silently,
+   with a green build. Config whose absence breaks production and whose
+   presence protects nothing belongs in the repo.
+
+   To point a deployment at a different form, set PUBLIC_FORMSPREE_ID in that
+   environment; it wins over this default. Genuine secrets must never be
+   handled this way, and none exist in this project. */
+const FORMSPREE_ID_DEFAULT = 'xaeynrge';
+
+export const FORMSPREE_ID: string =
+  import.meta.env.PUBLIC_FORMSPREE_ID || FORMSPREE_ID_DEFAULT;
 export const formspreeEndpoint = FORMSPREE_ID ? `https://formspree.io/f/${FORMSPREE_ID}` : '';
