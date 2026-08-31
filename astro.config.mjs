@@ -40,6 +40,27 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
     /**
+     * Force ONE copy of React into the graph.
+     *
+     * `Cannot read properties of null (reading 'useState')` is React telling
+     * you its internal dispatcher is null, which happens when a component is
+     * rendered by a different React instance than the one the hooks were
+     * imported from. In dev, Vite's optimizer can hand `@astrojs/react`'s
+     * client entry a separately pre-bundled React from the one the islands
+     * import, and every island then dies on hydration.
+     *
+     * That failure is worse than it sounds: Astro server-renders the islands,
+     * so the markup arrives correct and complete, and hydration then WIPES it.
+     * The navigation was being delivered in full and erased a moment later,
+     * which reads as "the nav is missing" rather than as a script error.
+     *
+     * `optimizeDeps.include` below keeps the pre-bundling stable; this makes
+     * duplication impossible in the first place, whatever the optimizer does.
+     */
+    resolve: {
+      dedupe: ['react', 'react-dom'],
+    },
+    /**
      * Pre-bundle the React JSX runtimes explicitly.
      *
      * Without this, Vite's dependency optimizer intermittently produces an
