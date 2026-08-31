@@ -98,14 +98,28 @@ const jsonLd = [organizationSchema(logoUrl), ...schemas];
 
     <title>{title}</title>
     <meta name="description" content={description} />
-    <link rel="canonical" href={canonical} />
     {noindex && <meta name="robots" content="noindex, follow" />}
 
     {
-      !singleLocale && (
+      /* A noindex page emits NO canonical and NO alternates.
+
+         The 404 is the only page that sets `noindex`, and it has no route of
+         its own, so it passes the home path purely to satisfy `path`. That was
+         quietly turning every unmatched URL on the site into a page claiming
+         `rel=canonical` to the homepage, advertising the homepage's hreflang
+         pair, and reporting the homepage as its `og:url`. A canonical is an
+         assertion that this content lives at that address, which is exactly
+         what a 404 must not say, and some crawlers weigh canonical above
+         noindex. Emitting nothing is both correct and unambiguous. */
+      !noindex && (
         <Fragment>
-          {alternates.map((alt) => <link rel="alternate" hreflang={alt.hreflang} href={alt.href} />)}
-          <link rel="alternate" hreflang="x-default" href={new URL(localizePath(path, 'en'), site).href} />
+          <link rel="canonical" href={canonical} />
+          {!singleLocale && (
+            <Fragment>
+              {alternates.map((alt) => <link rel="alternate" hreflang={alt.hreflang} href={alt.href} />)}
+              <link rel="alternate" hreflang="x-default" href={new URL(localizePath(path, 'en'), site).href} />
+            </Fragment>
+          )}
         </Fragment>
       )
     }
@@ -115,7 +129,7 @@ const jsonLd = [organizationSchema(logoUrl), ...schemas];
     <meta property="og:locale" content={locale === 'rw' ? 'rw_RW' : 'en_RW'} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:url" content={canonical} />
+    {!noindex && <meta property="og:url" content={canonical} />}
     <meta property="og:image" content={ogImageUrl} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
