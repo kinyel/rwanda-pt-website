@@ -22,8 +22,8 @@
  * third would be exhausting.
  *
  * Entrance is a stagger by column, so the wall lights up left to right as it
- * arrives. It fades only. Anything that MOVES on entrance would slide out from
- * under the panel's clip and show the hairline colour behind it.
+ * arrives, once. It fades only: anything that MOVES on entrance would slide out
+ * from under the panel's clip and show the hairline colour behind it.
  *
  * Every tile is a real link to its industry page, so this section carries eight
  * internal links to sector pages rather than being decorative.
@@ -47,7 +47,7 @@ const items = t.industries.items as Record<string, { name: string; summary: stri
       const copy = items[industry.key];
       return (
         <li class="industry-cell" style={`--n:${i % 4}`}>
-          <a href={localizePath(industryPath(industry.slug), locale)} class="industry-tile">
+          <a href={localizePath(industryPath(industry.slug), locale)} class="industry-tile reveal-fade">
             <span class="industry-rule" aria-hidden="true" />
             <span class="industry-index" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
 
@@ -106,7 +106,12 @@ const items = t.industries.items as Record<string, { name: string; summary: stri
     flex-direction: column;
     padding: 1.75rem 1.5rem 1.5rem;
     background-color: var(--color-white);
-    transition: background-color var(--duration-base) var(--ease-prime);
+    /* Longhand, and opacity is listed here rather than left to `.reveal-fade`:
+       a `transition` shorthand on a component silently replaces the utility's,
+       so the tile would hover correctly and never fade in. */
+    transition-property: background-color, opacity;
+    transition-duration: var(--duration-fast), var(--duration-base);
+    transition-timing-function: var(--ease-prime), var(--ease-out);
   }
 
   .industry-tile:hover,
@@ -208,19 +213,9 @@ const items = t.industries.items as Record<string, { name: string; summary: stri
     }
   }
 
-  /* Entrance. Opacity only: see the note at the top of this file. The shared
-     `.reveal-soft` cannot be used because it also translates. */
-  @media (prefers-reduced-motion: no-preference) {
-    @supports (animation-timeline: view()) {
-      .industry-tile {
-        animation: industry-tile-in linear both;
-        animation-timeline: view();
-        animation-range: entry 2% cover calc(22% + var(--n, 0) * 5%);
-      }
-      @keyframes industry-tile-in {
-        from { opacity: 0; }
-        to { opacity: 1; }
-      }
-    }
-  }
+  /* Entrance. Opacity only, because a tile that MOVES on entrance slides out
+     from under the panel's clip and briefly shows the hairline colour behind
+     it. `.reveal-fade` is the shared one-shot system with the transform left
+     off, so this stagger is the same mechanism and the same timing as every
+     other reveal on the site rather than a private copy of one. */
 </style>

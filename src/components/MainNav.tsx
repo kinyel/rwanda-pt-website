@@ -106,7 +106,7 @@ const FOCUSABLE = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1
 function Chevron({ open }: { open: boolean }) {
   return (
     <svg
-      className={`h-3 w-3 shrink-0 transition-transform duration-[--duration-base] ease-[--ease-prime] ${
+      className={`h-3 w-3 shrink-0 transition-transform duration-[--duration-fast] ease-[--ease-prime] ${
         open ? 'rotate-180' : ''
       }`}
       viewBox="0 0 12 12"
@@ -472,7 +472,7 @@ export default function MainNav({
                     hidden={!isOpen}
                     onKeyDown={(event) => onPanelKeyDown(event, index)}
                     className="nav-panel absolute top-[calc(100%+0.625rem)] z-50 w-[min(52rem,calc(100vw-2rem))]
-                               p-2.5 motion-safe:animate-[nav-panel-in_var(--duration-base)_var(--ease-prime)]"
+                               p-2.5 motion-safe:animate-[nav-panel-in_var(--duration-base)_var(--ease-out)]"
                   >
                     <div
                       className={`grid gap-2 sm:grid-cols-[11.5rem_minmax(0,1fr)] ${
@@ -612,7 +612,7 @@ export default function MainNav({
             aria-label={navLabel}
             className="h-full overflow-y-auto overscroll-contain
                        border-t border-[color:var(--nav-hairline)] bg-[color:var(--nav-panel-bg)] px-5 pb-10 pt-4
-                       motion-safe:animate-[drawer-in_var(--duration-base)_var(--ease-prime)]"
+                       motion-safe:animate-[drawer-in_var(--duration-slow)_var(--ease-out)]"
           >
             <nav aria-label={navLabel}>
               <ul className="flex flex-col divide-y divide-[color:var(--nav-rule)]">

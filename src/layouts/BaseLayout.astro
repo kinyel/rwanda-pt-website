@@ -11,7 +11,9 @@
 import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import CookieConsent from '../components/CookieConsent';
 import { useTranslations, localeMeta, LOCALES, localizePath, type Locale } from '../i18n';
+import { routes } from '../data/routes';
 import { images } from '../data/images';
 import { organizationSchema } from '../data/schema';
 import { getImage } from 'astro:assets';
@@ -194,27 +196,63 @@ const jsonLd = [organizationSchema(logoUrl), ...schemas];
     -->
     <script is:inline>
       (() => {
-        const KEY = 'primetrack-locale';
+        const CONSENT = 'primetrack_consent';
+        const LANG = 'primetrack_language';
+        const YEAR = 60 * 60 * 24 * 365;
 
-        /* 1. Remember an explicit choice. */
+        const read = (name) => {
+          try {
+            const hit = document.cookie.match('(?:^|;\\s*)' + name + '=([^;]*)');
+            return hit ? decodeURIComponent(hit[1]) : '';
+          } catch {
+            return '';
+          }
+        };
+
+        /* `version.state.timestamp`. Only a current-version grant counts, which
+           is what lets the policy version re-ask the right people later. */
+        const granted = () => {
+          const parts = read(CONSENT).split('.');
+          return parts[0] === '1' && parts[1] === 'granted';
+        };
+
+        /* One-time cleanup. An earlier build remembered the language in
+           localStorage with no consent step at all. That value was collected
+           before anyone was asked, so it is deleted rather than migrated into
+           the new cookie. */
+        try {
+          localStorage.removeItem('primetrack-locale');
+        } catch {
+          /* Nothing there, or storage is blocked. Either way, nothing to do. */
+        }
+
+        /* 1. Remember an explicit choice, but only with consent. Delegated from
+              the document, so the header and footer switchers are both covered
+              by one listener. Consent is re-read on every click, so accepting
+              later takes effect immediately with no reload. */
         document.addEventListener('click', (event) => {
           const link = event.target.closest?.('a[data-locale]');
-          if (!link) return;
+          if (!link || !granted()) return;
           try {
-            localStorage.setItem(KEY, link.dataset.locale);
+            const secure = location.protocol === 'https:' ? '; Secure' : '';
+            document.cookie =
+              LANG + '=' + encodeURIComponent(link.dataset.locale) +
+              '; Path=/; Max-Age=' + YEAR + '; SameSite=Lax' + secure;
           } catch {
-            /* Private mode or storage disabled: the link still navigates. */
+            /* Cookies blocked: the link still navigates, nothing is stored. */
           }
         });
 
-        /* 2. Apply it, on the English homepage only. */
-        try {
-          if (location.pathname !== '/') return;
-          if (localStorage.getItem(KEY) !== 'rw') return;
-          location.replace('/rw/' + location.search + location.hash);
-        } catch {
-          /* Storage unavailable: serve the URL exactly as requested. */
-        }
+        /* 2. Apply it, on the English homepage ONLY.
+              An earlier version applied the stored preference on every path,
+              which hijacked shared links: opening /primesolar/ with "rw" stored
+              bounced you to /rw/primesolar/. Restricting it to the bare
+              homepage keeps return-visit persistence, makes every explicit URL
+              authoritative, and makes a redirect loop impossible because / is
+              the only origin and /rw/ is never a source. */
+        if (location.pathname !== '/') return;
+        if (read(LANG) !== 'rw') return;
+        location.replace('/rw/' + location.search + location.hash);
       })();
     </script>
   </head>
@@ -255,5 +293,79 @@ const jsonLd = [organizationSchema(logoUrl), ...schemas];
     </main>
 
     <Footer locale={locale} path={path} switcherFallback={switcherFallback} />
+
+    <!--
+      Cookie notice. `client:idle` because it is not needed for first paint and
+      must not compete with it. It renders nothing at all until it has read the
+      cookie on the client, so a returning visitor never sees it flash.
+    -->
+    <CookieConsent
+      client:idle
+      labels={t.common.cookies}
+      privacyHref={localizePath(routes.privacy, locale)}
+    />
+
+    <!--
+      One-shot entrance reveals, for the whole site.
+
+      ONE observer for every revealing element on the page rather than one per
+      element or per section, and each element is unobserved the moment it has
+      fired, so the observer empties itself as the reader goes down the page.
+
+      It runs at the end of <body>, where the DOM is parsed and measurements are
+      real. Order matters inside it:
+        1. bail out entirely under reduced motion or without IntersectionObserver
+        2. measure, and hide ONLY what starts below the fold
+        3. observe those, in the same synchronous pass as the hiding
+        4. turn transitions on a frame later, so the initial hide never animates
+      Step 2 is what makes this safe: nothing already on screen is ever hidden,
+      so there is no flash, and no element can be left invisible by a callback
+      that never comes.
+    -->
+    <script is:inline>
+      (() => {
+        if (!('IntersectionObserver' in window)) return;
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+        const items = document.querySelectorAll('.reveal, .reveal-soft, .reveal-fade');
+        if (!items.length) return;
+
+        /* The stagger's numbers stay in CSS, read once, so the tokens remain
+           the single source of truth. */
+        const root = getComputedStyle(document.documentElement);
+        const step = parseFloat(root.getPropertyValue('--stagger-step')) || 60;
+        const cap = parseFloat(root.getPropertyValue('--stagger-cap')) || 5;
+
+        const seen = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (!entry.isIntersecting) continue;
+              const el = entry.target;
+              seen.unobserve(el);
+              /* `--n` is written as an inline style by the components that
+                 stagger, so this reads it without forcing a layout. Past the
+                 cap every remaining sibling shares the last slot and the group
+                 lands together. */
+              const n = Math.min(parseFloat(el.style.getPropertyValue('--n')) || 0, cap);
+              if (n > 0) setTimeout(() => el.removeAttribute('data-reveal'), n * step);
+              else el.removeAttribute('data-reveal');
+            }
+          },
+          /* A tenth of a screen of overlap before it counts as arrived, so an
+             element resolves as the reader reaches it rather than at the
+             instant its first pixel crosses the edge. */
+          { rootMargin: '0px 0px -10% 0px', threshold: 0.01 },
+        );
+
+        const fold = window.innerHeight * 0.92;
+        for (const item of items) {
+          if (item.getBoundingClientRect().top < fold) continue;
+          item.setAttribute('data-reveal', '');
+          seen.observe(item);
+        }
+
+        requestAnimationFrame(() => document.documentElement.classList.add('reveal-ready'));
+      })();
+    </script>
   </body>
 </html>

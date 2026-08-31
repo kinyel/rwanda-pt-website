@@ -225,6 +225,15 @@ const socialPaths: Record<string, string> = {
         <li>{t.common.footer.warrantyLine}</li>
         <li aria-hidden="true" class="hidden h-3 w-px bg-white/15 sm:block"></li>
         <li>{t.common.footer.supportLine}</li>
+        <li aria-hidden="true" class="hidden h-3 w-px bg-white/15 sm:block"></li>
+        <li>
+          <!-- Reopens the preferences dialog. The island listens for this
+               attribute on the document, so the link needs no JavaScript of
+               its own and works from anywhere on any page. -->
+          <button type="button" class="cookie-footer-link" data-cookie-preferences>
+            {t.common.footer.cookiePreferences}
+          </button>
+        </li>
       </ul>
     </div>
   </div>

@@ -84,5 +84,26 @@ export const rw: DeepPartial<typeof en> = {
       home: 'Ahabanza',
       loading: 'Birimo gupakirwa',
     },
+    footer: {
+      // @review
+      cookiePreferences: 'Uko cookies zikoreshwa',
+    },
+    /* Only the ACTIONS are translated here, following this file's own rule:
+       short, unambiguous interface words whose Kinyarwanda form is settled.
+       The explanatory paragraphs, the panel intro and the storage description
+       are deliberately absent and fall back to English, because consent copy
+       is the last place to put a translation nobody on this build can check.
+       All of it is listed in docs/translation-checklist.md. */
+    cookies: {
+      // @review — every one of these needs native confirmation before launch.
+      accept: 'Emera',
+      decline: 'Anga',
+      manage: 'Uko cookies zikoreshwa',
+      panelTitle: 'Uko cookies zikoreshwa',
+      save: 'Bika',
+      close: 'Funga',
+      on: 'Birakora',
+      off: 'Ntibikora',
+    },
   },
 };

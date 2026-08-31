@@ -30,11 +30,18 @@ const shell = tone === 'prime' ? 'bg-prime-500 text-white' : 'bg-ink-900 text-in
 </div>
 
 <style>
+  /* A continuous ribbon, not a loop the eye is asked to follow: it carries no
+     state and nothing in it needs to be caught. It is the one piece of
+     perpetual motion on the site, and it stops for anyone who might be trying
+     to read it, whether they arrived with a pointer or with a keyboard.
+     `linear` is deliberate and is not a raw easing value: a ribbon that eased
+     would visibly surge and slow. */
   @media (prefers-reduced-motion: no-preference) {
     .marquee-track {
-      animation: marquee-track 34s linear infinite;
+      animation: marquee-track var(--duration-marquee) linear infinite;
     }
-    .marquee:hover .marquee-track {
+    .marquee:hover .marquee-track,
+    .marquee:focus-within .marquee-track {
       animation-play-state: paused;
     }
   }

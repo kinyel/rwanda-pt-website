@@ -158,17 +158,75 @@
   --shadow-lift: 0 2px 4px rgb(8 9 11 / 0.05), 0 18px 40px -18px rgb(8 9 11 / 0.22);
   --shadow-menu: 0 24px 64px -24px rgb(8 9 11 / 0.35);
 
-  /* --- Motion: subtle, fast, consistent. Shared with Nigeria. ----------- */
-  --ease-prime: cubic-bezier(0.22, 0.61, 0.36, 1);
-  --duration-fast: 140ms;
-  --duration-base: 220ms;
-  --duration-slow: 420ms;
+  /* --- Motion ------------------------------------------------------------
+     The whole motion vocabulary, defined once. Nothing in this codebase may
+     write a raw duration or easing value; if something needs a step that is
+     not here, the scale is wrong and the scale gets fixed.
 
-  /* The header's dark/light crossfade. Long enough not to snap at a section
-     boundary, short enough that it never lags behind the scroll. Its own
-     token rather than --duration-base because it is the one duration tuned
-     against scrolling rather than against a click. */
+     Four durations, one per kind of event:
+       instant  the press of a button. Below this a click feels unregistered,
+                above it the button feels sticky.
+       fast     hover, focus, a small state change. Felt, not noticed.
+       base     dropdowns, reveals, most transitions.
+       slow     larger panels and page-level changes.
+
+     Three curves, one per direction of travel:
+       prime    general purpose, symmetric. Things changing in place.
+       out      entrances. Fast at the start, settling at the end, which is
+                how something arriving under its own momentum behaves.
+       in       exits. Slow to leave, then gone. Nothing should linger on
+                its way out.
+
+     PREVIOUS VALUES, replaced deliberately rather than by accident:
+       --ease-prime was cubic-bezier(0.22, 0.61, 0.36, 1), an ease-out used
+       for everything including in-place changes; it is now symmetric and the
+       ease-out behaviour moved to its own token, where it belongs.
+       --duration-fast was 140ms, --duration-base 220ms, --duration-slow 420ms.
+     The three durations moved by 20ms, 20ms and -60ms. The slow step came
+     down the most: at 420ms a panel opening read as hesitant. */
+  --duration-instant: 90ms;
+  --duration-fast: 160ms;
+  --duration-base: 240ms;
+  --duration-slow: 360ms;
+
+  --ease-prime: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+
+  /* The header's dark/light crossfade. Its own token rather than
+     --duration-base because it is the one duration tuned against scrolling
+     rather than against a click: long enough not to snap at a section
+     boundary, short enough that it never lags behind the scroll. */
   --duration-theme: 240ms;
+
+  /* How far apart siblings arrive in a staggered group, and how many are
+     allowed to stagger before the group reveals as one. Past six the last
+     item lands so late it reads as broken rather than as sequenced. */
+  --stagger-step: 60ms;
+  --stagger-cap: 5;
+
+  /* An unhurried arrival: something appearing on its own account rather than
+     in response to a click.
+
+     It is deliberately not on the interaction scale above. Everything there is
+     an answer to something the visitor just did, and an answer that takes a
+     second is a slow interface. Nothing is waiting on this one, so it can take
+     its time. The cookie notice is the only thing using it: it appears three
+     seconds in, unasked, and should arrive the way a notification does rather
+     than the way a menu does.
+
+     Past about 1.2s this stops reading as smooth and starts reading as
+     broken, so this is close to the ceiling. */
+  --duration-arrive: 1000ms;
+
+  /* Ambient loops. These are NOT part of the transition scale above and must
+     never be used as one: they are the rhythm of the two things on this site
+     that legitimately run forever. Kept here so no component hardcodes them.
+       marquee  the client strip, a continuous ribbon rather than a loop the
+                eye is asked to follow.
+       pulse    the live tick on the report read head, a state indicator. */
+  --duration-marquee: 34s;
+  --duration-pulse: 2.6s;
 }
 
 /* --- Base ---------------------------------------------------------------- */
@@ -303,13 +361,23 @@
     text-align: center;
     text-wrap: balance;
     white-space: nowrap;
+    /* Hover is a small state change, so it runs at --duration-fast. A button
+       is the control users feel most and notice least; at --duration-base the
+       plate visibly lags the pointer. */
     transition:
-      background-color var(--duration-base) var(--ease-prime),
-      background-image var(--duration-base) var(--ease-prime),
-      border-color var(--duration-base) var(--ease-prime),
-      box-shadow var(--duration-base) var(--ease-prime),
-      color var(--duration-base) var(--ease-prime),
-      transform var(--duration-base) var(--ease-prime);
+      background-color var(--duration-fast) var(--ease-prime),
+      background-image var(--duration-fast) var(--ease-prime),
+      border-color var(--duration-fast) var(--ease-prime),
+      box-shadow var(--duration-fast) var(--ease-prime),
+      color var(--duration-fast) var(--ease-prime),
+      transform var(--duration-fast) var(--ease-prime);
+  }
+
+  /* The press is the one moment that must feel immediate. Anything slower
+     than --duration-instant here and the button feels like it is deciding
+     whether to accept the click. */
+  .btn:active {
+    transition-duration: var(--duration-instant);
   }
 
   /* Long labels in Kinyarwanda must wrap rather than blow the layout open. */
@@ -865,6 +933,374 @@
     }
   }
 
+  /* --- Cookie notice and preferences -------------------------------------
+     Built from the same tokens as everything else so it reads as part of the
+     site rather than as a widget dropped on top of it: the same radii, the
+     same shadow language, the same buttons.
+
+     Fixed position throughout, so it is out of document flow and cannot shift
+     the page or contribute to CLS whenever it appears.
+
+     It sits BELOW the header in z-order, not above it: the header carries the
+     language switcher and the primary call to action, and a notice about
+     remembering your language must never cover the control that sets it. */
+  .cookie-banner {
+    position: fixed;
+    z-index: 60;
+    inset-inline: 0;
+    bottom: 0;
+    padding: 0.75rem;
+  }
+  .cookie-banner-inner {
+    position: relative;
+    max-width: 64rem;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+    padding: 1rem;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius-panel);
+    background-color: var(--color-white);
+    box-shadow: var(--shadow-menu);
+    overflow: hidden;
+  }
+
+  /* The one flourish: the same orange hairline that marks a live industry tile
+     and the report read head, drawn along the top edge. It says the notice
+     belongs to this site rather than to a consent vendor. */
+  .cookie-banner-inner::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 2px;
+    background-image: linear-gradient(
+      90deg,
+      var(--color-prime-500),
+      var(--color-amber-500) 62%,
+      transparent
+    );
+  }
+
+  /* THE ENTRANCE.
+
+     The notice waits three seconds before it exists at all (see the component:
+     the delay is a mount delay, not an animation delay, so nothing is
+     occupying the screen or the compositor while it waits). When it does
+     arrive it rises rather than appearing, over --duration-slow, which is the
+     step for a panel arriving at page level.
+
+     The slight scale is what makes it read as settling into place rather than
+     sliding up from under the edge. Kept under 2% on purpose: past that it
+     reads as a pop.
+
+     Under reduced motion it still fades rather than snapping into existence
+     after a silent three-second wait, which would be startling. A short
+     opacity crossfade with no movement is the acceptable form there. */
+  /* WHERE THE SMOOTHNESS COMES FROM.
+
+     Two animations on one element, because the arrival has two channels and
+     they want different timings. One keyframe set could not do this: a single
+     easing has to serve both, and whichever curve suits the movement then
+     decides how the opacity is spent.
+
+     1. OPACITY CARRIES THE WHOLE SECOND, LINEARLY. This is the channel that
+        does the work, and `linear` is the point of it. An eased fade spends
+        most of its opacity early: measured on the previous version, an
+        ease-in-out over 1s was already at 0.86 opacity by 58% of the way
+        through, so the remaining 420ms was invisible and the duration was
+        wasted. Linear spends it evenly, so the fade is still visibly
+        progressing at 800ms, which is what actually reads as smooth.
+
+     2. THE RISE IS SHORT, EARLY AND OVER BEFORE YOU SEE IT. 360ms on the
+        entrance curve, finishing while the panel is still around a third
+        visible. Movement is what the eye tracks and what makes an entrance
+        feel busy; getting it done while the panel is faint means the last
+        two thirds is a pure, still materialisation in place.
+
+     `linear` here is a deliberate choice rather than a missing token, for the
+     same reason the marquee uses it: an evenly-spent ramp is the whole
+     intent, and a curve would defeat it. */
+  @media (prefers-reduced-motion: no-preference) {
+    .cookie-banner-inner {
+      animation:
+        cookie-fade var(--duration-arrive) linear both,
+        cookie-lift var(--duration-slow) var(--ease-out) both;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cookie-banner-inner {
+      animation: cookie-fade var(--duration-fast) var(--ease-prime) both;
+    }
+  }
+  @keyframes cookie-lift {
+    from { transform: translateY(10px); }
+    to { transform: translateY(0); }
+  }
+  @keyframes cookie-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  /* The dialog's own entrance. It answers a click, so it stays on
+     --duration-base and keeps its movement: a panel that took a full second to
+     respond to a button press would read as lag, not as polish. */
+  @keyframes cookie-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .cookie-banner-title {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: var(--color-ink-950);
+  }
+  /* ink-600 on white is 8.6:1, comfortably past AA at this size. */
+  .cookie-banner-body {
+    margin-top: 0.4rem;
+    /* Steps down on the narrowest screens. At 0.9375rem the paragraph wrapped
+       to five lines at 320px and the notice took over half the viewport, which
+       for a functional-only notice is more of the page than it has earned. */
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--color-ink-600);
+  }
+  @media (width >= 26rem) {
+    .cookie-banner-body {
+      font-size: 0.9375rem;
+      line-height: 1.55;
+    }
+  }
+
+  .cookie-banner-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.625rem;
+  }
+  /* Accept and Decline are the same width as well as the same size, so neither
+     is the easier target. Making refusal harder than acceptance would
+     undermine the consent being collected. */
+  .cookie-action {
+    flex: 1 1 auto;
+    min-width: 8.5rem;
+  }
+  .cookie-manage {
+    min-height: 2.75rem;
+    padding-inline: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-ink-500);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color var(--duration-fast) var(--ease-prime);
+  }
+  .cookie-manage:hover { color: var(--color-ink-800); }
+
+  @media (width >= 48rem) {
+    .cookie-banner { padding: 1.25rem; }
+    .cookie-banner-inner {
+      flex-direction: row;
+      align-items: center;
+      gap: 1.75rem;
+      padding: 1.125rem 1.5rem;
+    }
+    .cookie-banner-copy { flex: 1; }
+    .cookie-banner-actions { flex: none; }
+    .cookie-action { flex: none; }
+  }
+
+  /* --- The preferences dialog --- */
+  .cookie-panel {
+    /* A native <dialog> centres itself with `margin: auto` from the UA
+       stylesheet. Tailwind's preflight zeroes margin on every element, which
+       silently pins the dialog to the top-left, so it is restored here. */
+    margin: auto;
+    width: min(32rem, calc(100vw - 1.5rem));
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
+    padding: 1.5rem;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius-panel);
+    background-color: var(--color-white);
+    color: var(--color-ink-800);
+    box-shadow: var(--shadow-menu);
+  }
+  .cookie-panel::backdrop {
+    background-color: rgb(8 9 11 / 0.55);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .cookie-panel[open] {
+      animation: cookie-in var(--duration-base) var(--ease-out) both;
+    }
+  }
+
+  .cookie-panel-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .cookie-panel-title {
+    font-size: var(--text-h3);
+    font-weight: 700;
+    color: var(--color-ink-950);
+  }
+  .cookie-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 2.75rem;
+    height: 2.75rem;
+    margin: -0.5rem -0.5rem 0 0;
+    border-radius: var(--radius-card);
+    color: var(--color-ink-500);
+    transition:
+      background-color var(--duration-fast) var(--ease-prime),
+      color var(--duration-fast) var(--ease-prime);
+  }
+  .cookie-close:hover {
+    background-color: var(--color-ink-50);
+    color: var(--color-ink-900);
+  }
+
+  .cookie-panel-intro {
+    margin-top: 0.75rem;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: var(--color-ink-600);
+  }
+
+  .cookie-category {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding: 1.125rem;
+    border: 1px solid var(--color-ink-100);
+    border-radius: var(--radius-card);
+    background-color: var(--color-ink-50);
+  }
+  .cookie-category-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-ink-950);
+  }
+  .cookie-category-body {
+    margin-top: 0.3rem;
+    font-size: 0.875rem;
+    line-height: 1.55;
+    color: var(--color-ink-600);
+  }
+
+  /* 44px of height on the whole control, not just on the painted track. */
+  .cookie-switch {
+    display: inline-flex;
+    flex: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    justify-content: center;
+    border-radius: var(--radius-card);
+  }
+  .cookie-switch-track {
+    position: relative;
+    display: block;
+    width: 2.75rem;
+    height: 1.5rem;
+    border-radius: 999px;
+    background-color: var(--color-ink-300);
+    transition: background-color var(--duration-fast) var(--ease-prime);
+  }
+  .cookie-switch-knob {
+    position: absolute;
+    top: 0.1875rem;
+    left: 0.1875rem;
+    width: 1.125rem;
+    height: 1.125rem;
+    border-radius: 999px;
+    background-color: var(--color-white);
+    box-shadow: 0 1px 2px rgb(8 9 11 / 0.3);
+    transition: transform var(--duration-fast) var(--ease-prime);
+  }
+  /* The ON state, driven by the same `aria-checked` the accessibility tree
+     reads. One source of truth: there is no separate class to fall out of step
+     with the attribute. */
+  .cookie-switch[aria-checked='true'] > .cookie-switch-track {
+    background-color: var(--color-prime-500);
+  }
+  .cookie-switch[aria-checked='true'] > .cookie-switch-track > .cookie-switch-knob {
+    transform: translateX(1.25rem);
+  }
+  /* ink-500 on ink-50 is 5.2:1. */
+  .cookie-switch-state {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-ink-500);
+  }
+
+  .cookie-stored {
+    margin-top: 1.25rem;
+  }
+  .cookie-stored-title {
+    font-size: var(--text-label);
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--color-prime-700);
+  }
+  .cookie-stored-list {
+    margin-top: 0.6rem;
+    display: grid;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+  }
+  .cookie-stored-list dt {
+    font-weight: 700;
+    color: var(--color-ink-800);
+    font-variant-ligatures: none;
+  }
+  .cookie-stored-list dd {
+    color: var(--color-ink-600);
+  }
+
+  .cookie-panel-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.25rem;
+    margin-top: 1.5rem;
+  }
+  .cookie-policy-link {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-prime-700);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .cookie-saved:not(:empty) {
+    margin-top: 0.85rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-ink-700);
+  }
+
+  /* The footer's quiet way back in. */
+  .cookie-footer-link {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color var(--duration-fast) var(--ease-prime);
+  }
+  .cookie-footer-link:hover { color: var(--color-white); }
+
   /* --- Page shells -------------------------------------------------------
      Two shells, one fluid gutter. `container-prime` is the default;
      `container-wide` is for full-bleed visual sections such as the hero.
@@ -1230,6 +1666,8 @@
     from { opacity: 0; transform: translateY(-6px); }
     to { opacity: 1; transform: translateY(0); }
   }
+  /* Applied by MainNav with --ease-out: an entrance is quick off the mark and
+     settles into place, which --ease-prime, being symmetric, does not do. */
 }
 
 /* --- Utilities ------------------------------------------------------------ */
@@ -1270,51 +1708,91 @@
   .text-balance { text-wrap: balance; }
   .text-pretty { text-wrap: pretty; }
 
-  /* Scroll reveal — CSS-only, no JS, no animation library.
-     `animation-timeline: view()` is progressively enhanced: where it is not
-     supported the declaration is invalid, the animation falls back to the
-     document timeline at zero duration, and `both` snaps it to the `to` frame.
-     The resting state is therefore the finished design everywhere.
+  /* Scroll reveal.
+     ONE SHOT, driven by IntersectionObserver, not by `animation-timeline:
+     view()`.
 
-     `--n` staggers an element within its group. Set it per item and a row, a
-     grid or a list arrives in sequence rather than all at once, which is what
-     gives a long page the feel of one thing happening at a time. Keep the
-     offsets small: this is pacing, not choreography. */
-  .reveal {
-    animation: reveal-in linear both;
-    animation-timeline: view();
-    animation-range: entry calc(2% + var(--n, 0) * 5%) cover calc(24% + var(--n, 0) * 5%);
+     WHY THIS CHANGED. A view timeline binds an animation to scroll POSITION,
+     not to an event. Scrolling back up therefore plays it backwards, and every
+     element re-runs its entrance on every pass over it. That is exactly the
+     "motion on scroll direction change" that makes a page feel unstable: the
+     reader moves up to re-read a paragraph and the paragraph fades out from
+     under them. An entrance is an event. It happens once.
+
+     HOW IT CANNOT LEAVE CONTENT HIDDEN. The hidden state hangs off
+     `[data-reveal]`, an attribute only the script writes, and only ever onto
+     elements that start BELOW the fold:
+       - JavaScript off        the attribute is never written, nothing hides
+       - already in view       the attribute is never written, so no flash and
+                               nothing above the fold can be caught out
+       - reduced motion        the script returns before writing anything
+       - no IntersectionObserver   same, it returns early
+     The attribute and the observer are written in the same synchronous pass,
+     so there is no window in which an element is hidden but unobserved.
+
+     `will-change` rides the same attribute, so it is present exactly while an
+     element is waiting to animate and gone the moment it has. No bookkeeping.
+
+     `--n` staggers an element within its group, capped by --stagger-cap: past
+     that every remaining sibling shares the last delay, so a long list arrives
+     as a group rather than trickling in. */
+  /* The stagger is NOT a transition-delay. Two reasons, both found by
+     measuring: a component that writes `transition` as a shorthand resets the
+     delay to zero and silently wipes it, and a delay that lives on the element
+     goes on delaying its hover for the rest of the page's life. The observer
+     schedules the reveal instead, so the delay exists only for the entrance.
+
+     Gated on `.reveal-ready` so the initial hide is committed without
+     animating. */
+  :root.reveal-ready .reveal,
+  :root.reveal-ready .reveal-soft {
+    transition-property: opacity, transform, filter;
+    transition-duration: var(--duration-base);
+    transition-timing-function: var(--ease-out);
+  }
+
+  .reveal[data-reveal],
+  .reveal-soft[data-reveal] {
+    opacity: 0;
+    will-change: opacity, transform;
+  }
+  /* A short rise. Not a slide from off-screen: the element is telling you it
+     just arrived, not travelling across the page to get here. */
+  .reveal[data-reveal] { transform: translateY(14px); }
+  .reveal-soft[data-reveal] { transform: translateY(18px); filter: blur(6px); }
+
+  /* Fade with no movement, for anything inside a clipped panel where a rise
+     would show the panel's own background under the moving edge. A component
+     that sets its own `transition` must include opacity itself; see the
+     industry wall, which is the one place this applies. */
+  :root.reveal-ready .reveal-fade {
+    transition-property: opacity;
+    transition-duration: var(--duration-base);
+    transition-timing-function: var(--ease-out);
+  }
+  .reveal-fade[data-reveal] {
+    opacity: 0;
+    will-change: opacity;
   }
 
   /* A section arriving as a unit: the header leads, its content follows. */
   .reveal-lead { --n: 0; }
   .reveal-follow { --n: 1; }
 
-  @keyframes reveal-in {
-    from { opacity: 0; transform: translateY(16px); }
-    to { opacity: 1; transform: none; }
-  }
-
-  /* A softer variant for larger blocks, where a slide would read as a jolt.
-     Resolves out of blur instead of moving far. */
-  .reveal-soft {
-    animation: reveal-soft-in linear both;
-    animation-timeline: view();
-    animation-range: entry calc(2% + var(--n, 0) * 5%) cover calc(28% + var(--n, 0) * 5%);
-  }
-  @keyframes reveal-soft-in {
-    from { opacity: 0; filter: blur(12px); transform: translateY(20px); }
-    72% { transform: translateY(0); }
-    to { opacity: 1; filter: blur(0); transform: translateY(0); }
-  }
-
+  /* Belt and braces. The script already declines to run under reduced motion,
+     so nothing should ever be hidden here; this guarantees it. */
   @media (prefers-reduced-motion: reduce) {
     .reveal,
-    .reveal-soft {
-      animation: none;
+    .reveal-soft,
+    .reveal-fade,
+    .reveal[data-reveal],
+    .reveal-soft[data-reveal],
+    .reveal-fade[data-reveal] {
       opacity: 1;
       filter: none;
       transform: none;
+      transition: none;
+      will-change: auto;
     }
   }
 

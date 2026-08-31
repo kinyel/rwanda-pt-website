@@ -101,6 +101,51 @@ export const common = {
     nigeriaOfficeTitle: 'Nigeria office',
     nigeriaOfficeLink: 'Visit primetracknigeria.com',
     sitemapLabel: 'Footer',
+    /** Reopens the cookie preferences dialog. */
+    cookiePreferences: 'Cookie preferences',
+  },
+
+  /**
+   * Cookie consent.
+   *
+   * One category, because the site has one: functional preferences. There is
+   * no analytics, advertising or third-party tracking on this site, and this
+   * copy must never imply otherwise. "Accept" rather than "Accept all", since
+   * there is nothing to accept all of.
+   *
+   * Accept and Decline are written to the same length and weight for a reason:
+   * they are rendered as the same size and prominence, and copy that made one
+   * sound like the safe default would undo that.
+   */
+  cookies: {
+    title: 'We value your privacy',
+    body:
+      'We use a small number of functional cookies to remember your preferences, such as your preferred language. These cookies help us provide a more consistent experience across visits.',
+    accept: 'Accept',
+    decline: 'Decline',
+    manage: 'Cookie preferences',
+    /** Names the banner region for a screen reader. */
+    bannerLabel: 'Cookie notice',
+
+    panelTitle: 'Cookie preferences',
+    panelIntro:
+      'This site uses one category of cookie. You can change your choice at any time, and the site works either way.',
+    functionalTitle: 'Functional and preference cookies',
+    functionalBody: 'These cookies remember choices such as your preferred language.',
+    /** The toggle's accessible name, and its two spoken states. */
+    toggleLabel: 'Functional and preference cookies',
+    on: 'On',
+    off: 'Off',
+    save: 'Save preferences',
+    close: 'Close',
+    /** Confirmation after saving, announced politely. */
+    saved: 'Your cookie preferences have been saved.',
+    /** Names what is actually stored, so the panel is specific rather than vague. */
+    storedTitle: 'What is stored',
+    storedConsent: 'Your choice on this notice, so you are not asked again.',
+    storedLanguage: 'Your language preference, only if you accept.',
+    /** Links out to the full policy, which is an existing page. */
+    policyLink: 'Read our privacy policy',
   },
 
   links: {
