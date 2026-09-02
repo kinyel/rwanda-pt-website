@@ -15,6 +15,7 @@ import { industries as industryList, industryPath as industryPathOf } from './in
 
 export { routes, type RouteKey } from './routes';
 import { routes } from './routes';
+import { company } from './company';
 
 
 /**
@@ -222,7 +223,10 @@ export const footerNav = {
     { titleKey: 'common.nav.blog', href: routes.blog },
   ],
   tools: [
-    { titleKey: 'common.links.supportManuals', href: routes.tools },
+    /* The manuals live on their own subdomain, so this leaves the site.
+       `external` is what stops the footer running it through localizePath,
+       which would otherwise turn it into /rw/https:/manuals.primetrack.rw. */
+    { titleKey: 'common.links.supportManuals', href: company.manualsUrl, external: true },
     { titleKey: 'common.links.termsOfService', href: routes.terms },
     { titleKey: 'common.links.privacyPolicy', href: routes.privacy },
   ],

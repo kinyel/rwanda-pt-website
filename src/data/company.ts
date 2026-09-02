@@ -28,6 +28,9 @@ export const company = {
 
   whatsappUrl: 'https://api.whatsapp.com/send?phone=250793017263',
 
+  /** Device manuals and platform documentation, on their own subdomain. */
+  manualsUrl: 'https://manuals.primetrack.rw',
+
   address: {
     line1: '6th Floor, Tower A',
     line2: 'Yyussa City Centre',

@@ -98,18 +98,27 @@ const socialPaths: Record<string, string> = {
             <nav aria-label={column.title}>
               <h2 class="text-label uppercase text-ink-500">{column.title}</h2>
               <ul class="mt-4 flex flex-col gap-1">
-                {column.links.map((link) => (
-                  <li>
-                    <a
-                      href={localizePath(link.href, locale)}
-                      aria-current={link.href === path ? 'page' : undefined}
-                      class={`inline-flex min-h-9 items-center text-[0.9375rem] transition-colors duration-[--duration-fast]
-                              ${link.href === path ? 'text-prime-400' : 'text-ink-300 hover:text-white'}`}
-                    >
-                      {resolveKey(t, link.titleKey)}
-                    </a>
-                  </li>
-                ))}
+                {column.links.map((link) => {
+                  /* An external link is used verbatim. localizePath() prefixes
+                     the locale onto a site path, so putting an absolute URL
+                     through it produces /rw/https:/example.com. It also cannot
+                     be the current page, so it takes no aria-current. */
+                  const isExternal = 'external' in link && link.external;
+                  return (
+                    <li>
+                      <a
+                        href={isExternal ? link.href : localizePath(link.href, locale)}
+                        {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                        aria-current={!isExternal && link.href === path ? 'page' : undefined}
+                        class={`inline-flex min-h-9 items-center text-[0.9375rem] transition-colors duration-[--duration-fast]
+                                ${!isExternal && link.href === path ? 'text-prime-400' : 'text-ink-300 hover:text-white'}`}
+                      >
+                        {resolveKey(t, link.titleKey)}
+                        {isExternal && <span class="sr-only">{` (${t.common.common.externalLink})`}</span>}
+                      </a>
+                    </li>
+                  );
+                })}
               </ul>
             </nav>
           ))
