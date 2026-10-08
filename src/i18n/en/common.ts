@@ -58,7 +58,7 @@ export const common = {
   },
 
   cta: {
-    contactUs: 'Talk to an expert',
+    contactUs: 'Talk to our expert',
     talkToUs: 'Talk to our team',
     getStarted: 'Get started',
     callUs: 'Call us',

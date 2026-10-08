@@ -20,7 +20,7 @@ export const home = {
     title: 'Your fleet, completely visible',
     lead:
       'PrimeTrack connects every vehicle, driver and load you run to one platform: where things are, how they are being driven, and what the fleet is costing you.',
-    primaryCta: 'Talk to an expert',
+    primaryCta: 'Talk to our expert',
     secondaryCta: 'Explore solutions',
     /** Descriptor band. Source: the live site's hero subhead. Lifted out of the
      *  hero section during the redesign so the hero reads cleaner; it now sits
