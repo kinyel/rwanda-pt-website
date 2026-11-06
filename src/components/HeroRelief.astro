@@ -134,9 +134,12 @@ const ENTERS = 0.18;
 const EXITS = 0.72;
 /* Half the length of the dissolve, so the rock is exactly half way to
    glass at the moment the vehicle crosses the rim. Wide enough that the
-   hill is seen opening rather than caught having opened: 0.045 of the
-   journey is a little over 200px of scroll at the section's height. */
-const RIM = 0.045;
+   hill is seen opening rather than caught having opened: 0.07 of the
+   journey is about 330px of scroll at the section's height, and the ramp
+   is smoothstepped on top of that so it starts and ends without an edge.
+   The buried stretch is 0.54 long, so even two dissolves this wide leave
+   0.40 of it fully open. */
+const RIM = 0.07;
 /* Precomputed so the CSS multiplies by a number instead of dividing by one:
    division by a non-literal is newer than this site's browser floor. */
 const RAMP = +(0.5 / RIM).toFixed(3);
@@ -584,30 +587,46 @@ const RAMP = +(0.5 / RIM).toFixed(3);
     :global(.hero-journey[data-journey-live]) .relief {
       --tilt: calc(58deg - var(--p, 0) * 13deg);
       --spin: calc(-26deg + var(--p, 0) * 30deg);
-      --xray: min(
+      /* Linear in, linear out, then smoothstepped as one, so the glass
+         arrives and leaves without either end of the dissolve having a
+         corner in it. Same curve the report strip glides on. */
+      --xray-ramp: min(
         clamp(0, (var(--p, 0) - var(--enters) + var(--rim)) * var(--xray-k), 1),
         clamp(0, (var(--exits) + var(--rim) - var(--p, 0)) * var(--xray-k), 1)
       );
+      --xray: calc(var(--xray-ramp) * var(--xray-ramp) * (3 - 2 * var(--xray-ramp)));
     }
 
-    :global(.hero-journey[data-journey-live]) .plate path {
-      fill: color-mix(in oklab, var(--rock) calc(100% - var(--xray, 0) * 78%), #070a10);
+    /* REAL TRANSPARENCY, NOT A DARKER STONE.
+
+       The fills lose alpha rather than being mixed toward the ground
+       colour, so the section's own warm wash and anything behind the hill
+       come through it. The risers go all the way to nothing -- they are
+       the mass -- while the treads keep a thin 18% of themselves, which
+       is what stacks up into readable depth instead of a flat sheet.
+
+       `color-mix` interpolates premultiplied, so mixing toward
+       `transparent` drops the alpha and leaves the colour alone. */
+    :global(.hero-journey[data-journey-live]) .plate:not([data-face]) path {
+      fill: color-mix(in oklab, var(--rock) calc(100% - var(--xray, 0) * 100%), transparent);
+      /* And a hairline appears as the mass goes, so the risers are still
+         edges when they are no longer volume. */
+      stroke: color-mix(in oklab, var(--color-prime-400) calc(var(--xray, 0) * 9%), transparent);
+      stroke-width: 1;
+      vector-effect: non-scaling-stroke;
     }
     :global(.hero-journey[data-journey-live]) .plate[data-face] path {
+      fill: color-mix(in oklab, var(--rock) calc(100% - var(--xray, 0) * 82%), transparent);
+      /* THE BORDERS STAY. Every contour's cut edge brightens as its face
+         empties out, so what is left is the hill drawn in light: the shape
+         is still completely readable, and the road, the stops and the
+         vehicle are visible through it. */
       stroke: color-mix(
         in oklab,
         var(--color-prime-400) calc(22% + var(--t) * 50% + var(--xray, 0) * 34%),
         transparent
       );
-      stroke-width: calc(1.1px + var(--xray, 0) * 0.5px);
-    }
-    /* The risers pick up a hairline of their own only once the hill is
-       glass. Solid, they would be 36 extra lines on something already
-       made of lines; transparent, they are what gives it thickness. */
-    :global(.hero-journey[data-journey-live]) .plate:not([data-face]) path {
-      stroke: color-mix(in oklab, var(--color-prime-400) calc(var(--xray, 0) * 6%), transparent);
-      stroke-width: 1;
-      vector-effect: non-scaling-stroke;
+      stroke-width: calc(1.1px + var(--xray, 0) * 0.55px);
     }
     :global(.hero-journey[data-journey-live]) .relief-model {
       transform: rotateX(var(--tilt)) rotateZ(var(--spin))
@@ -654,23 +673,33 @@ const RAMP = +(0.5 / RIM).toFixed(3);
       --lit: clamp(0, (var(--p, 0) - var(--at) + 0.07) * 13, 1);
       opacity: var(--lit);
     }
-    /* A pin is up exactly when its report is the one at the read head.
+    /* A pin is up only while its own report holds the read head, and the
+       handover is a relay, not a cross-fade.
 
-       Not "at the same time as": the same number. `--adv` is published on
-       the section by the report sequence, and this is character for
-       character the expression the report row and the counter digit use to
-       decide how current they are. Three renderings of one index, so a pin
-       cannot lead its report, lag it, or stand there without it, and the
-       handover is the same cross-fade on both sides of the screen.
+       `--adv` is published on the section by the report sequence, so this
+       reads the same clock as the report row and the counter digit: the
+       pin cannot be on a different report from the strip, because it does
+       not have its own idea of which report is current.
 
-       It used to key off the vehicle's position instead, which is a
-       different clock: the vehicle reaches stop three at 64% of the
-       journey but report three is only at the read head from 64% to 92%,
-       so a card keyed to arrival had come and gone by the middle of the
-       report it belonged to. */
+       WHY NOT SIMPLY `1 - dist`, WHICH IS WHAT THE STRIP ROWS USE. Because
+       on the strip the rows are stacked and moving, so two of them at half
+       strength read as one object turning; on the model they are two
+       separate labels in two separate places, and two of them at half
+       strength read as two pop-ups, one of which has not been earned yet.
+       Matching the rows exactly was correct arithmetic and the wrong
+       picture.
+
+       So the ramp is steeper and ends early: full while `--adv` is within
+       0.12 of this index, out by 0.42, nothing after that. Adjacent
+       indices' distances always sum to exactly 1, so both being under 0.42
+       is arithmetically impossible -- two pins can never be up together,
+       whatever the scroll does. Between 0.42 and 0.58 neither is up, and
+       that gap is the beat the handover needs: the old pin leaves, the
+       strip carries the change on its own for about 35px of scroll, and
+       the new pin arrives behind its report rather than ahead of it. */
     :global(.hero-journey[data-journey-live]) .beam {
       --dist: max(calc(var(--i) - var(--adv, 0)), calc(var(--adv, 0) - var(--i)));
-      --lit: clamp(0, 1 - var(--dist), 1);
+      --lit: clamp(0, (0.42 - var(--dist)) * 3.33, 1);
       opacity: var(--lit);
     }
     :global(.hero-journey[data-journey-live]) .beam-shaft,
