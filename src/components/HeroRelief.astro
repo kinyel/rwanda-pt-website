@@ -60,6 +60,8 @@ const LEVELS = 9;
 /* Elevation gained per contour, and how many copies build the wall between
    one contour and the next. */
 const LIFT = 16;
+/* Which contour the road is cut into. Shared with the CSS below. */
+const ROAD_LEVEL = 3;
 const SKIN = 5;
 
 function contour(level: number): string {
@@ -177,19 +179,80 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
       </svg>
     </div>
 
-    <!-- Signal. A beam standing off each stop, which only reads as a beam
-         because the model is tilted: on a flat drawing it would be a stick. -->
+  </div>
+
+  <!-- THE SIGNAL PLANE.
+
+       A second layer that is NOT inside the model, carrying the travelling
+       window and the four checkpoint pins.
+
+       WHY IT IS A SIBLING. Everything that has to appear ON the road has to
+       be drawn at the road's exact depth or it lands somewhere else on
+       screen: the model is tilted 58deg, so a layer lifted to the top of the
+       stack to escape the rock is thrown about 100px up the screen and the
+       "window" stops lining up with the road it is meant to be a window
+       onto. Drawn at the road's own depth inside the model, it is buried by
+       the five plates above it instead.
+
+       A sibling under the SAME `perspective`, carrying the SAME camera and
+       the SAME `translateZ` as the road, projects to pixel-identical
+       positions, and paints after the model because it is its own 3D
+       context. Same place, nothing on top of it. That is the whole trick.
+
+       WHY AN OVERLAY AND NOT TRANSLUCENT ROCK. The contours are EXTRUDED:
+       five copies build each riser, so 25 layers at 55% alpha composite
+       straight back to opaque. Transparency cannot work against the
+       technique that makes the hills solid. -->
+  <div class="relief-signals">
+    <svg class="relief-xray" viewBox="0 0 400 400" focusable="false">
+      <defs>
+        <!-- The glass. A soft lens of darkness that rides with the rover,
+             so the rock it is over reads as looked INTO rather than as
+             having a line painted on it. -->
+        <radialGradient id="relief-lens">
+          <stop offset="0%" stop-color="#04070c" stop-opacity="0.72" />
+          <stop offset="54%" stop-color="#04070c" stop-opacity="0.46" />
+          <stop offset="100%" stop-color="#04070c" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+
+      <g class="rover xray-lens">
+        <ellipse rx="44" ry="36" fill="url(#relief-lens)" />
+      </g>
+
+      <!-- The window itself. With `pathLength="1"` the stroke is one 9% dash
+           and a 100% gap, and the offset keeps that dash centred on the
+           rover: the road shows through exactly where the dot is, and the
+           rock closes behind it. A moving dash rather than a mask tracking a
+           position, so nothing can fall out of sync with the dot. -->
+      <path class="xray-line" d={ROUTE} pathLength="1" />
+
+      <g class="rover xray-rover">
+        <circle r="9" class="rover-halo" />
+        <circle r="4" class="rover-core" />
+      </g>
+    </svg>
+
+    <!-- A pin standing out of each stop. It only reads as standing because
+         the model is tilted and the pin counter-rotates to face the camera:
+         on a flat drawing it would be a stick. -->
     {
-      waypoints.map((point, i) => (
-        <div
-          class="beam"
-          style={`--at:${point.at / 100}; --bx:${(point.x / 400) * 100}%; --by:${(point.y / 400) * 100}%; --mast:${[6.4, 7.2, 6.4, 7.2][i]}`}
-        >
-          <span class="beam-shaft"></span>
-          <span class="beam-cap"></span>
-          <span class="beam-label">{stops[point.key].label}</span>
-        </div>
-      ))
+      waypoints.map((point, i) => {
+        /* When the NEXT stop is reached, which is when this card hands over.
+           The last one runs past the end of the journey so it is still
+           standing when the reader leaves the section. */
+        const until = i + 1 < waypoints.length ? waypoints[i + 1].at / 100 : 1.2;
+        return (
+          <div
+            class="beam"
+            style={`--at:${point.at / 100}; --until:${until}; --bx:${(point.x / 400) * 100}%; --by:${(point.y / 400) * 100}%; --mast:${[4.2, 3.8, 3.4, 3.1][i]}`}
+          >
+            <span class="beam-shaft"></span>
+            <span class="beam-cap"></span>
+            <span class="beam-label">{stops[point.key].label}</span>
+          </div>
+        );
+      })
     }
   </div>
 
@@ -199,12 +262,10 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
 
 <style>
   .relief {
-    /* Plate count, so the surface and the beams can sit on top of the stack
-       without the elevation being written out three times. */
-    --levels: 11;
     /* Which contour the road is cut into. Low enough that the upper plates
        cross in front of it, which is what makes it read as lying ON the
-       terrain rather than hovering over it. */
+       terrain rather than hovering over it. The signal plane shares it:
+       every overlay has to be at the road's own depth to land on the road. */
     --road-level: 3;
     /* THE CAMERA, as two numbers.
 
@@ -220,7 +281,11 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
     --lift: 16px;
     position: absolute;
     inset: 0;
+    /* One cell, two layers. The model and the signal plane are stacked
+       rather than laid out, so they occupy the same box and the same
+       projection without either one being positioned against the other. */
     display: grid;
+    grid-template: 'stack' 1fr / 1fr;
     place-items: center;
     perspective: 1500px;
     perspective-origin: 50% 44%;
@@ -230,14 +295,28 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
   /* The model. One 3D context: every plate, the surface and every beam are
      projected together, so they occlude each other correctly and the cut
      edges foreshorten as it turns. */
-  .relief-model {
+  .relief-model,
+  .relief-signals {
+    grid-area: stack;
     position: relative;
     width: min(100%, 38rem);
     aspect-ratio: 1;
     transform-style: preserve-3d;
+  }
+
+  .relief-model {
     /* Resting pose. Steep enough to see the lamination, shallow enough that
        the footprint is still legible as a map. */
     transform: rotateX(var(--tilt)) rotateZ(var(--spin));
+    will-change: transform;
+  }
+
+  /* The same camera, plus the road's own elevation. Identical projection to
+     `.relief-surface` inside the model, so a point drawn here lands on the
+     same pixel as the same point drawn on the road. */
+  .relief-signals {
+    transform: rotateX(var(--tilt)) rotateZ(var(--spin))
+               translateZ(calc(var(--road-level) * var(--lift) + 1px));
     will-change: transform;
   }
 
@@ -325,8 +404,12 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
     top: var(--by);
     width: 2px;
     height: 0;
+    /* No lift of its own: the pin is planted at the road, on the plane its
+       layer already sits on, so its foot is exactly the node the rover
+       passes over. It used to be hoisted to the top of the plate stack to
+       avoid being buried, which put the card a hundred pixels up the screen
+       from the stop it belonged to. Painting order solves that now. */
     transform: translate(-50%, 0)
-               translateZ(calc(var(--road-level) * var(--lift)))
                rotateZ(calc(-1 * var(--spin)))
                rotateX(calc(-1 * var(--tilt)));
     transform-origin: 50% 100%;
@@ -371,22 +454,47 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
     left: 50%;
     display: block;
     width: max-content;
-    max-width: 9.5rem;
+    max-width: none;
     padding: 0.3rem 0.6rem;
-    border: 1px solid rgb(255 255 255 / 0.12);
+    border: 1px solid rgb(255 125 41 / 0.5);
     border-radius: 0.5rem;
-    background-color: rgb(12 15 20 / 0.86);
-    box-shadow: 0 10px 28px -14px rgb(0 0 0 / 0.9);
-    font-size: 0.6875rem;
-    font-weight: 700;
+    background-color: rgb(8 11 16 / 0.96);
+    box-shadow: 0 12px 30px -14px rgb(0 0 0 / 0.95);
+    font-size: 0.625rem;
+    font-weight: 800;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     white-space: nowrap;
-    color: var(--color-prime-400);
+    color: #ffd2b0;
     transform: translate(-50%, 0) scale(var(--pop, 1));
     transform-origin: 50% 100%;
     backdrop-filter: blur(6px);
   }
+  .relief-xray {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  /* At rest the window is shut: the embedded road is already fully drawn on
+     the surface below and the model needs no hole in it. Static and
+     reduced-motion both get the finished composition. */
+  .xray-line {
+    fill: none;
+    stroke: #ffb37d;
+    stroke-width: 2.6;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+    filter: url(#relief-glow);
+    stroke-dasharray: 0 1;
+  }
+  .xray-lens,
+  .xray-rover { opacity: 0; }
+  .xray-rover .rover-halo { fill-opacity: 0.34; }
+  .xray-rover .rover-core { fill: #fff; }
+
   .relief-shadow {
     position: absolute;
     left: 50%;
@@ -411,11 +519,28 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
       transform: rotateX(var(--tilt)) rotateZ(var(--spin))
                  translateZ(calc(var(--p, 0) * 40px));
     }
+    /* Rides the model's dolly as well, or the window would drift off the
+       road the moment the model started moving toward the camera. */
+    :global(.hero-journey[data-journey-live]) .relief-signals {
+      transform: rotateX(var(--tilt)) rotateZ(var(--spin))
+                 translateZ(calc(var(--p, 0) * 40px + var(--road-level) * var(--lift) + 1px));
+    }
     :global(.hero-journey[data-journey-live]) .route-lit {
       stroke-dashoffset: calc(1 - var(--p, 0));
     }
     :global(.hero-journey[data-journey-live]) .rover {
       offset-distance: calc(var(--p, 0) * 100%);
+    }
+    /* One 9% dash, centred on the rover. Everything ahead and behind is
+       gap, so the model reads solid except right where the dot is, and seals
+       again the moment the dot has passed. */
+    :global(.hero-journey[data-journey-live]) .xray-line {
+      stroke-dasharray: 0.09 1;
+      stroke-dashoffset: calc(0.045 - var(--p, 0));
+    }
+    :global(.hero-journey[data-journey-live]) .xray-lens,
+    :global(.hero-journey[data-journey-live]) .xray-rover {
+      opacity: 1;
     }
     /* Two different behaviours, deliberately.
 
@@ -434,13 +559,25 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
       --lit: clamp(0, (var(--p, 0) - var(--at) + 0.07) * 13, 1);
       opacity: var(--lit);
     }
+    /* A card is up from the moment the rover reaches its stop until the
+       rover reaches the NEXT one, which is exactly the stretch the report
+       strip holds the same report at its read head.
+
+       It used to be a window centred on the stop, and that is what put the
+       two halves of the section out of step: report two sits at the read
+       head from 44% to 64% of the journey, while a window centred on stop
+       two had already faded out by 50%. Reading "driver behaviour" on the
+       model while the strip was still delivering the fuel report is the
+       whole of what looked broken. Tying the card to the same interval the
+       strip uses makes drift impossible rather than unlikely.
+
+       One card at a time still comes out of the geometry: a card turns off
+       on the same number the next one turns on, with a 0.045 crossfade. */
     :global(.hero-journey[data-journey-live]) .beam {
-      --dist: max(calc(var(--p, 0) - var(--at)), calc(var(--at) - var(--p, 0)));
-      /* 7, not 8. The stops are 0.28 of the journey apart, so a falloff that
-         reaches zero at 0.143 hands one card straight to the next: no gap
-         where nothing is showing, and no moment where two are up at once.
-         It is the same constant the report strip uses, for the same reason. */
-      --lit: clamp(0, 1 - var(--dist) * 7, 1);
+      --lit: min(
+        clamp(0, (var(--p, 0) - var(--at) + 0.016) * 30, 1),
+        clamp(0, (var(--until) + 0.016 - var(--p, 0)) * 30, 1)
+      );
       opacity: var(--lit);
     }
     :global(.hero-journey[data-journey-live]) .beam-shaft,
@@ -469,14 +606,15 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
       --tilt: 62deg;
       --spin: -20deg;
     }
-    .relief-model {
+    .relief-model,
+    .relief-signals {
       width: min(78%, 22rem);
     }
     /* The stagger is kept and scaled, not flattened. */
     .relief { --mast-k: 0.68; }
     .beam-label {
       max-width: none;
-      padding: 0.25rem 0.45rem;
+      padding: 0.25rem 0.5rem;
       font-size: 0.5625rem;
     }
     .relief { opacity: 0.85; }
