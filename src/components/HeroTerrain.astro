@@ -1,0 +1,238 @@
+---
+/**
+ * A thousand hills, in perspective.
+ *
+ * THE IDEA. Rwanda is the land of a thousand hills, and that is not decoration
+ * here: gradient drives fuel burn and hills drive route times, so terrain is
+ * the thing that actually shapes fleet work in this market. Nigeria's hero is
+ * a radar sweeping a flat plane. Rwanda's is a landscape. That single
+ * difference is what gives the two sibling sites separate personalities
+ * without either leaving the brand.
+ *
+ * WHY THIS IS REAL DEPTH AND NOT A STACK OF PICTURES. Each ridgeline sits at
+ * its own `translateZ` inside one `preserve-3d` world under a shared
+ * `perspective`. The browser therefore projects them, which means two things a
+ * faked parallax cannot give you: the layers are correctly foreshortened
+ * relative to each other, and when the camera dollies forward on scroll the
+ * near hills sweep past while the far ones barely move, with the ratio falling
+ * out of the projection rather than out of tuned multipliers.
+ *
+ * THE COUNTER-SCALE. A layer pushed to `translateZ(-900px)` under a 1100px
+ * perspective is drawn at 1100 / (1100 + 900) of its size. Left alone the far
+ * hills would shrink to nothing, so each layer is scaled back up by the
+ * inverse, `(P - z) / P`. The maths is in the CSS, derived from `--z`, so
+ * moving a ridge means changing one number and nothing else.
+ *
+ * WHY IT IS NOT BANDS ACROSS THE PAGE. An earlier backdrop drew translucent
+ * contour bands the full width of a white hero, behind the headline, and was
+ * removed for exactly that reason. This one is anchored to the right, behind
+ * the route, and is masked away before it reaches the text column. The
+ * headline keeps a clean dark ground.
+ *
+ * COST. No WebGL, no 3D library, no images, no JavaScript of its own. It reads
+ * the `--p` the hero already publishes, and animates transform and opacity
+ * only.
+ */
+
+/* Ridgelines, far to near.
+   `z` is the depth in CSS pixels, negative being further away. `tone` is the
+   fill lightness: distant hills sit closer to the sky because haze lifts them,
+   which is the cue that makes a flat silhouette read as distance.
+   `d` is drawn in a 1200x400 box and tiles horizontally past the frame. */
+const ridges = [
+  { z: -430, fill: '#39424f', d: 'M0 300 C 90 232, 168 268, 258 236 S 430 170, 528 206 S 688 262, 790 226 S 950 168, 1060 204 S 1160 236, 1200 224 L 1200 400 L 0 400 Z' },
+  { z: -315, fill: '#2d3540', d: 'M0 322 C 110 266, 206 300, 306 262 S 484 196, 588 238 S 742 294, 852 254 S 1024 196, 1124 232 S 1178 250, 1200 244 L 1200 400 L 0 400 Z' },
+  { z: -215, fill: '#232932', d: 'M0 342 C 128 296, 232 330, 344 288 S 528 226, 638 268 S 796 322, 912 282 S 1078 228, 1172 262 L 1200 272 L 1200 400 L 0 400 Z' },
+  { z: -130, fill: '#1a1f26', d: 'M0 360 C 146 322, 266 354, 386 312 S 584 252, 702 296 S 862 346, 986 306 S 1132 260, 1200 288 L 1200 400 L 0 400 Z' },
+  { z: -50, fill: '#12161b', d: 'M0 378 C 162 348, 300 376, 430 338 S 640 282, 772 324 S 936 370, 1072 330 S 1164 300, 1200 310 L 1200 400 L 0 400 Z' },
+] as const;
+---
+
+<div class="terrain" aria-hidden="true">
+  <div class="terrain-world">
+    <!-- Dusk behind the hills. The only warm light in the scene, so the eye
+         reads the far edge as a horizon rather than as the top of a shape. -->
+    <span class="terrain-dusk"></span>
+
+    {
+      ridges.map((ridge, i) => (
+        <div class="ridge" style={`--z:${ridge.z}; --fill:${ridge.fill}; --i:${i}`}>
+          <svg viewBox="0 0 1200 400" preserveAspectRatio="none" focusable="false">
+            <path d={ridge.d} />
+          </svg>
+        </div>
+      ))
+    }
+
+    <!-- Contour lines on the nearest slope. This is the motif the design
+         system already calls Rwanda's substrate, now lying on a surface that
+         has an actual angle rather than printed flat on the page. -->
+    <div class="ridge ridge-contours" style="--z:-40; --tone:0">
+      <svg viewBox="0 0 1200 400" preserveAspectRatio="none" focusable="false">
+        <path d="M-20 352 C 170 322, 306 350, 436 312 S 646 256, 778 298 S 942 344, 1078 304 S 1170 274, 1220 284" />
+        <path d="M-20 372 C 170 342, 306 370, 436 332 S 646 276, 778 318 S 942 364, 1078 324 S 1170 294, 1220 304" />
+        <path d="M-20 392 C 170 362, 306 390, 436 352 S 646 296, 778 338 S 942 384, 1078 344 S 1170 314, 1220 324" />
+      </svg>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* The frame. It is anchored to the rail but deliberately wider than it, so
+     the landscape has room to be a landscape, and it is masked off before it
+     reaches the reading column. */
+  /* MOBILE FIRST, and deliberately so.
+
+     There is no reading column beside the hills on a phone, so the landscape
+     becomes the hero's own ground: full bleed, no horizontal mask, pulled back
+     in opacity so the headline still wins. This is a different composition,
+     not a shrunken desktop one, and it is why the terrain is parented to the
+     section rather than to the rail. Inside the rail it inherited
+     `display: none` below 64rem and simply did not exist on any phone. */
+  .terrain {
+    position: absolute;
+    /* The FIRST SCREEN only.
+
+       `inset-block: 0` stretched this over the whole journey section, which
+       is about 2.6 screens tall because the report sequence needs that much
+       scroll to be pinned through. The hills are anchored to the frame's
+       floor, so that floor sat ~1700px below the fold and the landscape was
+       never on screen at all. It is the hero's ground, so it gets the hero's
+       height. */
+    top: 0;
+    height: 100svh;
+    inset-inline: -14vw;
+    pointer-events: none;
+    /* `--lens` is deliberately unitless so the counter-scale below can divide
+       by it. That means it has to get its unit back HERE: `perspective: 1100`
+       is invalid CSS and is dropped silently, which left the scene with no
+       projection at all while every layer still applied its counter-scale.
+       The ridges grew to twice the frame and the depth never existed. */
+    perspective: calc(var(--lens) * 1px);
+    perspective-origin: 50% 52%;
+    opacity: 0.8;
+  }
+
+  /* The vertical softening, as paint rather than as a mask.
+
+     Two mask layers plus `mask-composite: intersect` is the obvious way to
+     write this and it does not work: the layers get unioned instead, so the
+     full-width vertical gradient on its own revealed the hills right across
+     the headline. That same bottom fade was also erasing the solid base of
+     every ridge, which is why they read as stray curved lines rather than as
+     landforms. Masking the 3D world itself is not an option either, since any
+     mask forces `transform-style: flat` and collapses the depth. */
+  .terrain::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: linear-gradient(
+      to bottom,
+      var(--color-ink-950) 0,
+      rgb(8 9 11 / 0) 26%,
+      rgb(8 9 11 / 0) 88%,
+      var(--color-ink-950) 100%
+    );
+  }
+
+  /* DESKTOP. The copy takes the left, so the landscape moves off to the right
+     and is masked away before it reaches the text. The frame is 148vw wide
+     and starts at -34vw, which puts viewport x=0 already 23% into it: the
+     fade therefore has to begin past the halfway mark, or the hills climb
+     over the headline, which is exactly why the previous backdrop on this
+     site was removed. */
+  @media (width >= 64rem) {
+    .terrain {
+      left: -34vw;
+      right: -14vw;
+      perspective-origin: 62% 46%;
+      opacity: 1;
+      mask-image: linear-gradient(to right, transparent 0 50%, #000 76%, #000 100%);
+    }
+  }
+
+
+  .terrain-world {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    /* Resting camera. The driven state below dollies it forward. */
+    transform: rotateX(1.5deg);
+  }
+
+  /* The horizon. It sits in the band of sky the crests leave open, and it is
+     the only warm light in the scene, so the eye reads the far edge as a
+     distance rather than as the top of a shape. */
+  .terrain-dusk {
+    position: absolute;
+    inset-inline: -10%;
+    top: 18%;
+    height: 52%;
+    transform: translateZ(-560px) scale(calc((var(--lens) + 560) / var(--lens)));
+    background-image: radial-gradient(
+      58% 100% at 62% 100%,
+      rgb(243 93 1 / 0.55),
+      rgb(243 93 1 / 0.12) 48%,
+      transparent 72%
+    );
+  }
+
+  /* One ridge. `--z` is the only per-layer number; the counter-scale that
+     keeps it the right apparent size is derived from it. */
+  .ridge {
+    position: absolute;
+    inset-inline: -8%;
+    /* Pushed below the frame so each hill's base is off-screen and only its
+       mass and crest are in view. Sitting flush at the floor left the whole
+       silhouette visible, which reads as a shape on a page rather than as
+       land continuing past the edge. */
+    bottom: -8%;
+    height: 58%;
+    transform: translateZ(calc(var(--z) * 1px))
+               scale(calc((var(--lens) - var(--z)) / var(--lens)));
+    transform-origin: 50% 100%;
+  }
+  .ridge svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  /* Hills are lit from the horizon, so each one is a touch warmer at its crest
+     than at its foot. `--tone` carries the haze: far hills sit lighter. */
+  /* Atmospheric perspective, the right way round: the FAR hills are lighter
+     because haze lifts them toward the sky, and the near ones fall away to
+     almost black. An earlier pass mixed two near-blacks and produced no
+     separation at all, so only the rim light showed and the silhouettes read
+     as stray curved lines rather than as landforms. */
+  .ridge path {
+    fill: var(--fill);
+    stroke: rgb(255 185 130 / 0.30);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .ridge-contours svg path {
+    fill: none;
+    stroke: rgb(255 255 255 / 0.10);
+    stroke-width: 1;
+    stroke-dasharray: 3 9;
+    vector-effect: non-scaling-stroke;
+  }
+
+  /* ---- Driven. The camera moves with the journey's own progress ----------
+     `--p` is published by the hero and is the same number that drives the
+     vehicle, so the landscape and the route can never fall out of step.
+     Reduced motion keeps the composition and drops the movement. */
+  @media (prefers-reduced-motion: no-preference) {
+    :global(.hero-journey[data-journey-live]) .terrain-world {
+      transform: translateZ(calc(var(--p, 0) * 300px))
+                 rotateX(calc(1.5deg + var(--p, 0) * 3.5deg))
+                 translateY(calc(var(--p, 0) * -2%));
+    }
+  }
+
+  /* On a phone the rail is hidden, so the terrain becomes the hero's own
+     ground instead: shallower, wider, and sitting under the copy rather than
+     beside it. It is not switched off, it is recomposed. */
+</style>

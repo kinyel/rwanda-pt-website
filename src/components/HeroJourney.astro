@@ -76,6 +76,7 @@
  * compositor-friendly. Nothing here can move layout.
  */
 import Icon from './Icon.astro';
+import HeroTerrain from './HeroTerrain.astro';
 import Button from './Button.astro';
 import { routes } from '../data/navigation';
 import { useTranslations, localizePath, type Locale } from '../i18n';
@@ -112,6 +113,15 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
 
 <section class="hero-journey on-dark relative bg-ink-950" data-nav="dark">
   <div class="journey-wash pointer-events-none absolute inset-0" aria-hidden="true"></div>
+
+  <!-- The landscape the route crosses.
+
+       It belongs to the SECTION, not to the rail. Mounted inside the rail it
+       inherited `.journey-rail { display: none }` below 64rem and so did not
+       exist on any phone, which is the one thing the brief rules out. Here it
+       is the hero's own ground at every width: masked to the right of the
+       copy on desktop, full width and quieter on mobile. -->
+  <HeroTerrain />
 
   <div class="container-wide relative">
     <div class="journey-grid">
@@ -271,7 +281,13 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
             </defs>
 
             <!-- The road ahead. -->
-            <path d={ROUTE} stroke="#1b1f26" stroke-opacity="0.13" stroke-width="3" stroke-linecap="round" />
+            <!-- The road ahead, unlit.
+                 Warm white at low alpha, NOT the old #1b1f26 at 0.13: that was
+                 picked when this hero had a white ground, and against ink-950
+                 it composited to invisible. The road was therefore absent at
+                 the top of the page, where `--p` is 0 and the lit trace is
+                 still fully dashed away. -->
+            <path d={ROUTE} stroke="#ffd9bf" stroke-opacity="0.17" stroke-width="2.5" stroke-linecap="round" />
 
             <!-- The road already travelled, drawn in behind the vehicle. -->
             <!--
@@ -362,6 +378,10 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
 
   .hero-journey {
     position: relative;
+    /* The shared camera. Every depth in the terrain is derived from it, so
+       the focal length is one number rather than a constant repeated in each
+       layer's counter-scale. */
+    --lens: 1600;
 
     /* How much scroll the pinned report sequence is given, and therefore the
        section's total height: one screen of headline plus this. It is the one
@@ -585,6 +605,10 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
       width: 100%;
       height: 100%;
       overflow: visible;
+      /* Above the hills. The terrain is absolutely positioned inside the same
+         stage, so the road needs its own layer or the near ridge covers it. */
+      position: relative;
+      z-index: 1;
     }
 
     .journey-vehicle {
@@ -608,6 +632,7 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
        plus shared vertical position carries the association. */
     .journey-label {
       position: absolute;
+      z-index: 1;
       top: var(--y);
       max-width: 9.5rem;
       font-size: 0.9375rem;
