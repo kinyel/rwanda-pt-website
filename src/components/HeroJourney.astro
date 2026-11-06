@@ -122,17 +122,28 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
       <div class="journey-column">
         <!-- Screen one: the hero proper. -->
         <div class="journey-panel">
-          <p class="eyebrow mb-6">{t.home.hero.eyebrow}</p>
-          <h1 class="text-display-xl text-white">{t.home.hero.title}</h1>
-          <p class="mt-7 measure text-lead text-ink-300">{t.home.hero.lead}</p>
+          <!-- The copy stands in the SAME 3D space as the relief, not flat
+               beside it. Each line sits at its own depth and the block angles
+               a few degrees toward the model, so the two halves of the hero
+               read as one scene rather than as a column of text next to a
+               picture of an object. -->
+          <div class="hero-copy">
+            <p class="eyebrow mb-6 hero-layer" style="--depth:0">{t.home.hero.eyebrow}</p>
+            <h1 class="text-display-xl text-white hero-layer hero-title" style="--depth:58">
+              {t.home.hero.title}
+            </h1>
+            <p class="mt-7 measure text-lead text-ink-300 hero-layer" style="--depth:22">
+              {t.home.hero.lead}
+            </p>
 
-          <div class="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <Button href={localizePath(routes.contact, locale)} variant="primary" size="lg">
-              {t.home.hero.primaryCta}
-            </Button>
-            <Button href={localizePath(routes.solutions, locale)} variant="secondaryOnDark" size="lg">
-              {t.home.hero.secondaryCta}
-            </Button>
+            <div class="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap hero-layer" style="--depth:38">
+              <Button href={localizePath(routes.contact, locale)} variant="primary" size="lg">
+                {t.home.hero.primaryCta}
+              </Button>
+              <Button href={localizePath(routes.solutions, locale)} variant="secondaryOnDark" size="lg">
+                {t.home.hero.secondaryCta}
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -325,6 +336,24 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
   .journey-panel {
     padding-block: 4.5rem;
   }
+
+  /* THE COPY, IN THE SCENE.
+
+     Mobile keeps it flat: there the model sits below the text rather than
+     beside it, so there is no shared space to join and angled type would
+     just be angled type. Depth is added from lg up, where the two halves
+     actually face each other. */
+  .hero-copy,
+  .hero-layer {
+    transform-style: preserve-3d;
+  }
+  .hero-title {
+    /* Tighter than the global display tracking. At this size the default
+       leading leaves the two lines drifting apart instead of reading as one
+       mass set against the model. */
+    line-height: 0.95;
+    letter-spacing: -0.035em;
+  }
   .journey-panel-payoff {
     padding-top: 0;
   }
@@ -339,8 +368,24 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
   .journey-rail {
     display: block;
     position: relative;
-    height: min(20rem, 62vw);
-    margin-top: 2rem;
+    height: min(22rem, 68vw);
+    margin-top: 2.5rem;
+  }
+
+  /* MOBILE ORDER.
+
+     The rail is a sibling of the whole text column, not of the panels inside
+     it, so in a single-column grid it landed after the report sequence: the
+     hero's centrepiece ended up below a different section entirely.
+     `display: contents` dissolves the column so its panels become grid items
+     in their own right, and the three can then be ordered properly. */
+  @media (width < 64rem) {
+    .journey-column {
+      display: contents;
+    }
+    .journey-panel:not(.journey-panel-payoff) { order: 1; }
+    .journey-rail { order: 2; }
+    .journey-panel-payoff { order: 3; }
   }
 
   /* ---------- The report sequence, static ------------------------------
@@ -495,6 +540,23 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
       justify-content: center;
       min-height: calc(100svh - var(--header-h));
       padding-block: 3rem;
+    }
+
+    /* The copy gets its own camera, matched to the relief's so both halves
+       sit in the same apparent space. The panel is the lens; the block
+       inside it is what turns. */
+    .journey-panel {
+      perspective: 1500px;
+      perspective-origin: 20% 45%;
+    }
+    .hero-copy {
+      transform: rotateY(5deg) rotateX(0.8deg);
+      transform-origin: 0% 50%;
+    }
+    /* Each line stands at its own distance. The headline is nearest, which
+       is why it reads first; the eyebrow sits furthest back. */
+    .hero-layer {
+      transform: translateZ(calc(var(--depth, 0) * 1px));
     }
 
     .journey-rail {
@@ -656,6 +718,14 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
          scroll it is pinned for. Raise it and every beat gets more room and
          the drive on the right plays more slowly; lower it and the reverse.
          It is the only number that governs the section's total height. */
+      /* The camera moves through the hero: as the reader scrolls, the copy
+         drifts back and turns away while the relief advances. One `--p`
+         drives both, so the two halves cannot slide out of step. */
+      .hero-journey[data-journey-live] .hero-copy {
+        transform: rotateY(calc(5deg - var(--p, 0) * 9deg))
+                   rotateX(0.8deg)
+                   translateZ(calc(var(--p, 0) * -120px));
+      }
       .hero-journey[data-journey-live] .journey-report {
         min-height: 0;
         height: var(--report-track);

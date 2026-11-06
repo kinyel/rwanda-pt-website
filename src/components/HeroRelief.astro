@@ -55,14 +55,18 @@ const j = t.home.journey;
    smooth cone, and the phase shifts with elevation so the peaks lean, the way
    a real ridgeline does rather than a wedding cake.
 --------------------------------------------------------------------------- */
-const LEVELS = 11;
+const LEVELS = 9;
+/* Elevation gained per contour, and how many copies build the wall between
+   one contour and the next. */
+const LIFT = 16;
+const SKIN = 5;
 
 function contour(level: number): string {
   const steps = 44;
   const t = level / (LEVELS - 1);
   /* Shrinks fast at first and then slows, so the base is broad and the summit
      plates stack tightly: the profile of a hill, not a pyramid. */
-  const radius = 168 * (1 - t) ** 0.78 + 16;
+  const radius = 168 * (1 - t) ** 0.78 + 18;
   const pts: [number, number][] = [];
 
   for (let i = 0; i < steps; i++) {
@@ -93,14 +97,26 @@ function contour(level: number): string {
   return d + 'Z';
 }
 
-const plates = Array.from({ length: LEVELS }, (_, i) => ({
-  i,
-  d: contour(i),
-  /* Lift per plate. The cut edge between plates is what sells the lamination,
-     so it has to be thick enough to catch light at this tilt. */
-  z: i * 13,
-  t: i / (LEVELS - 1),
-}));
+/* EXTRUSION.
+
+   One outline per contour reads as a floating ring, not as rock: you see the
+   top faces and straight through the gap to the plate below, which is what
+   made the first version look unfinished. CSS has no solid geometry, so the
+   wall between two contours is built the only way it can be, by repeating the
+   same outline at small z increments until the copies close the gap. Five
+   copies over a 16px rise leaves 3.2px between them, which at this tilt is
+   below the point where a seam is visible.
+
+   Only the last copy of each contour is a top face; the rest are wall, and
+   darker, so the model has treads and risers rather than one flat mass. */
+const plates: { d: string; z: number; t: number; face: boolean }[] = [];
+for (let i = 0; i < LEVELS; i++) {
+  const d = contour(i);
+  const t = i / (LEVELS - 1);
+  for (let k = 0; k < SKIN; k++) {
+    plates.push({ d, t, z: i * LIFT + (k * LIFT) / SKIN, face: k === SKIN - 1 });
+  }
+}
 
 /* The route, cut across the surface. Lives on the top plate's plane. */
 const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86, 236 66';
@@ -110,8 +126,8 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
   <div class="relief-model">
     <!-- The hills. Far plate first so the DOM order matches the stack. -->
     {
-      plates.map((plate) => (
-        <div class="plate" style={`--z:${plate.z}; --t:${plate.t}`}>
+      plates.map((plate, k) => (
+        <div class="plate" data-face={plate.face ? '' : undefined} style={`--z:${plate.z}; --t:${plate.t}`}>
           <svg viewBox="0 0 400 400" focusable="false">
             <path d={plate.d} />
           </svg>
@@ -184,6 +200,9 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
        cross in front of it, which is what makes it read as lying ON the
        terrain rather than hovering over it. */
     --road-level: 3;
+    /* Must track LIFT in the frontmatter: the road and the beams sit on a
+       contour, so they move when the contour spacing does. */
+    --lift: 16px;
     position: absolute;
     inset: 0;
     display: grid;
@@ -225,21 +244,31 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
     transform: translateZ(calc(var(--z) * 1px));
   }
 
-  /* Each plate is lighter than the one beneath it, which is what a stack of
-     cut sheets does under a single light, and the edge stroke is the cut. */
+  /* WALL. The four copies that build the riser between two contours. Darker
+     than the tread above them and unstroked, so the stack reads as one solid
+     mass with steps cut into it rather than as 45 separate outlines. */
   .plate path {
-    fill: color-mix(in oklab, #39424f calc(var(--t) * 86%), #10141a);
-    stroke: color-mix(in oklab, var(--color-prime-400) calc(18% + var(--t) * 46%), transparent);
+    fill: color-mix(in oklab, #2b3340 calc(var(--t) * 70%), #0b0e13);
+    stroke: none;
+  }
+
+  /* TREAD. The last copy of each contour is the surface you would stand on,
+     so it is lighter and carries the cut line that makes the lamination
+     legible. */
+  .plate[data-face] path {
+    fill: color-mix(in oklab, #46525f calc(var(--t) * 88%), #141921);
+    stroke: color-mix(in oklab, var(--color-prime-400) calc(22% + var(--t) * 50%), transparent);
     stroke-width: 1.1;
     vector-effect: non-scaling-stroke;
   }
+
   /* The summit catches the warm light directly. */
   .plate:last-of-type path {
-    fill: color-mix(in oklab, var(--color-prime-500) 16%, #434d5c);
+    fill: color-mix(in oklab, var(--color-prime-500) 20%, #4d596a);
   }
 
   .relief-surface {
-    transform: translateZ(calc(var(--road-level) * 13px + 2px));
+    transform: translateZ(calc(var(--road-level) * var(--lift) + 1px));
   }
 
   .route-bed {
@@ -289,7 +318,7 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
     width: 2px;
     height: 0;
     transform: translate(-50%, 0)
-               translateZ(calc(var(--road-level) * 13px))
+               translateZ(calc(var(--road-level) * var(--lift)))
                rotateZ(26deg)
                rotateX(-58deg);
     transform-origin: 50% 100%;
