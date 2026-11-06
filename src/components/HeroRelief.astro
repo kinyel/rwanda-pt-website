@@ -41,7 +41,7 @@ interface Props {
 const { locale, waypoints } = Astro.props as Props;
 const t = useTranslations(locale);
 const j = t.home.journey;
-const stops = j.waypoints as Record<string, { label: string; refrain: string }>;
+const stops = j.waypoints as Record<string, { label: string }>;
 
 /* ---------------------------------------------------------------------------
    The contours.
@@ -154,7 +154,11 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
           </filter>
         </defs>
 
-        <path class="route-bed" d={ROUTE} />
+        <!-- No bed path. A permanently visible pale line showed the entire
+             route before the rover had travelled any of it, which gives the
+             journey away. The road is drawn BY the dot: solid behind it,
+             nothing ahead, and the rover's own halo softens the leading
+             edge so the line does not end in a hard cut. -->
         <path class="route-lit" d={ROUTE} pathLength="1" />
 
         {
@@ -183,10 +187,7 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
         >
           <span class="beam-shaft"></span>
           <span class="beam-cap"></span>
-          <span class="beam-label">
-            <span class="beam-label-name">{stops[point.key].label}</span>
-            <span class="beam-label-line">{stops[point.key].refrain}</span>
-          </span>
+          <span class="beam-label">{stops[point.key].label}</span>
         </div>
       ))
     }
@@ -285,13 +286,6 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
     transform: translateZ(calc(var(--road-level) * var(--lift) + 1px));
   }
 
-  .route-bed {
-    fill: none;
-    stroke: rgb(255 214 184 / 0.28);
-    stroke-width: 5;
-    stroke-linecap: round;
-    vector-effect: non-scaling-stroke;
-  }
   .route-lit {
     fill: none;
     stroke: url(#relief-route);
@@ -377,35 +371,22 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
     left: 50%;
     display: block;
     width: max-content;
-    max-width: 8.5rem;
-    padding: 0.4rem 0.7rem;
+    max-width: 9.5rem;
+    padding: 0.3rem 0.6rem;
     border: 1px solid rgb(255 255 255 / 0.12);
     border-radius: 0.5rem;
     background-color: rgb(12 15 20 / 0.86);
     box-shadow: 0 10px 28px -14px rgb(0 0 0 / 0.9);
-    text-align: left;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--color-prime-400);
     transform: translate(-50%, 0) scale(var(--pop, 1));
     transform-origin: 50% 100%;
     backdrop-filter: blur(6px);
   }
-  .beam-label-name {
-    display: block;
-    font-size: 0.625rem;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--color-prime-400);
-  }
-  .beam-label-line {
-    display: block;
-    margin-top: 0.15rem;
-    font-size: 0.8125rem;
-    font-weight: 700;
-    line-height: 1.25;
-    color: #fff;
-    text-wrap: balance;
-  }
-
   .relief-shadow {
     position: absolute;
     left: 50%;
@@ -494,11 +475,10 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
     /* The stagger is kept and scaled, not flattened. */
     .relief { --mast-k: 0.68; }
     .beam-label {
-      max-width: 6.75rem;
-      padding: 0.3rem 0.5rem;
+      max-width: none;
+      padding: 0.25rem 0.45rem;
+      font-size: 0.5625rem;
     }
-    .beam-label-line { font-size: 0.6875rem; }
-    .beam-label-name { font-size: 0.5625rem; }
     .relief { opacity: 0.85; }
   }
 </style>
