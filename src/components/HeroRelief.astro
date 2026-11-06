@@ -1,0 +1,376 @@
+---
+/**
+ * A thousand hills, as an object you could pick up.
+ *
+ * THE IDEA. Rwanda is the land of a thousand hills, and the design system
+ * already treats contour geometry as the local substrate for an honest
+ * reason: gradient drives fuel burn and hills drive route times. The previous
+ * attempt drew those contours as flat silhouettes behind the copy, which is a
+ * backdrop, not a centrepiece.
+ *
+ * This is the same idea built as a THING: a laminated topographic relief
+ * model, the kind that gets laser-cut from stacked plates, floating in space
+ * and turning as you scroll. Every contour is a real plate at its own
+ * elevation with a visible cut edge, so the hills have thickness you can read
+ * rather than a shape you have to infer. The route is cut across the surface,
+ * the vehicle runs it, and each stop sends a signal up off the model.
+ *
+ * Nigeria's hero is a radar sweeping a flat plane. Rwanda's is a landscape
+ * with altitude. That is the whole difference between the siblings.
+ *
+ * WHY IT IS GENUINELY 3D AND NOT A DRAWING OF 3D. Every plate sits at its own
+ * `translateZ` inside one `preserve-3d` model under a shared `perspective`,
+ * and the model is tilted on `rotateX`. The browser projects the stack, so the
+ * plates occlude each other correctly, the cut edges foreshorten as the model
+ * turns, and the whole thing parallaxes for free. Nothing here is a painted
+ * highlight pretending to be depth.
+ *
+ * COST. No WebGL, no 3D library, no model file, no images, and no JavaScript
+ * of its own. It reads the `--p` the hero already publishes. Transform and
+ * opacity only.
+ */
+import type { Locale } from '../i18n';
+import { useTranslations } from '../i18n';
+
+interface Props {
+  locale: Locale;
+  /** Waypoints, so the model's stops stay in step with the report strip. */
+  waypoints: readonly { key: string; at: number; x: number; y: number }[];
+}
+
+const { locale, waypoints } = Astro.props as Props;
+const t = useTranslations(locale);
+const j = t.home.journey;
+
+/* ---------------------------------------------------------------------------
+   The contours.
+
+   Generated rather than hand-drawn, because ten nested organic outlines
+   authored by hand drift out of nesting and the error only shows up as a
+   plate poking through the one above it. A deterministic generator cannot
+   make that mistake: every level shrinks, so every level sits inside its
+   neighbour by construction.
+
+   Two sine terms at different frequencies give ridges and spurs instead of a
+   smooth cone, and the phase shifts with elevation so the peaks lean, the way
+   a real ridgeline does rather than a wedding cake.
+--------------------------------------------------------------------------- */
+const LEVELS = 11;
+
+function contour(level: number): string {
+  const steps = 44;
+  const t = level / (LEVELS - 1);
+  /* Shrinks fast at first and then slows, so the base is broad and the summit
+     plates stack tightly: the profile of a hill, not a pyramid. */
+  const radius = 168 * (1 - t) ** 0.78 + 16;
+  const pts: [number, number][] = [];
+
+  for (let i = 0; i < steps; i++) {
+    const a = (i / steps) * Math.PI * 2;
+    const ridge =
+      1 +
+      0.17 * Math.sin(a * 3 + level * 0.55) +
+      0.10 * Math.sin(a * 5 - level * 0.38) +
+      0.06 * Math.sin(a * 8 + level * 0.9);
+    const r = radius * ridge;
+    /* Squashed on y because the plate is seen through a steep rotateX; this
+       keeps the footprint roughly circular once projected. */
+    pts.push([200 + Math.cos(a) * r, 200 + Math.sin(a) * r * 0.82]);
+  }
+
+  /* Closed quadratic spline through the midpoints. Straight segments between
+     44 points still read as faceted at this size; routing each curve through
+     a midpoint smooths the outline without needing control points. */
+  const mid = (p: [number, number], q: [number, number]) =>
+    [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2] as [number, number];
+  const f = (n: number) => n.toFixed(1);
+
+  let d = `M${f(mid(pts[steps - 1], pts[0])[0])} ${f(mid(pts[steps - 1], pts[0])[1])}`;
+  for (let i = 0; i < steps; i++) {
+    const m = mid(pts[i], pts[(i + 1) % steps]);
+    d += `Q${f(pts[i][0])} ${f(pts[i][1])} ${f(m[0])} ${f(m[1])}`;
+  }
+  return d + 'Z';
+}
+
+const plates = Array.from({ length: LEVELS }, (_, i) => ({
+  i,
+  d: contour(i),
+  /* Lift per plate. The cut edge between plates is what sells the lamination,
+     so it has to be thick enough to catch light at this tilt. */
+  z: i * 13,
+  t: i / (LEVELS - 1),
+}));
+
+/* The route, cut across the surface. Lives on the top plate's plane. */
+const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86, 236 66';
+---
+
+<div class="relief" aria-hidden="true">
+  <div class="relief-model">
+    <!-- The hills. Far plate first so the DOM order matches the stack. -->
+    {
+      plates.map((plate) => (
+        <div class="plate" style={`--z:${plate.z}; --t:${plate.t}`}>
+          <svg viewBox="0 0 400 400" focusable="false">
+            <path d={plate.d} />
+          </svg>
+        </div>
+      ))
+    }
+
+    <!-- The route, and everything that rides it, on one plane above the
+         summit so nothing z-fights with the top plate. -->
+    <div class="relief-surface">
+      <svg viewBox="0 0 400 400" focusable="false">
+        <defs>
+          <linearGradient id="relief-route" x1="0" y1="1" x2="1" y2="0">
+            <stop offset="0%" stop-color="#ff8c00" />
+            <stop offset="100%" stop-color="#f35d01" />
+          </linearGradient>
+          <filter id="relief-glow" x="-80%" y="-80%" width="260%" height="260%">
+            <feGaussianBlur stdDeviation="4" result="b" />
+            <feMerge>
+              <feMergeNode in="b" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        <path class="route-bed" d={ROUTE} />
+        <path class="route-lit" d={ROUTE} pathLength="1" />
+
+        {
+          waypoints.map((point) => (
+            <g class="node" style={`--at:${point.at / 100}`}>
+              <circle class="node-ring" cx={point.x} cy={point.y} r="13" />
+              <circle class="node-core" cx={point.x} cy={point.y} r="4" />
+            </g>
+          ))
+        }
+
+        <g class="rover">
+          <circle r="11" class="rover-halo" />
+          <circle r="4.5" class="rover-core" />
+        </g>
+      </svg>
+    </div>
+
+    <!-- Signal. A beam standing off each stop, which only reads as a beam
+         because the model is tilted: on a flat drawing it would be a stick. -->
+    {
+      waypoints.map((point) => (
+        <div
+          class="beam"
+          style={`--at:${point.at / 100}; --bx:${(point.x / 400) * 100}%; --by:${(point.y / 400) * 100}%`}
+        >
+          <span class="beam-shaft"></span>
+          <span class="beam-cap"></span>
+        </div>
+      ))
+    }
+  </div>
+
+  <!-- Ground shadow, flat on the floor the model floats above. -->
+  <span class="relief-shadow"></span>
+</div>
+
+<style>
+  .relief {
+    /* Plate count, so the surface and the beams can sit on top of the stack
+       without the elevation being written out three times. */
+    --levels: 11;
+    /* Which contour the road is cut into. Low enough that the upper plates
+       cross in front of it, which is what makes it read as lying ON the
+       terrain rather than hovering over it. */
+    --road-level: 3;
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    perspective: 1500px;
+    perspective-origin: 50% 44%;
+    pointer-events: none;
+  }
+
+  /* The model. One 3D context: every plate, the surface and every beam are
+     projected together, so they occlude each other correctly and the cut
+     edges foreshorten as it turns. */
+  .relief-model {
+    position: relative;
+    width: min(100%, 38rem);
+    aspect-ratio: 1;
+    transform-style: preserve-3d;
+    /* Resting pose. Steep enough to see the lamination, shallow enough that
+       the footprint is still legible as a map. */
+    transform: rotateX(58deg) rotateZ(-26deg);
+    will-change: transform;
+  }
+
+  .plate,
+  .relief-surface {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+  }
+  .plate svg,
+  .relief-surface svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .plate {
+    transform: translateZ(calc(var(--z) * 1px));
+  }
+
+  /* Each plate is lighter than the one beneath it, which is what a stack of
+     cut sheets does under a single light, and the edge stroke is the cut. */
+  .plate path {
+    fill: color-mix(in oklab, #39424f calc(var(--t) * 86%), #10141a);
+    stroke: color-mix(in oklab, var(--color-prime-400) calc(18% + var(--t) * 46%), transparent);
+    stroke-width: 1.1;
+    vector-effect: non-scaling-stroke;
+  }
+  /* The summit catches the warm light directly. */
+  .plate:last-of-type path {
+    fill: color-mix(in oklab, var(--color-prime-500) 16%, #434d5c);
+  }
+
+  .relief-surface {
+    transform: translateZ(calc(var(--road-level) * 13px + 2px));
+  }
+
+  .route-bed {
+    fill: none;
+    stroke: rgb(255 214 184 / 0.28);
+    stroke-width: 5;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .route-lit {
+    fill: none;
+    stroke: url(#relief-route);
+    stroke-width: 3;
+    stroke-linecap: round;
+    filter: url(#relief-glow);
+    vector-effect: non-scaling-stroke;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+  }
+
+  .node-ring {
+    fill: none;
+    stroke: var(--color-prime-400);
+    stroke-opacity: 0.55;
+    stroke-width: 1.4;
+    vector-effect: non-scaling-stroke;
+  }
+  .node-core {
+    fill: var(--color-prime-400);
+  }
+
+  .rover {
+    offset-path: path('M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86, 236 66');
+    offset-distance: 100%;
+    offset-rotate: 0deg;
+  }
+  .rover-halo { fill: var(--color-prime-500); fill-opacity: 0.22; }
+  .rover-core { fill: #fff; filter: url(#relief-glow); }
+
+  /* A beam stands UP out of the model, so it is a child of the 3D context
+     with its own rotateX cancelling the model's tilt. Drawn flat it would
+     just be a line lying on the map. */
+  .beam {
+    position: absolute;
+    left: var(--bx);
+    top: var(--by);
+    width: 2px;
+    height: 0;
+    transform: translate(-50%, 0)
+               translateZ(calc(var(--road-level) * 13px))
+               rotateZ(26deg)
+               rotateX(-58deg);
+    transform-origin: 50% 100%;
+  }
+  .beam-shaft {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 2px;
+    height: 5.5rem;
+    background-image: linear-gradient(to top, var(--color-prime-400), transparent);
+    opacity: 0.5;
+  }
+  .beam-cap {
+    position: absolute;
+    bottom: 5.5rem;
+    left: 50%;
+    width: 0.45rem;
+    height: 0.45rem;
+    margin-left: -0.225rem;
+    border-radius: 999px;
+    background-color: var(--color-prime-400);
+    box-shadow: 0 0 10px 2px rgb(243 93 1 / 0.55);
+  }
+
+  .relief-shadow {
+    position: absolute;
+    left: 50%;
+    top: 68%;
+    width: min(74%, 27rem);
+    height: 7rem;
+    transform: translate(-50%, 0);
+    border-radius: 999px;
+    background-image: radial-gradient(closest-side, rgb(243 93 1 / 0.16), transparent 72%);
+    filter: blur(14px);
+  }
+
+  /* ---- Driven. The model turns, lifts and lights with the journey -------
+     `--p` is the same number that drives the report strip, so the hills and
+     the reports cannot fall out of step. */
+  @media (prefers-reduced-motion: no-preference) {
+    :global(.hero-journey[data-journey-live]) .relief-model {
+      transform: rotateX(calc(58deg - var(--p, 0) * 13deg))
+                 rotateZ(calc(-26deg + var(--p, 0) * 30deg))
+                 translateZ(calc(var(--p, 0) * 40px));
+    }
+    :global(.hero-journey[data-journey-live]) .route-lit {
+      stroke-dashoffset: calc(1 - var(--p, 0));
+    }
+    :global(.hero-journey[data-journey-live]) .rover {
+      offset-distance: calc(var(--p, 0) * 100%);
+    }
+    /* A stop lights as the vehicle reaches it and stays lit. */
+    :global(.hero-journey[data-journey-live]) .node,
+    :global(.hero-journey[data-journey-live]) .beam {
+      --lit: clamp(0, (var(--p, 0) - var(--at) + 0.07) * 13, 1);
+      opacity: var(--lit);
+    }
+    :global(.hero-journey[data-journey-live]) .beam-shaft,
+    :global(.hero-journey[data-journey-live]) .beam-cap {
+      transform-origin: 50% 100%;
+      transform: scaleY(var(--lit));
+    }
+  }
+
+  /* Static fallback: everything already arrived. The composition is finished
+     at rest, so no-JS and reduced-motion both get the whole scene. */
+  .node,
+  .beam {
+    opacity: 1;
+  }
+
+  @media (width < 64rem) {
+    /* Not hidden, recomposed. The model flattens toward a map and shrinks,
+       because at this width it sits behind the copy rather than beside it. */
+    .relief-model {
+      width: min(78%, 22rem);
+      transform: rotateX(62deg) rotateZ(-20deg);
+    }
+    .beam-shaft { height: 3.25rem; }
+    .beam-cap { bottom: 3.25rem; }
+    .relief { opacity: 0.85; }
+  }
+</style>

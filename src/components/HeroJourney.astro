@@ -76,7 +76,7 @@
  * compositor-friendly. Nothing here can move layout.
  */
 import Icon from './Icon.astro';
-import HeroTerrain from './HeroTerrain.astro';
+import HeroRelief from './HeroRelief.astro';
 import Button from './Button.astro';
 import { routes } from '../data/navigation';
 import { useTranslations, localizePath, type Locale } from '../i18n';
@@ -101,10 +101,10 @@ const specs = [j.specs.accuracy, j.specs.interval];
    coordinate, which renders correctly everywhere, while only the moving
    vehicle needs offset-path. */
 const waypoints = [
-  { key: 'position', icon: 'truck', at: 8, x: 152.8, y: 94.5, side: 'right' },
-  { key: 'fuel', icon: 'fuel', at: 36, x: 220.6, y: 392.5, side: 'left' },
-  { key: 'driver', icon: 'shield', at: 64, x: 64, y: 655.2, side: 'right' },
-  { key: 'video', icon: 'video', at: 92, x: 189.2, y: 925.3, side: 'left' },
+  { key: 'position', icon: 'truck', at: 8,  x: 70,  y: 295 },
+  { key: 'fuel',     icon: 'fuel',  at: 36, x: 185, y: 234 },
+  { key: 'driver',   icon: 'shield', at: 64, x: 297, y: 175 },
+  { key: 'video',    icon: 'video', at: 92, x: 252, y: 80 },
 ] as const;
 
 /* The route. Declared once; the SVG normalises its own length via pathLength. */
@@ -114,14 +114,7 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
 <section class="hero-journey on-dark relative bg-ink-950" data-nav="dark">
   <div class="journey-wash pointer-events-none absolute inset-0" aria-hidden="true"></div>
 
-  <!-- The landscape the route crosses.
 
-       It belongs to the SECTION, not to the rail. Mounted inside the rail it
-       inherited `.journey-rail { display: none }` below 64rem and so did not
-       exist on any phone, which is the one thing the brief rules out. Here it
-       is the hero's own ground at every width: masked to the right of the
-       copy on desktop, full width and quieter on mobile. -->
-  <HeroTerrain />
 
   <div class="container-wide relative">
     <div class="journey-grid">
@@ -242,99 +235,10 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
         </div>
       </div>
 
-      <!-- ============ Right: the pinned route ============ -->
+      <!-- ============ Right: the relief model ============ -->
       <div class="journey-rail">
         <div class="journey-stage">
-          <!--
-            One coordinate system for everything.
-
-            The stage carries `aspect-ratio: 360 / 1000`, the same as the
-            viewBox, so the SVG fills it with no letterboxing and one user unit
-            is always one stage unit. SVG parts sit at measured coordinates;
-            the HTML labels are positioned as percentages of the same box.
-            Both therefore stay locked to the route at any rail height, which
-            an HTML `offset-path` in pixels could never do against a viewBox
-            that scales.
-          -->
-          <svg
-            class="journey-svg"
-            viewBox="0 0 360 1000"
-            fill="none"
-            preserveAspectRatio="xMidYMid meet"
-            role="img"
-            aria-label={j.railLabel}
-          >
-            <defs>
-              <linearGradient id="journey-fade" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#f35d01" stop-opacity="0" />
-                <stop offset="10%" stop-color="#f35d01" stop-opacity="1" />
-                <stop offset="90%" stop-color="#f35d01" stop-opacity="1" />
-                <stop offset="100%" stop-color="#f35d01" stop-opacity="0" />
-              </linearGradient>
-              <filter id="journey-glow" x="-60%" y="-60%" width="220%" height="220%">
-                <feGaussianBlur stdDeviation="7" result="b" />
-                <feMerge>
-                  <feMergeNode in="b" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-            </defs>
-
-            <!-- The road ahead. -->
-            <!-- The road ahead, unlit.
-                 Warm white at low alpha, NOT the old #1b1f26 at 0.13: that was
-                 picked when this hero had a white ground, and against ink-950
-                 it composited to invisible. The road was therefore absent at
-                 the top of the page, where `--p` is 0 and the lit trace is
-                 still fully dashed away. -->
-            <path d={ROUTE} stroke="#ffd9bf" stroke-opacity="0.17" stroke-width="2.5" stroke-linecap="round" />
-
-            <!-- The road already travelled, drawn in behind the vehicle. -->
-            <!--
-              `pathLength="1"` re-scales this path's own length to 1 unit, so
-              the dash maths below is just `1 - progress` and carries no
-              measured constant. Edit the route and the draw still works.
-            -->
-            <path
-              class="journey-trace"
-              d={ROUTE}
-              pathLength="1"
-              stroke="url(#journey-fade)"
-              stroke-width="3.5"
-              stroke-linecap="round"
-              filter="url(#journey-glow)"
-            />
-
-            <!-- Waypoint markers, at measured points on the route. -->
-            {
-              waypoints.map((point, i) => (
-                <g class="journey-marker" style={`--at:${point.at / 100}`}>
-                  <circle cx={point.x} cy={point.y} r="17" fill="#ffffff" />
-                  <circle cx={point.x} cy={point.y} r="17" fill="none" stroke="#f35d01" stroke-opacity="0.45" stroke-width="1.5" />
-                  <circle cx={point.x} cy={point.y} r="4.5" fill="#f35d01" />
-                </g>
-              ))
-            }
-
-            <!-- The vehicle. The only part that needs offset-path, and the
-                 only part that moves. -->
-            <g class="journey-vehicle">
-              <circle r="26" fill="#f35d01" fill-opacity="0.16" />
-              <circle r="9" fill="#f35d01" filter="url(#journey-glow)" />
-            </g>
-          </svg>
-
-          <!-- Labels stay HTML so they wrap, translate and inherit type. -->
-          {
-            waypoints.map((point, i) => (
-              <span
-                class:list={['journey-label', `journey-label-${point.side}`]}
-                style={`--y:${(point.y / 1000) * 100}%; --at:${point.at / 100}`}
-              >
-                {j.waypoints[point.key].label}
-              </span>
-            ))
-          }
+          <HeroRelief locale={locale} waypoints={waypoints} />
         </div>
       </div>
     </div>
@@ -425,8 +329,18 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
     padding-top: 0;
   }
 
+  /* The rail is visible at EVERY width.
+
+     It used to be `display: none` below 64rem, because it held a tall route
+     strip that had nowhere to go on a phone. It now holds the relief model,
+     which is the hero's centrepiece, and hiding a centrepiece on mobile is
+     the one thing the brief rules out. On a phone it sits under the copy as
+     its own band rather than beside it. */
   .journey-rail {
-    display: none;
+    display: block;
+    position: relative;
+    height: min(20rem, 62vw);
+    margin-top: 2rem;
   }
 
   /* ---------- The report sequence, static ------------------------------
@@ -594,10 +508,13 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
 
     /* Same ratio as the viewBox, so SVG user units and percentage positions
        describe the same points. */
+    /* The stage now holds a relief model rather than a tall route strip, so
+       it fills the rail instead of carrying the old 360/1000 viewBox ratio,
+       which would have squeezed a square model into a sliver. */
     .journey-stage {
       position: relative;
+      width: 100%;
       height: 100%;
-      aspect-ratio: 360 / 1000;
     }
 
     .journey-svg {
