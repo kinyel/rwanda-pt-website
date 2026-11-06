@@ -303,9 +303,9 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
        far it has turned by then, and `--drum-lens` is the camera. Together
        they are the whole of the 3D: everything else is the same two numbers,
        `--p` and `--adv`, that drive the flat version. */
-    --drum-lens: 1080px;
-    --drum-radius: 152px;
-    --drum-step: 17deg;
+    --drum-lens: 1180px;
+    --drum-radius: 104px;
+    --drum-step: 10deg;
 
     /* `clip`, never `hidden`.
     
@@ -316,6 +316,38 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
        journey stops tracking scroll. `clip` keeps the report drum inside the
        section without creating a scrollport. */
     overflow: clip;
+  }
+
+  /* =====================================================================
+     ONE CLOCK, READ BY BOTH COLUMNS.
+
+     `--adv` is how many reports have been delivered, 0 to 3, as a
+     continuous number. It is the only thing that says which report is the
+     current one, and it now lives on the SECTION rather than inside the
+     left column, because the model on the right has to answer the same
+     question and there must not be two answers to it.
+
+     One ramp per advance, each 6.25% of the section long and CENTRED on its
+     waypoint, so the strip is exactly half way through its glide at the
+     moment the vehicle reaches the stop. Smoothstepped (x²(3-2x)) so the
+     glide eases in and out instead of sliding at a constant rate.
+
+     Every consumer derives the same two numbers from it: `--dist`, how far
+     a given index is from the current one, and `--cur`, 1 at the read head
+     and 0 a full step away. The report row, the counter digit and the pin
+     standing on the model all use that identical expression, so a pin
+     cannot appear before, after or without its report. It is not that they
+     are kept in step; there is only one thing to be in step with. */
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-journey[data-journey-live] {
+      --a1: clamp(0, (var(--p, 0) - 0.328) * 16, 1);
+      --a2: clamp(0, (var(--p, 0) - 0.608) * 16, 1);
+      --a3: clamp(0, (var(--p, 0) - 0.888) * 16, 1);
+      --adv: calc(
+        var(--a1) * var(--a1) * (3 - 2 * var(--a1)) + var(--a2) * var(--a2) * (3 - 2 * var(--a2)) +
+          var(--a3) * var(--a3) * (3 - 2 * var(--a3))
+      );
+    }
   }
 
   /* ---------- Base: one column, everything static and readable ---------- */
@@ -739,29 +771,6 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
         justify-content: center;
         padding-block: 1.25rem;
 
-        /* One ramp per advance, each 6.25% of the section long and CENTRED
-           on its waypoint, so the strip is exactly half way through its
-           glide at the moment the vehicle reaches the stop. That is the
-           same crossover the checkpoint cards on the model use, which is
-           what keeps the two halves of the section reading as one event.
-
-           They used to start AT the waypoint and run for 8%. The vehicle
-           therefore reached stop three, the model's card changed to driver
-           behaviour, and the strip was still delivering the fuel report for
-           another 190px of scroll. Centring removes that lag; the 30ms of
-           anticipation it trades for is below the threshold at which anyone
-           reads the strip as moving first.
-
-           Smoothstepped (x²(3-2x)) so the glide eases in and out instead of
-           sliding at a constant rate. */
-        --a1: clamp(0, (var(--p) - 0.328) * 16, 1);
-        --a2: clamp(0, (var(--p) - 0.608) * 16, 1);
-        --a3: clamp(0, (var(--p) - 0.888) * 16, 1);
-        --adv: calc(
-          var(--a1) * var(--a1) * (3 - 2 * var(--a1)) + var(--a2) * var(--a2) * (3 - 2 * var(--a2)) +
-            var(--a3) * var(--a3) * (3 - 2 * var(--a3))
-        );
-
         /* A floor under the row pitch, and where in the window the report
            being delivered sits. The pitch itself is not fixed: see the strip.
 
@@ -892,7 +901,7 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
         flex: 1;
         min-height: 0;
         max-height: calc(var(--row-h) * 3 + 0.75rem);
-        margin-top: 0.9rem;
+        margin-top: 1.75rem;
       }
 
       /* `clip`, not `hidden`, for the same reason the section uses it. The
@@ -901,7 +910,7 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
       .hero-journey[data-journey-live] .journey-window-clip {
         height: 100%;
         overflow: clip;
-        mask-image: linear-gradient(to bottom, transparent 0, #000 23%, #000 72%, transparent 100%);
+        mask-image: linear-gradient(to bottom, transparent 0, #000 14%, #000 80%, transparent 100%);
       }
 
       /* The camera. It holds the perspective and nothing else, because both
@@ -957,8 +966,8 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
            in line is visibly next, and the two behind it are further back
            still. A flat "everything not current" dim made the lower half of
            the drum read as one grey mass. */
-        opacity: calc((0.30 + 0.70 * var(--cur)) * clamp(0, 1 - var(--dist) * 0.34, 1));
-        filter: blur(calc(var(--dist) * 1.05px));
+        opacity: calc((0.34 + 0.66 * var(--cur)) * clamp(0, 1 - var(--dist) * 0.3, 1));
+        filter: blur(calc(var(--dist) * 0.6px));
 
         /* The panel itself. Text alone tilting in space reads as text that has
            been skewed; a surface tilting reads as an object, because the eye
@@ -969,8 +978,8 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
         border-radius: 0.85rem;
         background-image: linear-gradient(
           100deg,
-          color-mix(in oklab, var(--color-prime-500) calc(var(--cur) * 12%), transparent),
-          transparent 44%
+          color-mix(in oklab, var(--color-prime-500) calc(var(--cur) * 15%), transparent),
+          transparent 54%
         );
         transform:
           translate3d(

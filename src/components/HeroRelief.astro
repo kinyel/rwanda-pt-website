@@ -123,9 +123,30 @@ for (let i = 0; i < LEVELS; i++) {
 
 /* The route, cut across the surface. Lives on the top plate's plane. */
 const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86, 236 66';
+
+/* WHERE THE ROAD GOES UNDERGROUND.
+   Sampled rather than guessed: the route was walked at 1% steps and each
+   point tested against every contour polygon to find the highest one
+   containing it. From 18% to 72% of its length the road has plates above
+   it, which is the stretch the rock has to open up for. Re-measure these
+   two numbers if ROUTE, LEVELS or ROAD_LEVEL ever change. */
+const ENTERS = 0.18;
+const EXITS = 0.72;
+/* Half the length of the dissolve, so the rock is exactly half way to
+   glass at the moment the vehicle crosses the rim. Wide enough that the
+   hill is seen opening rather than caught having opened: 0.045 of the
+   journey is a little over 200px of scroll at the section's height. */
+const RIM = 0.045;
+/* Precomputed so the CSS multiplies by a number instead of dividing by one:
+   division by a non-literal is newer than this site's browser floor. */
+const RAMP = +(0.5 / RIM).toFixed(3);
 ---
 
-<div class="relief" aria-hidden="true">
+<div
+  class="relief"
+  style={`--enters:${ENTERS}; --exits:${EXITS}; --rim:${RIM}; --xray-k:${RAMP}`}
+  aria-hidden="true"
+>
   <div class="relief-model">
     <!-- The hills. Far plate first so the DOM order matches the stack. -->
     {
@@ -205,31 +226,24 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
        technique that makes the hills solid. -->
   <div class="relief-signals">
     <svg class="relief-xray" viewBox="0 0 400 400" focusable="false">
-      <defs>
-        <!-- The glass. A soft lens of darkness that rides with the rover,
-             so the rock it is over reads as looked INTO rather than as
-             having a line painted on it. -->
-        <radialGradient id="relief-lens">
-          <stop offset="0%" stop-color="#04070c" stop-opacity="0.72" />
-          <stop offset="54%" stop-color="#04070c" stop-opacity="0.46" />
-          <stop offset="100%" stop-color="#04070c" stop-opacity="0" />
-        </radialGradient>
-      </defs>
-
-      <g class="rover xray-lens">
-        <ellipse rx="44" ry="36" fill="url(#relief-lens)" />
-      </g>
-
-      <!-- The window itself. With `pathLength="1"` the stroke is one 9% dash
-           and a 100% gap, and the offset keeps that dash centred on the
-           rover: the road shows through exactly where the dot is, and the
-           rock closes behind it. A moving dash rather than a mask tracking a
-           position, so nothing can fall out of sync with the dot. -->
+      <!-- What you see THROUGH the rock once it has gone to glass: the
+           buried length of road, the stops on it, and the vehicle. Drawn
+           at the road's own depth, so it is the same road, not a copy of
+           it drawn somewhere convenient. -->
       <path class="xray-line" d={ROUTE} pathLength="1" />
 
+      {
+        waypoints.map((point) => (
+          <g class="xray-node" style={`--at:${point.at / 100}`}>
+            <circle class="node-ring" cx={point.x} cy={point.y} r="13" />
+            <circle class="node-core" cx={point.x} cy={point.y} r="4" />
+          </g>
+        ))
+      }
+
       <g class="rover xray-rover">
-        <circle r="9" class="rover-halo" />
-        <circle r="4" class="rover-core" />
+        <circle r="10" class="rover-halo" />
+        <circle r="4.5" class="rover-core" />
       </g>
     </svg>
 
@@ -238,14 +252,10 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
          on a flat drawing it would be a stick. -->
     {
       waypoints.map((point, i) => {
-        /* When the NEXT stop is reached, which is when this card hands over.
-           The last one runs past the end of the journey so it is still
-           standing when the reader leaves the section. */
-        const until = i + 1 < waypoints.length ? waypoints[i + 1].at / 100 : 1.2;
         return (
           <div
             class="beam"
-            style={`--at:${point.at / 100}; --until:${until}; --bx:${(point.x / 400) * 100}%; --by:${(point.y / 400) * 100}%; --mast:${[4.2, 3.8, 3.4, 3.1][i]}`}
+            style={`--i:${i}; --bx:${(point.x / 400) * 100}%; --by:${(point.y / 400) * 100}%; --mast:${[5.4, 4.6, 4.0, 6.4][i]}`}
           >
             <span class="beam-shaft"></span>
             <span class="beam-cap"></span>
@@ -317,7 +327,13 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
   .relief-signals {
     transform: rotateX(var(--tilt)) rotateZ(var(--spin))
                translateZ(calc(var(--road-level) * var(--lift) + 1px));
-    will-change: transform;
+    /* Deliberately NO `will-change: transform`. It promises the compositor
+       that only the transform changes, so the layer is rasterised once and
+       then rescaled -- and this layer carries type. The perspective scale
+       on a card varies by about 20% across the journey, so a cached raster
+       was being resampled every frame and 10px letterforms came out soft
+       and crooked. Re-rasterising per frame costs a fraction of a
+       millisecond for four chips and an SVG path, and the text is sharp. */
   }
 
   .plate,
@@ -338,27 +354,37 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
     transform: translateZ(calc(var(--z) * 1px));
   }
 
+  /* ROCK. Each plate names its own stone as a token rather than painting
+     it directly, because the x-ray has to interpolate away from whatever
+     that stone happens to be. One mix instead of three. */
+
   /* WALL. The four copies that build the riser between two contours. Darker
      than the tread above them and unstroked, so the stack reads as one solid
      mass with steps cut into it rather than as 45 separate outlines. */
-  .plate path {
-    fill: color-mix(in oklab, #2b3340 calc(var(--t) * 70%), #0b0e13);
-    stroke: none;
+  .plate {
+    --rock: color-mix(in oklab, #2b3340 calc(var(--t) * 70%), #0b0e13);
   }
 
   /* TREAD. The last copy of each contour is the surface you would stand on,
      so it is lighter and carries the cut line that makes the lamination
      legible. */
-  .plate[data-face] path {
-    fill: color-mix(in oklab, #46525f calc(var(--t) * 88%), #141921);
-    stroke: color-mix(in oklab, var(--color-prime-400) calc(22% + var(--t) * 50%), transparent);
-    stroke-width: 1.1;
-    vector-effect: non-scaling-stroke;
+  .plate[data-face] {
+    --rock: color-mix(in oklab, #46525f calc(var(--t) * 88%), #141921);
   }
 
   /* The summit catches the warm light directly. */
-  .plate:last-of-type path {
-    fill: color-mix(in oklab, var(--color-prime-500) 20%, #4d596a);
+  .plate:last-of-type {
+    --rock: color-mix(in oklab, var(--color-prime-500) 20%, #4d596a);
+  }
+
+  .plate path {
+    fill: var(--rock);
+    stroke: none;
+  }
+  .plate[data-face] path {
+    stroke: color-mix(in oklab, var(--color-prime-400) calc(22% + var(--t) * 50%), transparent);
+    stroke-width: 1.1;
+    vector-effect: non-scaling-stroke;
   }
 
   .relief-surface {
@@ -448,27 +474,50 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
      centring in its own space. */
   .beam-label {
     position: absolute;
-    /* Each mast is a different height, so four cards cannot pile up on one
-       another when they are all standing at the end of the trip. */
-    bottom: calc(var(--mast, 5.5) * 1rem * var(--mast-k, 1) + 0.9rem);
+    /* Each mast is its own height, chosen twice over: so its card clears
+       the terrain silhouette at that point rather than landing on it, and
+       so that all four standing at once -- which is what no-JS and reduced
+       motion get -- do not touch. The last stop is the tallest because its
+       node sits almost directly behind the third one on screen. */
+    bottom: calc(var(--mast, 5.5) * 1rem * var(--mast-k, 1) + 0.55rem);
     left: 50%;
     display: block;
     width: max-content;
     max-width: none;
-    padding: 0.3rem 0.6rem;
-    border: 1px solid rgb(255 125 41 / 0.5);
-    border-radius: 0.5rem;
-    background-color: rgb(8 11 16 / 0.96);
-    box-shadow: 0 12px 30px -14px rgb(0 0 0 / 0.95);
-    font-size: 0.625rem;
-    font-weight: 800;
-    letter-spacing: 0.12em;
+    padding: 0.4rem 0.78rem;
+    border: 1px solid rgb(255 125 41 / 0.55);
+    border-radius: 0.55rem;
+    /* Fully opaque, and no `backdrop-filter`. Both the alpha and the
+       backdrop blur put the terrain's own contrast inside the chip and
+       made 10px type read as smeared. A solid ground is what makes a
+       label on a busy object legible. */
+    background-color: #0a0e14;
+    box-shadow: 0 16px 36px -18px rgb(0 0 0 / 0.95);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    line-height: 1.1;
     text-transform: uppercase;
     white-space: nowrap;
-    color: #ffd2b0;
+    color: #ffe4d2;
     transform: translate(-50%, 0) scale(var(--pop, 1));
     transform-origin: 50% 100%;
-    backdrop-filter: blur(6px);
+  }
+  /* The notch. A label floating above a line is a label; a label with a
+     notch pointing at the line is a callout, and the difference is what
+     stops it reading as something that happens to be there. */
+  .beam-label::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -4.5px;
+    width: 8px;
+    height: 8px;
+    margin-left: -4px;
+    transform: rotate(45deg);
+    background-color: #0a0e14;
+    border-right: 1px solid rgb(255 125 41 / 0.55);
+    border-bottom: 1px solid rgb(255 125 41 / 0.55);
   }
   .relief-xray {
     position: absolute;
@@ -478,9 +527,9 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
     height: 100%;
     overflow: visible;
   }
-  /* At rest the window is shut: the embedded road is already fully drawn on
-     the surface below and the model needs no hole in it. Static and
-     reduced-motion both get the finished composition. */
+  /* At rest the rock is solid and there is nothing to see through it, so
+     the whole overlay is off. Static and reduced-motion get the finished
+     composition from the surface layer underneath. */
   .xray-line {
     fill: none;
     stroke: #ffb37d;
@@ -488,10 +537,10 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
     stroke-linecap: round;
     vector-effect: non-scaling-stroke;
     filter: url(#relief-glow);
-    stroke-dasharray: 0 1;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
   }
-  .xray-lens,
-  .xray-rover { opacity: 0; }
+  .relief-xray { opacity: 0; }
   .xray-rover .rover-halo { fill-opacity: 0.34; }
   .xray-rover .rover-core { fill: #fff; }
 
@@ -511,9 +560,54 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
      `--p` is the same number that drives the report strip, so the hills and
      the reports cannot fall out of step. */
   @media (prefers-reduced-motion: no-preference) {
+    /* THE ROCK GOES TO GLASS WHILE THE VEHICLE IS INSIDE IT.
+
+       `--xray` is 1 for the stretch the road runs underground and 0 while
+       it is out in the open, dissolving over a short window centred
+       exactly on the rim at each end. Both rims were measured off the
+       geometry, not estimated: see ENTERS and EXITS in the frontmatter.
+
+       WHY THE WHOLE HILL AND NOT A HOLE ROUND THE DOT. CSS cannot cut a
+       hole in this. The contours are extruded, so each riser is five
+       copies of an outline and the stack is 45 layers deep; every property
+       that could mask through it -- `mask-image`, `clip-path`, `filter`,
+       `opacity` -- also forces `transform-style: flat`, which collapses
+       the model back into a flat drawing. The first attempt painted a lit
+       patch on top of the stone instead, and a patch painted ON a surface
+       is the one thing that will never read as a view INTO it.
+
+       What CSS can do is change what the stone is made of. The fills fall
+       away toward the ground colour while the cut edges light up, so the
+       hill turns into a lit wireframe of itself and the road, the stops
+       and the vehicle inside it all show through. It reseals the moment
+       the vehicle comes out the far side. */
     :global(.hero-journey[data-journey-live]) .relief {
       --tilt: calc(58deg - var(--p, 0) * 13deg);
       --spin: calc(-26deg + var(--p, 0) * 30deg);
+      --xray: min(
+        clamp(0, (var(--p, 0) - var(--enters) + var(--rim)) * var(--xray-k), 1),
+        clamp(0, (var(--exits) + var(--rim) - var(--p, 0)) * var(--xray-k), 1)
+      );
+    }
+
+    :global(.hero-journey[data-journey-live]) .plate path {
+      fill: color-mix(in oklab, var(--rock) calc(100% - var(--xray, 0) * 78%), #070a10);
+    }
+    :global(.hero-journey[data-journey-live]) .plate[data-face] path {
+      stroke: color-mix(
+        in oklab,
+        var(--color-prime-400) calc(22% + var(--t) * 50% + var(--xray, 0) * 34%),
+        transparent
+      );
+      stroke-width: calc(1.1px + var(--xray, 0) * 0.5px);
+    }
+    /* The risers pick up a hairline of their own only once the hill is
+       glass. Solid, they would be 36 extra lines on something already
+       made of lines; transparent, they are what gives it thickness. */
+    :global(.hero-journey[data-journey-live]) .plate:not([data-face]) path {
+      stroke: color-mix(in oklab, var(--color-prime-400) calc(var(--xray, 0) * 6%), transparent);
+      stroke-width: 1;
+      vector-effect: non-scaling-stroke;
     }
     :global(.hero-journey[data-journey-live]) .relief-model {
       transform: rotateX(var(--tilt)) rotateZ(var(--spin))
@@ -531,16 +625,17 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
     :global(.hero-journey[data-journey-live]) .rover {
       offset-distance: calc(var(--p, 0) * 100%);
     }
-    /* One 9% dash, centred on the rover. Everything ahead and behind is
-       gap, so the model reads solid except right where the dot is, and seals
-       again the moment the dot has passed. */
-    :global(.hero-journey[data-journey-live]) .xray-line {
-      stroke-dasharray: 0.09 1;
-      stroke-dashoffset: calc(0.045 - var(--p, 0));
+    /* What shows through, and only while there is something to show
+       through: the road drawn as far as the vehicle has come, the stops it
+       has already reached, and the vehicle itself. */
+    :global(.hero-journey[data-journey-live]) .relief-xray {
+      opacity: var(--xray, 0);
     }
-    :global(.hero-journey[data-journey-live]) .xray-lens,
-    :global(.hero-journey[data-journey-live]) .xray-rover {
-      opacity: 1;
+    :global(.hero-journey[data-journey-live]) .xray-line {
+      stroke-dashoffset: calc(1 - var(--p, 0));
+    }
+    :global(.hero-journey[data-journey-live]) .xray-node {
+      opacity: clamp(0, (var(--p, 0) - var(--at) + 0.07) * 13, 1);
     }
     /* Two different behaviours, deliberately.
 
@@ -559,25 +654,23 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
       --lit: clamp(0, (var(--p, 0) - var(--at) + 0.07) * 13, 1);
       opacity: var(--lit);
     }
-    /* A card is up from the moment the rover reaches its stop until the
-       rover reaches the NEXT one, which is exactly the stretch the report
-       strip holds the same report at its read head.
+    /* A pin is up exactly when its report is the one at the read head.
 
-       It used to be a window centred on the stop, and that is what put the
-       two halves of the section out of step: report two sits at the read
-       head from 44% to 64% of the journey, while a window centred on stop
-       two had already faded out by 50%. Reading "driver behaviour" on the
-       model while the strip was still delivering the fuel report is the
-       whole of what looked broken. Tying the card to the same interval the
-       strip uses makes drift impossible rather than unlikely.
+       Not "at the same time as": the same number. `--adv` is published on
+       the section by the report sequence, and this is character for
+       character the expression the report row and the counter digit use to
+       decide how current they are. Three renderings of one index, so a pin
+       cannot lead its report, lag it, or stand there without it, and the
+       handover is the same cross-fade on both sides of the screen.
 
-       One card at a time still comes out of the geometry: a card turns off
-       on the same number the next one turns on, with a 0.045 crossfade. */
+       It used to key off the vehicle's position instead, which is a
+       different clock: the vehicle reaches stop three at 64% of the
+       journey but report three is only at the read head from 64% to 92%,
+       so a card keyed to arrival had come and gone by the middle of the
+       report it belonged to. */
     :global(.hero-journey[data-journey-live]) .beam {
-      --lit: min(
-        clamp(0, (var(--p, 0) - var(--at) + 0.016) * 30, 1),
-        clamp(0, (var(--until) + 0.016 - var(--p, 0)) * 30, 1)
-      );
+      --dist: max(calc(var(--i) - var(--adv, 0)), calc(var(--adv, 0) - var(--i)));
+      --lit: clamp(0, 1 - var(--dist), 1);
       opacity: var(--lit);
     }
     :global(.hero-journey[data-journey-live]) .beam-shaft,
@@ -614,8 +707,9 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
     .relief { --mast-k: 0.68; }
     .beam-label {
       max-width: none;
-      padding: 0.25rem 0.5rem;
-      font-size: 0.5625rem;
+      padding: 0.3rem 0.55rem;
+      font-size: 0.625rem;
+      letter-spacing: 0.07em;
     }
     .relief { opacity: 0.85; }
   }
