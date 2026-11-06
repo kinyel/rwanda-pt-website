@@ -698,8 +698,23 @@ const RAMP = +(0.5 / RIM).toFixed(3);
        strip carries the change on its own for about 35px of scroll, and
        the new pin arrives behind its report rather than ahead of it. */
     :global(.hero-journey[data-journey-live]) .beam {
+      /* AND NOTHING STANDS ON THE MODEL UNTIL THE READER HAS SET OFF.
+
+         `--adv` is 0 from the top of the page, so report one is the
+         current report before anyone has scrolled, and the first pin was
+         therefore up the instant the page loaded. That made it read as a
+         caption printed on the hill rather than as something the journey
+         produced, and it gave away the mechanism before the mechanism had
+         done anything.
+
+         The whole pin -- mast, cap and card -- now rises as the vehicle
+         clears its first stop, between 10% and 18% of the journey, which
+         is about 240px of scroll. Pins two to four are long past that by
+         the time they are due, so this is one rule for all four rather
+         than a special case for the first. */
+      --open: clamp(0, (var(--p, 0) - 0.1) * 12.5, 1);
       --dist: max(calc(var(--i) - var(--adv, 0)), calc(var(--adv, 0) - var(--i)));
-      --lit: clamp(0, (0.42 - var(--dist)) * 3.33, 1);
+      --lit: calc(clamp(0, (0.42 - var(--dist)) * 3.33, 1) * var(--open));
       opacity: var(--lit);
     }
     :global(.hero-journey[data-journey-live]) .beam-shaft,
