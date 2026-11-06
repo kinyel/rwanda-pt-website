@@ -41,6 +41,7 @@ interface Props {
 const { locale, waypoints } = Astro.props as Props;
 const t = useTranslations(locale);
 const j = t.home.journey;
+const stops = j.waypoints as Record<string, { label: string; refrain: string }>;
 
 /* ---------------------------------------------------------------------------
    The contours.
@@ -175,13 +176,17 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
     <!-- Signal. A beam standing off each stop, which only reads as a beam
          because the model is tilted: on a flat drawing it would be a stick. -->
     {
-      waypoints.map((point) => (
+      waypoints.map((point, i) => (
         <div
           class="beam"
-          style={`--at:${point.at / 100}; --bx:${(point.x / 400) * 100}%; --by:${(point.y / 400) * 100}%`}
+          style={`--at:${point.at / 100}; --bx:${(point.x / 400) * 100}%; --by:${(point.y / 400) * 100}%; --mast:${[6.4, 7.2, 6.4, 7.2][i]}`}
         >
           <span class="beam-shaft"></span>
           <span class="beam-cap"></span>
+          <span class="beam-label">
+            <span class="beam-label-name">{stops[point.key].label}</span>
+            <span class="beam-label-line">{stops[point.key].refrain}</span>
+          </span>
         </div>
       ))
     }
@@ -200,6 +205,15 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
        cross in front of it, which is what makes it read as lying ON the
        terrain rather than hovering over it. */
     --road-level: 3;
+    /* THE CAMERA, as two numbers.
+
+       The model turns on these and every upright element counter-rotates by
+       the negative of them to face the viewer. Written out twice they would
+       drift apart the moment the scroll animation changed one of them, and
+       labels that are a few degrees off-camera look like a bug rather than a
+       style. */
+    --tilt: 58deg;
+    --spin: -26deg;
     /* Must track LIFT in the frontmatter: the road and the beams sit on a
        contour, so they move when the contour spacing does. */
     --lift: 16px;
@@ -222,7 +236,7 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
     transform-style: preserve-3d;
     /* Resting pose. Steep enough to see the lamination, shallow enough that
        the footprint is still legible as a map. */
-    transform: rotateX(58deg) rotateZ(-26deg);
+    transform: rotateX(var(--tilt)) rotateZ(var(--spin));
     will-change: transform;
   }
 
@@ -319,8 +333,8 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
     height: 0;
     transform: translate(-50%, 0)
                translateZ(calc(var(--road-level) * var(--lift)))
-               rotateZ(26deg)
-               rotateX(-58deg);
+               rotateZ(calc(-1 * var(--spin)))
+               rotateX(calc(-1 * var(--tilt)));
     transform-origin: 50% 100%;
   }
   .beam-shaft {
@@ -328,13 +342,13 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
     bottom: 0;
     left: 0;
     width: 2px;
-    height: 5.5rem;
+    height: calc(var(--mast, 5.5) * 1rem * var(--mast-k, 1));
     background-image: linear-gradient(to top, var(--color-prime-400), transparent);
     opacity: 0.5;
   }
   .beam-cap {
     position: absolute;
-    bottom: 5.5rem;
+    bottom: calc(var(--mast, 5.5) * 1rem * var(--mast-k, 1));
     left: 50%;
     width: 0.45rem;
     height: 0.45rem;
@@ -342,6 +356,54 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
     border-radius: 999px;
     background-color: var(--color-prime-400);
     box-shadow: 0 0 10px 2px rgb(243 93 1 / 0.55);
+  }
+
+  /* THE CHECKPOINT CARD.
+
+     Sits at the head of its beam, inside the beam's counter-rotated space,
+     so it faces the viewer however the model is turned. It pops when the
+     rover reaches the stop and then stays: by the end of the hero all four
+     are standing, which is the record of the trip rather than a caption that
+     flashes past.
+
+     `translate(-50%)` cannot go in the same transform as the counter-rotation
+     on the beam, or it would be rotated too, so the card does its own
+     centring in its own space. */
+  .beam-label {
+    position: absolute;
+    /* Each mast is a different height, so four cards cannot pile up on one
+       another when they are all standing at the end of the trip. */
+    bottom: calc(var(--mast, 5.5) * 1rem * var(--mast-k, 1) + 0.9rem);
+    left: 50%;
+    display: block;
+    width: max-content;
+    max-width: 8.5rem;
+    padding: 0.4rem 0.7rem;
+    border: 1px solid rgb(255 255 255 / 0.12);
+    border-radius: 0.5rem;
+    background-color: rgb(12 15 20 / 0.86);
+    box-shadow: 0 10px 28px -14px rgb(0 0 0 / 0.9);
+    text-align: left;
+    transform: translate(-50%, 0) scale(var(--pop, 1));
+    transform-origin: 50% 100%;
+    backdrop-filter: blur(6px);
+  }
+  .beam-label-name {
+    display: block;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-prime-400);
+  }
+  .beam-label-line {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1.25;
+    color: #fff;
+    text-wrap: balance;
   }
 
   .relief-shadow {
@@ -360,9 +422,12 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
      `--p` is the same number that drives the report strip, so the hills and
      the reports cannot fall out of step. */
   @media (prefers-reduced-motion: no-preference) {
+    :global(.hero-journey[data-journey-live]) .relief {
+      --tilt: calc(58deg - var(--p, 0) * 13deg);
+      --spin: calc(-26deg + var(--p, 0) * 30deg);
+    }
     :global(.hero-journey[data-journey-live]) .relief-model {
-      transform: rotateX(calc(58deg - var(--p, 0) * 13deg))
-                 rotateZ(calc(-26deg + var(--p, 0) * 30deg))
+      transform: rotateX(var(--tilt)) rotateZ(var(--spin))
                  translateZ(calc(var(--p, 0) * 40px));
     }
     :global(.hero-journey[data-journey-live]) .route-lit {
@@ -371,16 +436,41 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
     :global(.hero-journey[data-journey-live]) .rover {
       offset-distance: calc(var(--p, 0) * 100%);
     }
-    /* A stop lights as the vehicle reaches it and stays lit. */
-    :global(.hero-journey[data-journey-live]) .node,
-    :global(.hero-journey[data-journey-live]) .beam {
+    /* Two different behaviours, deliberately.
+
+       A NODE lights as the rover reaches it and stays lit, so the route
+       accumulates a record of the trip. Nodes are small and sit on the road,
+       so they cannot collide.
+
+       A CARD is only up while the rover is AT its stop. Four cards standing
+       at once needs roughly 560px of model to lay out, and the model is
+       292px wide on a 320px phone: no stagger survives that, which is why
+       raising masts and then scaling them both made it worse rather than
+       better. One card at a time removes the collision by construction, is
+       calmer to read, and still answers "what happens when the dot arrives".
+       The full record is in the report strip below in any case. */
+    :global(.hero-journey[data-journey-live]) .node {
       --lit: clamp(0, (var(--p, 0) - var(--at) + 0.07) * 13, 1);
+      opacity: var(--lit);
+    }
+    :global(.hero-journey[data-journey-live]) .beam {
+      --dist: max(calc(var(--p, 0) - var(--at)), calc(var(--at) - var(--p, 0)));
+      /* 7, not 8. The stops are 0.28 of the journey apart, so a falloff that
+         reaches zero at 0.143 hands one card straight to the next: no gap
+         where nothing is showing, and no moment where two are up at once.
+         It is the same constant the report strip uses, for the same reason. */
+      --lit: clamp(0, 1 - var(--dist) * 7, 1);
       opacity: var(--lit);
     }
     :global(.hero-journey[data-journey-live]) .beam-shaft,
     :global(.hero-journey[data-journey-live]) .beam-cap {
       transform-origin: 50% 100%;
       transform: scaleY(var(--lit));
+    }
+    /* Overshoots very slightly on the way in, which is what makes it read as
+       arriving rather than as switching on. Nothing elastic: it settles. */
+    :global(.hero-journey[data-journey-live]) .beam-label {
+      --pop: calc(0.86 + var(--lit) * 0.14);
     }
   }
 
@@ -394,12 +484,21 @@ const ROUTE = 'M 52 300 C 118 286, 146 246, 196 232 S 286 206, 306 150 S 288 86,
   @media (width < 64rem) {
     /* Not hidden, recomposed. The model flattens toward a map and shrinks,
        because at this width it sits behind the copy rather than beside it. */
+    .relief {
+      --tilt: 62deg;
+      --spin: -20deg;
+    }
     .relief-model {
       width: min(78%, 22rem);
-      transform: rotateX(62deg) rotateZ(-20deg);
     }
-    .beam-shaft { height: 3.25rem; }
-    .beam-cap { bottom: 3.25rem; }
+    /* The stagger is kept and scaled, not flattened. */
+    .relief { --mast-k: 0.68; }
+    .beam-label {
+      max-width: 6.75rem;
+      padding: 0.3rem 0.5rem;
+    }
+    .beam-label-line { font-size: 0.6875rem; }
+    .beam-label-name { font-size: 0.5625rem; }
     .relief { opacity: 0.85; }
   }
 </style>

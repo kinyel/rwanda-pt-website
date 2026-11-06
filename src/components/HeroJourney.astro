@@ -144,6 +144,18 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
                 {t.home.hero.secondaryCta}
               </Button>
             </div>
+
+            <!-- Proof, at the shallowest depth so it reads last.
+                 Three facts the site already states and can stand behind: the
+                 licence, the warranty and the support line. A hero that asks
+                 for a conversation should say why anyone would have one, and
+                 these are the three reasons already verified elsewhere on the
+                 site rather than new claims. -->
+            <ul class="hero-proof hero-layer" style="--depth:8">
+              <li>{t.home.trust.licensed.title}</li>
+              <li>{t.home.trust.warranty.title}</li>
+              <li>{t.home.trust.support.title}</li>
+            </ul>
           </div>
         </div>
 
@@ -347,6 +359,35 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
   .hero-layer {
     transform-style: preserve-3d;
   }
+  .hero-proof {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    margin-top: 2.75rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgb(255 255 255 / 0.09);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--color-ink-400);
+  }
+  .hero-proof li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  /* A small lit node before each fact, the same mark the checkpoints use on
+     the model, so the proof reads as part of the same system. */
+  .hero-proof li::before {
+    content: '';
+    width: 0.3rem;
+    height: 0.3rem;
+    flex: none;
+    border-radius: 999px;
+    background-color: var(--color-prime-500);
+    box-shadow: 0 0 7px 1px rgb(243 93 1 / 0.6);
+  }
+
   .hero-title {
     /* Tighter than the global display tracking. At this size the default
        leading leaves the two lines drifting apart instead of reading as one
