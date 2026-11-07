@@ -7,30 +7,50 @@
  * same hero 108 times, so the site had exactly one piece of real geometry in
  * it and the rest was wallpaper.
  *
- * THE ORGANISING IDEA, which is the homepage's. Rwanda is a landscape, not a
+ * EVERYTHING HERE IS DRAWN, NOT MODELLED, and that is the lesson of the first
+ * build of this file. It held five shaded solids — a plinth, stacked slabs, a
+ * tile lattice, filled contours — and on a near-black ground a shaded solid
+ * is a dark lump with a rim on it. The only one of the five that worked was
+ * the one made of lit lines in space. A line holds its colour at any size,
+ * never muddies against the ground it is on, and lets what is behind it show
+ * through, which is the thing that actually sells depth. So all five are
+ * line-work now: luminous drawings standing in a dark room.
+ *
+ * THE ORGANISING IDEA is still the homepage's. Rwanda is a landscape, not a
  * plane, and the design system already treats contour geometry as the local
  * substrate because gradient drives fuel burn and hills drive route times.
- * Each scene below is A DIFFERENT CAMERA ON THAT SAME WORLD rather than a
- * repeated object: looking straight down at coverage, along a wall, at a unit
- * on a plinth, at roads arriving. That is what keeps the pages distinct from
- * each other and the site coherent as one product.
+ * Each scene is a different drawing of that same world rather than a repeated
+ * object, which is what keeps the families distinct and the site coherent.
  *
  * WHY IT IS GENUINELY 3D. Every part sits at its own `translateZ` inside one
  * `preserve-3d` stage under a shared `perspective`, and the stage is tilted.
  * The browser projects it, so parts occlude each other correctly and edges
- * foreshorten. Nothing here is a painted highlight pretending to be depth.
+ * foreshorten.
  *
- * COST. No WebGL, no 3D library, no model file, no images and NO JAVASCRIPT.
- * One short entrance on load, transform and opacity only, and none of it runs
- * under reduced motion. The scene is `aria-hidden` and carries no text, so it
- * is invisible to search engines and to assistive technology: nothing here can
- * touch a heading, a link or a word of copy.
+ * AND IT MOVES, WHICH IS THE POINT. A static tilted shape is not a 3D object,
+ * it is a picture of one; the cue the eye actually uses is MOTION PARALLAX,
+ * parts at different depths sweeping past each other at different rates. One
+ * number, `--s`, is how far the scene has travelled up the viewport (-1 at
+ * the bottom edge, 0 dead centre, +1 at the top). Every camera and every
+ * event derives from it in CSS. Each scene has a real event, and the event is
+ * about what the page is for: the platform fans into its layers, the eight
+ * operations rise off the ground, the unit assembles itself, the routes pulse
+ * into the hub, the land lifts into its contours. Scrolling back runs it
+ * backwards.
+ *
+ * COST. No WebGL, no 3D library, no model file, no images. One rAF-throttled
+ * scroll handler for every scene on the page, writing one custom property;
+ * every visual consequence is declarative CSS. Transform, opacity and filter
+ * only, so nothing here can move layout. Under reduced motion the handler
+ * never attaches and the static composition is what ships. The scene is
+ * `aria-hidden` and carries no text, so it is invisible to search engines and
+ * to assistive technology: nothing here can touch a heading, a link or a word
+ * of copy.
  *
  * MOBILE. Not hidden, recomposed. The scene moves under the copy as its own
- * band and the stage flattens toward a plan view, because at that width it is
- * a header ornament rather than half the composition.
+ * band and loses most of its relief, because at that width it is read at a
+ * glance on the way past rather than studied.
  */
-
 import type { SceneKind } from '../data/hero-scenes';
 
 interface Props {
@@ -42,35 +62,44 @@ const { kind } = Astro.props as Props;
 /* ---------------------------------------------------------------------------
    Geometry is generated, not hand-written.
 
-   Hand-authored repeats drift: a ring that is 3% off, a tile whose stagger
-   breaks the pattern, a contour that pokes through the one above it. None of
-   these generators can make that mistake, and changing the look is changing a
+   Hand-authored repeats drift: a plate 3% off, a column whose spacing breaks
+   the pattern, a contour that crosses the one inside it. None of these
+   generators can make that mistake, and changing the look is changing a
    number rather than editing forty attributes.
 --------------------------------------------------------------------------- */
 
-/** RINGS: range rings, and the sites standing on them. */
-const RING_COUNT = 6;
-const SITES = [
-  { r: 0.3, a: 214 },
-  { r: 0.56, a: 326 },
-  { r: 0.84, a: 28 },
-  { r: 0.66, a: 118 },
-].map(({ r, a }) => {
-  const rad = (a * Math.PI) / 180;
+/** LAYERS: five plates of one platform, and the posts running through them. */
+const PLATE = { x: 62, y: 98, w: 276, h: 204, r: 18 };
+const LAYERS = [0, 1, 2, 3, 4];
+const POSTS = [
+  [PLATE.x, PLATE.y],
+  [PLATE.x + PLATE.w, PLATE.y],
+  [PLATE.x, PLATE.y + PLATE.h],
+  [PLATE.x + PLATE.w, PLATE.y + PLATE.h],
+].map(([x, y]) => ({ x: +((x / 400) * 100).toFixed(2), y: +((y / 400) * 100).toFixed(2) }));
+
+/** FIELD: eight columns on one measured ground.
+    Heights from a fixed sequence rather than random, so the skyline is a
+    composition and is identical on every render. */
+const COLUMNS = [0.62, 1, 0.42, 0.84, 0.34, 0.72, 0.5, 0.94].map((h, i) => {
+  const col = i % 4;
+  const row = Math.floor(i / 4);
   return {
-    x: +(50 + Math.cos(rad) * r * 48).toFixed(2),
-    y: +(50 + Math.sin(rad) * r * 48).toFixed(2),
+    i,
+    h,
+    /* Two rows of four, the back row inset, so the set reads in perspective
+       rather than as a line of eight. */
+    x: +(20 + col * 20 + row * 10).toFixed(2),
+    y: +(62 - row * 24).toFixed(2),
   };
 });
 
-/** WALL: the lattice, and how far each tile stands off it.
-    A repeating 4-term offset rather than a random one, so the stagger reads
-    as a woven pattern instead of as noise. */
-const TILES = Array.from({ length: 12 }, (_, i) => ({
-  z: [26, 8, 18, 0][(i + Math.floor(i / 4)) % 4],
-  /* Three tiles carry the brand edge: one per row, never adjacent. */
-  lit: i === 1 || i === 6 || i === 8,
-}));
+/** BLUEPRINT: three parts of one unit, as outlines. */
+const PARTS = [
+  { w: 152, h: 106, r: 12 },
+  { w: 130, h: 92, r: 11 },
+  { w: 108, h: 76, r: 10 },
+].map((part, i) => ({ ...part, i, x: 200 - part.w / 2, y: 200 - part.h / 2 }));
 
 /** CONVERGE: eight routes arriving at one point.
     Bowed alternately left and right off their own straight line, so eight
@@ -90,22 +119,21 @@ const ROUTES = Array.from({ length: 8 }, (_, i) => {
   return { d: `M${f(ex)} ${f(ey)}Q${f(cx)} ${f(cy)} ${HUB.x} ${HUB.y}`, x: +f(ex), y: +f(ey), i };
 });
 
-/** TERRAIN: the quiet default. The homepage's hill, seen from much further
-    away and with none of its instrumentation — five contours and nothing
-    else. Different radius falloff and ridge phase from the homepage model, so
-    it is the same landscape rather than the same object. */
-const TERRAIN_LEVELS = 5;
+/** CONTOURS: the land, as nothing but its lines.
+    Different radius falloff and ridge phase from the homepage model, so it
+    is the same landscape rather than the same object. */
+const CONTOUR_LEVELS = 7;
 function contour(level: number): string {
-  const steps = 34;
-  const t = level / (TERRAIN_LEVELS - 1);
-  const radius = 150 * (1 - t) ** 0.72 + 22;
+  const steps = 40;
+  const t = level / (CONTOUR_LEVELS - 1);
+  const radius = 156 * (1 - t) ** 0.7 + 16;
   const pts: [number, number][] = [];
   for (let i = 0; i < steps; i++) {
     const a = (i / steps) * Math.PI * 2;
     const ridge =
-      1 + 0.15 * Math.sin(a * 3 - level * 0.8) + 0.09 * Math.sin(a * 5 + level * 0.44);
+      1 + 0.14 * Math.sin(a * 3 - level * 0.7) + 0.085 * Math.sin(a * 5 + level * 0.42);
     const r = radius * ridge;
-    pts.push([200 + Math.cos(a) * r, 200 + Math.sin(a) * r * 0.84]);
+    pts.push([200 + Math.cos(a) * r, 200 + Math.sin(a) * r * 0.86]);
   }
   const mid = (p: [number, number], q: [number, number]) =>
     [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2] as [number, number];
@@ -117,9 +145,9 @@ function contour(level: number): string {
   }
   return `${d}Z`;
 }
-const TERRAIN = Array.from({ length: TERRAIN_LEVELS }, (_, i) => ({
+const CONTOURS = Array.from({ length: CONTOUR_LEVELS }, (_, i) => ({
   d: contour(i),
-  t: +(i / (TERRAIN_LEVELS - 1)).toFixed(3),
+  t: +(i / (CONTOUR_LEVELS - 1)).toFixed(3),
   i,
 }));
 ---
@@ -128,55 +156,105 @@ const TERRAIN = Array.from({ length: TERRAIN_LEVELS }, (_, i) => ({
   <div class="phs-cam">
     <div class="phs-stage">
       {
-        kind === 'rings' && (
+        kind === 'layers' && (
           <>
-            {Array.from({ length: RING_COUNT }, (_, i) => (
-              <span class="ring" style={`--i:${i}`} />
+            {/* Posts first, so the plates draw over where they cross. */}
+            {POSTS.map((post) => (
+              <span class="post" style={`--x:${post.x}%; --y:${post.y}%`} />
             ))}
-            {SITES.map((s) => (
-              <span class="site" style={`--x:${s.x}%; --y:${s.y}%`} />
+            {LAYERS.map((i) => (
+              <span class="plate" style={`--i:${i}; --t:${(i / 4).toFixed(3)}`}>
+                <svg viewBox="0 0 400 400" focusable="false">
+                  <rect
+                    class="plate-edge"
+                    x={PLATE.x}
+                    y={PLATE.y}
+                    width={PLATE.w}
+                    height={PLATE.h}
+                    rx={PLATE.r}
+                  />
+                  <line
+                    class="plate-rule"
+                    x1={PLATE.x}
+                    y1={PLATE.y + PLATE.h / 2}
+                    x2={PLATE.x + PLATE.w}
+                    y2={PLATE.y + PLATE.h / 2}
+                  />
+                  <line
+                    class="plate-rule"
+                    x1={PLATE.x + PLATE.w / 2}
+                    y1={PLATE.y}
+                    x2={PLATE.x + PLATE.w / 2}
+                    y2={PLATE.y + PLATE.h}
+                  />
+                </svg>
+              </span>
             ))}
-            {/* The high point the signal comes from. It is the only upright
-                thing in the scene, which is what tells you the rest is
-                lying flat. */}
-            <span class="mast">
-              <i class="mast-shaft" />
-              <i class="mast-cap" />
-            </span>
           </>
         )
       }
 
       {
-        kind === 'wall' &&
-          TILES.map((tile) => (
-            <span class="tile" data-lit={tile.lit ? '' : undefined} style={`--z:${tile.z}`}>
-              <i class="tile-side" />
+        kind === 'field' && (
+          <>
+            <span class="ground">
+              <svg viewBox="0 0 400 400" focusable="false">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <line class="ground-rule" x1="34" y1={136 + i * 44} x2="366" y2={136 + i * 44} />
+                ))}
+                {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                  <line class="ground-rule" x1={34 + i * 41.5} y1="136" x2={34 + i * 41.5} y2="312" />
+                ))}
+              </svg>
             </span>
-          ))
+            {COLUMNS.map((column) => (
+              <span
+                class="column"
+                style={`--i:${column.i}; --h:${column.h}; --x:${column.x}%; --y:${column.y}%`}
+              >
+                <i class="column-shaft" />
+                <i class="column-cap" />
+              </span>
+            ))}
+          </>
+        )
       }
 
       {
-        kind === 'device' && (
+        kind === 'blueprint' && (
           <>
-            {/* The plinth: three contour steps, lightest on top. */}
-            <span class="plinth" style="--i:0" />
-            <span class="plinth" style="--i:1" />
-            <span class="plinth" style="--i:2" />
-            {/* The unit, taken apart. The leader runs through all three so
-                the separation reads as an exploded view rather than as
-                three unrelated slabs floating. */}
-            <span class="leader" />
-            <span class="slab" style="--i:0" />
-            <span class="slab" style="--i:1" />
-            <span class="slab" data-face style="--i:2" />
-            {/* The aerial. The only upright thing up there, which is what
-                fixes the stack as an object standing on the landscape
-                rather than three plates hanging in front of it. */}
-            <span class="aerial">
-              <i class="mast-shaft" />
-              <i class="mast-cap" />
-            </span>
+            <span class="datum" />
+            {PARTS.map((part) => (
+              <span class="part" style={`--i:${part.i}`}>
+                <svg viewBox="0 0 400 400" focusable="false">
+                  <rect
+                    class="part-edge"
+                    x={part.x}
+                    y={part.y}
+                    width={part.w}
+                    height={part.h}
+                    rx={part.r}
+                  />
+                  {/* Called-out corners. A drawing's corners are ticked and
+                      a render's are not, and that difference is most of
+                      what makes this read as a specification rather than
+                      as three boxes. */}
+                  {[
+                    [part.x, part.y, 1, 1],
+                    [part.x + part.w, part.y, -1, 1],
+                    [part.x, part.y + part.h, 1, -1],
+                    [part.x + part.w, part.y + part.h, -1, -1],
+                  ].map(([cx, cy, sx, sy]) => (
+                    <path
+                      class="part-tick"
+                      d={`M${cx + sx * 24} ${cy}H${cx + sx * 10}M${cx} ${cy + sy * 24}V${cy + sy * 10}`}
+                    />
+                  ))}
+                  {part.i === 2 && <circle class="part-lens" cx="200" cy="200" r="18" />}
+                  {part.i === 2 && <circle class="part-lens-core" cx="200" cy="200" r="6" />}
+                </svg>
+              </span>
+            ))}
           </>
         )
       }
@@ -185,10 +263,6 @@ const TERRAIN = Array.from({ length: TERRAIN_LEVELS }, (_, i) => ({
         kind === 'converge' && (
           <svg class="phs-svg" viewBox="0 0 400 400" focusable="false">
             <defs>
-              <!-- Along the ROUTE, not across the canvas: each road starts
-                   faint at the edge of the country and arrives bright, so
-                   the eight read as traffic converging rather than as a
-                   fan of wires lit from one side. -->
               <linearGradient id="phs-route" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="400">
                 <stop offset="0%" stop-color="#ff9d5c" stop-opacity="0.95" />
                 <stop offset="100%" stop-color="#ff7d29" stop-opacity="0.5" />
@@ -201,8 +275,14 @@ const TERRAIN = Array.from({ length: TERRAIN_LEVELS }, (_, i) => ({
                 </feMerge>
               </filter>
             </defs>
+            {/* The road, then the traffic on it. Two passes rather than one
+                because a pulse on its own leaves the scene empty between
+                pulses, and a road on its own never arrives. */}
             {ROUTES.map((r) => (
               <path class="route" d={r.d} style={`--i:${r.i}`} />
+            ))}
+            {ROUTES.map((r) => (
+              <path class="pulse" d={r.d} pathLength="1" style={`--i:${r.i}`} />
             ))}
             {ROUTES.map((r) => (
               <circle class="origin" cx={r.x} cy={r.y} r="3.4" />
@@ -214,11 +294,11 @@ const TERRAIN = Array.from({ length: TERRAIN_LEVELS }, (_, i) => ({
       }
 
       {
-        kind === 'terrain' &&
-          TERRAIN.map((plate) => (
-            <span class="contour" style={`--i:${plate.i}; --t:${plate.t}`}>
+        kind === 'contours' &&
+          CONTOURS.map((line) => (
+            <span class="contour" style={`--i:${line.i}; --t:${line.t}`}>
               <svg viewBox="0 0 400 400" focusable="false">
-                <path d={plate.d} />
+                <path d={line.d} />
               </svg>
             </span>
           ))
@@ -231,27 +311,26 @@ const TERRAIN = Array.from({ length: TERRAIN_LEVELS }, (_, i) => ({
 
 <style>
   /* ---------------------------------------------------------------------
-     THE FRAME. Shared by every scene: one box, one camera, one ground
-     shadow. Only `--tilt`, `--spin`, `--turn` and the contents differ, so a
-     new scene is a block of markup and three numbers rather than a new
+     THE FRAME. Shared by every scene: one box, one camera, one pool of
+     light on the floor. Only `--tilt`, `--spin` and the contents differ,
+     so a new scene is a block of markup and two numbers rather than a new
      component.
   --------------------------------------------------------------------- */
   .phs {
     position: relative;
     width: 100%;
-    max-width: 26rem;
-    aspect-ratio: 5 / 4;
+    max-width: 32rem;
+    aspect-ratio: 6 / 5;
     margin-inline: auto;
     pointer-events: none;
-    /* The camera, as three numbers, so an upright element can counter-rotate
+    /* The camera, as two numbers, so an upright element can counter-rotate
        by the exact negative of them and face the viewer. Written out twice
        they would drift the moment one changed. */
     --tilt: 60deg;
     --spin: -22deg;
-    --turn: 0deg;
     /* Every `translateZ` in here is multiplied by this. Depth is the one
        dimension CSS cannot express as a percentage of the box, so a scene
-       authored at 26rem would keep its full relief at 17rem and burst out
+       authored at 32rem would keep its full relief at 18rem and burst out
        of its own frame. One number, set once per breakpoint. */
     --depth: 1;
     /* Arrives rather than appears. One animation on the whole scene, not
@@ -273,7 +352,7 @@ const TERRAIN = Array.from({ length: TERRAIN_LEVELS }, (_, i) => ({
   .phs-cam {
     position: absolute;
     inset: 0;
-    perspective: 1100px;
+    perspective: 1200px;
     perspective-origin: 50% 46%;
   }
 
@@ -281,7 +360,7 @@ const TERRAIN = Array.from({ length: TERRAIN_LEVELS }, (_, i) => ({
     position: absolute;
     inset: 0;
     transform-style: preserve-3d;
-    transform: rotateX(var(--tilt)) rotateY(var(--turn)) rotateZ(var(--spin));
+    transform: rotateX(var(--tilt)) rotateZ(var(--spin));
   }
 
   /* The scene floats, so it needs something to float above or it reads as
@@ -294,20 +373,17 @@ const TERRAIN = Array.from({ length: TERRAIN_LEVELS }, (_, i) => ({
     height: 22%;
     transform: translateX(-50%);
     border-radius: 999px;
-    background-image: radial-gradient(closest-side, rgb(243 93 1 / 0.2), transparent 72%);
+    background-image: radial-gradient(closest-side, rgb(243 93 1 / 0.3), transparent 72%);
     filter: blur(16px);
   }
 
-  /* A NOTE ON LINE WEIGHT AT A TILT.
-
-     A 1px edge lying on a plane tilted 62deg is 0.47px of screen once
-     projected, and a half-pixel line on a near-black field is a rumour.
-     Every hairline in here is therefore specified for its FINAL size, not
-     its authored one, and the cameras that were steepest have been
-     flattened until their edges survive the projection. Two scenes were
-     invisible on the first pass for exactly this reason and both looked,
-     wrongly, like a colour problem. */
-  .phs-svg {
+  /* Every scene's drawing surface. `overflow: visible` so a stroke at the
+     edge of the viewBox is not clipped in half by its own box. */
+  .phs-svg,
+  .plate svg,
+  .part svg,
+  .ground svg,
+  .contour svg {
     position: absolute;
     inset: 0;
     display: block;
@@ -316,237 +392,182 @@ const TERRAIN = Array.from({ length: TERRAIN_LEVELS }, (_, i) => ({
     overflow: visible;
   }
 
-  /* ---------------------------------------------------------------------
-     SIGNAL FROM ALTITUDE — solutions, security, why PrimeTrack.
+  /* A NOTE ON LINE WEIGHT AT A TILT, because it has caught this file twice.
+     A 1px edge lying on a plane tilted 62deg is 0.47px of screen once
+     projected, and a half-pixel line on a near-black field is a rumour.
+     Every stroke here is specified for its FINAL size, and
+     `vector-effect: non-scaling-stroke` keeps it honest when a 400-unit
+     viewBox is scaled into a box of some other size.
 
-     Coverage, seen from directly above the thing doing the covering. The
-     rings are not concentric circles drawn on one plane: each sits at its
-     own depth, stepping DOWN as it widens, so the set reads as a cone of
-     reach falling away from the mast rather than as a target painted on
-     the ground.
+     WHICH CUTS BOTH WAYS. `non-scaling-stroke` means the weight stays put
+     when the drawing grows, so enlarging the scene by a third made every
+     line a third finer relative to what it was drawing and the whole set
+     went pale at once. Line weight is proportional to the composition, not
+     to the pixel: these numbers belong with the 32rem box above them and
+     want revisiting if that changes again. */
+
+  /* ---------------------------------------------------------------------
+     ONE PLATFORM, IN LAYERS — solutions, security, why PrimeTrack.
+
+     The page's own argument is that this is one platform doing five
+     things, so the hero is that platform drawn as the five plates it is
+     made of, with posts running through all of them. Nothing is filled:
+     you see every layer through every other layer, which is the argument.
   --------------------------------------------------------------------- */
-  [data-scene='rings'] {
-    --tilt: 67deg;
-    --spin: -14deg;
+  [data-scene='layers'] {
+    --tilt: 60deg;
+    --spin: -28deg;
   }
-  .ring {
+  .plate {
     position: absolute;
-    left: 50%;
-    top: 50%;
-    width: calc(14% + var(--i) * 16.4%);
-    aspect-ratio: 1;
-    translate: -50% -50%;
-    transform: translateZ(calc(var(--i) * -8px * var(--depth)));
-    border: 1.5px solid
-      color-mix(in oklab, var(--color-prime-400) calc(78% - var(--i) * 9%), transparent);
-    border-radius: 999px;
+    inset: 0;
+    transform: translateZ(calc(var(--i) * 26px * var(--depth)));
   }
-  /* The innermost ring is the only one with a floor: it is the footprint of
-     the site itself, and it stops the middle of the scene being a hole.
-     `:first-of-type` is safe here only because the rings are emitted first;
-     anything added above them in the markup would take this with it. */
-  .ring:first-of-type {
-    background-image: radial-gradient(closest-side, rgb(243 93 1 / 0.3), transparent);
+  .plate-edge {
+    fill: none;
+    stroke: color-mix(in oklab, var(--color-prime-400) calc(60% + var(--t) * 40%), transparent);
+    stroke-width: calc(2.4px + var(--t) * 2px);
+    vector-effect: non-scaling-stroke;
   }
-  .site {
+  .plate-rule {
+    stroke: color-mix(in oklab, var(--color-prime-300) calc(16% + var(--t) * 32%), transparent);
+    stroke-width: 1.4;
+    vector-effect: non-scaling-stroke;
+  }
+  /* The posts. Upright in a scene where everything else is lying down,
+     which is what tells you the plates are stacked rather than nested. */
+  .post {
     position: absolute;
     left: var(--x);
     top: var(--y);
-    width: 0.4rem;
-    height: 0.4rem;
-    translate: -50% -50%;
-    border-radius: 999px;
-    background-color: var(--color-prime-300);
-    box-shadow: 0 0 0 3px rgb(243 93 1 / 0.18);
-  }
-  .mast {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 2px;
+    width: 1.5px;
     height: 0;
     translate: -50% 0;
-    /* The exact inverse of the stage, innermost rotation first, so the mast
-       stands up out of the plane instead of lying on it. */
     transform: rotateZ(calc(-1 * var(--spin))) rotateX(calc(-1 * var(--tilt)));
     transform-origin: 50% 100%;
   }
-  .mast-shaft {
+  .post::before {
+    content: '';
     position: absolute;
     bottom: 0;
     left: 0;
     width: 2px;
-    height: calc(var(--mast-h, 3.6rem) * var(--depth));
-    background-image: linear-gradient(to top, var(--color-prime-400), transparent);
-  }
-  .mast-cap {
-    position: absolute;
-    bottom: calc(var(--mast-h, 3.6rem) * var(--depth));
-    left: 50%;
-    width: 0.45rem;
-    height: 0.45rem;
-    margin-left: -0.225rem;
-    border-radius: 999px;
-    background-color: var(--color-prime-400);
-    box-shadow: 0 0 12px 3px rgb(243 93 1 / 0.5);
+    height: calc(var(--post-h, 7.4rem) * var(--depth));
+    background-image: linear-gradient(to top, rgb(255 125 41 / 0.14), rgb(255 189 140 / 0.9));
   }
 
   /* ---------------------------------------------------------------------
-     THE WALL, GIVEN DEPTH — industries.
+     EIGHT OPERATIONS, ONE GROUND — industries.
 
-     The eight verticals are already a wall of tiles further down the page.
-     Here it is the same wall seen from the side, turned on `rotateY` so the
-     stagger is visible: every tile stands off the lattice by its own amount
-     and carries a real side face, so the grid has thickness. Turned flat it
-     would be a chequerboard.
+     Eight columns of different height standing on one measured floor:
+     different operations, the same system measuring all of them, which is
+     exactly what the page is for.
   --------------------------------------------------------------------- */
-  [data-scene='wall'] {
-    --tilt: 7deg;
-    --spin: -2deg;
-    --turn: -26deg;
+  [data-scene='field'] {
+    --tilt: 66deg;
+    --spin: -20deg;
   }
-  [data-scene='wall'] .phs-stage {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    grid-auto-rows: 1fr;
-    gap: 0.5rem;
-    padding: 12% 6%;
-  }
-  .tile {
-    position: relative;
-    transform-style: preserve-3d;
-    transform: translateZ(calc(var(--z) * 1px * var(--depth)));
-    border: 1px solid rgb(255 255 255 / 0.17);
-    border-radius: 0.45rem;
-    background-image: linear-gradient(152deg, rgb(255 255 255 / 0.1), transparent 62%);
-  }
-  .tile[data-lit] {
-    border-color: rgb(255 125 41 / 0.55);
-    background-image: linear-gradient(152deg, rgb(243 93 1 / 0.26), transparent 66%);
-    box-shadow: 0 0 22px -6px rgb(243 93 1 / 0.5);
-  }
-  /* The side face. A tile is a slab, and the slab is what the turn is for:
-     without this the wall is twelve rectangles at twelve depths, which the
-     eye reads as a misaligned grid rather than as relief. */
-  .tile-side {
+  .ground {
     position: absolute;
     inset: 0;
-    transform: translateZ(calc(-9px * var(--depth)));
-    border-radius: 0.45rem;
-    background-color: #0b0e13;
-    border: 1px solid rgb(255 255 255 / 0.06);
   }
-
-  /* ---------------------------------------------------------------------
-     EXPLODED UNIT ON A PLINTH — products and services.
-
-     The thing the page is about, taken apart and held above a contour
-     floor. The plinth is the landscape; the slabs are the unit. One leader
-     runs through all three slabs, which is what makes the separation read
-     as an exploded view rather than as three unrelated plates floating.
-  --------------------------------------------------------------------- */
-  [data-scene='device'] {
-    --tilt: 50deg;
-    --spin: -26deg;
+  .ground-rule {
+    stroke: rgb(255 196 148 / 0.3);
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
   }
-  .plinth {
+  .column {
     position: absolute;
-    left: 50%;
-    top: 60%;
-    width: calc(82% - var(--i) * 18%);
-    aspect-ratio: 1;
-    translate: -50% -50%;
-    transform: translateZ(calc(var(--i) * 12px * var(--depth)));
-    border-radius: 999px;
-    border: 1.5px solid
-      color-mix(in oklab, var(--color-prime-400) calc(34% + var(--i) * 24%), transparent);
-    background-color: color-mix(in oklab, #55636f calc(22% + var(--i) * 30%), #0d1218);
-  }
-
-  /* THE SEPARATION IS A SIZE PROBLEM BEFORE IT IS A SPACING ONE.
-
-     A slab 100px deep lying on a plane tilted 50deg is 64px of screen
-     height. Three of those 31px apart overlap almost completely, and no
-     amount of extra elevation fixes it while each part is twice as tall as
-     the gap. The parts are smaller and the gaps are wider: 52px of
-     elevation is 40px of rise, against a foreshortened part height of
-     about 50. They still overlap, the way parts in any exploded view do,
-     but every edge is its own. */
-  .slab {
-    position: absolute;
-    left: 50%;
-    top: 60%;
-    width: calc(36% - var(--i) * 5%);
-    aspect-ratio: 7 / 5;
-    translate: -50% -50%;
-    transform: translateZ(calc((44px + var(--i) * 52px) * var(--depth)));
-    border-radius: 0.45rem;
-    border: 1.5px solid rgb(255 255 255 / 0.34);
-    background-image: linear-gradient(148deg, #5a6878, #232c37 76%);
-    box-shadow: 0 12px 30px -10px rgb(0 0 0 / 0.95);
-  }
-  /* The face. Lit, because it is the part of a tracker anyone ever sees,
-     and carrying the one round thing in the scene: three stacked
-     rectangles are a diagram, and a lens makes them a device. */
-  /* `data-face`, not `:last-of-type`. Every part of this scene is a
-     `span`, so `:last-of-type` means "the last span in the stage" and it
-     silently moved off the top slab and onto the aerial the moment the
-     aerial was added. The face is named rather than counted. */
-  .slab[data-face] {
-    border-color: rgb(255 157 92 / 0.85);
-    background-image: linear-gradient(148deg, #8a4f22, #2a1a10 78%);
-    box-shadow: 0 0 34px -6px rgb(243 93 1 / 0.75);
-  }
-  .slab[data-face]::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 34%;
-    aspect-ratio: 1;
-    translate: -50% -50%;
-    border-radius: 999px;
-    border: 1.5px solid rgb(255 213 184 / 0.75);
-    background-image: radial-gradient(closest-side, rgb(255 157 92 / 0.45), transparent);
-  }
-
-  .aerial {
-    position: absolute;
-    left: 50%;
-    top: 60%;
+    left: var(--x);
+    top: var(--y);
     width: 2px;
-    height: 0;
-    --mast-h: 1.5rem;
-    translate: -50% 0;
-    transform: translateZ(calc(148px * var(--depth))) rotateZ(calc(-1 * var(--spin)))
-      rotateX(calc(-1 * var(--tilt)));
-    transform-origin: 50% 100%;
-  }
-  .leader {
-    position: absolute;
-    left: 50%;
-    top: 60%;
-    width: 1px;
     height: 0;
     translate: -50% 0;
     transform: rotateZ(calc(-1 * var(--spin))) rotateX(calc(-1 * var(--tilt)));
     transform-origin: 50% 100%;
   }
-  .leader::before {
+  .column-shaft {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 2.5px;
+    height: calc(var(--h) * var(--col-h, 9rem) * var(--depth));
+    background-image: linear-gradient(to top, rgb(255 125 41 / 0.16), rgb(255 198 152 / 1));
+  }
+  .column-cap {
+    position: absolute;
+    bottom: calc(var(--h) * var(--col-h, 9rem) * var(--depth));
+    left: 50%;
+    width: 0.5rem;
+    height: 0.5rem;
+    margin-left: -0.25rem;
+    border-radius: 999px;
+    background-color: var(--color-amber-500);
+    box-shadow: 0 0 14px 3px rgb(243 93 1 / 0.55);
+  }
+
+  /* ---------------------------------------------------------------------
+     THE UNIT, AS A DRAWING — products and services.
+
+     Three parts of one object, exploded along a datum, as outlines with
+     called-out corners. A product page is about one object, so the hero
+     is that object; a service page is about what the object reports, and
+     the object is a fair picture of where that starts.
+  --------------------------------------------------------------------- */
+  [data-scene='blueprint'] {
+    --tilt: 56deg;
+    --spin: -30deg;
+  }
+  .part {
+    position: absolute;
+    inset: 0;
+    transform: translateZ(calc((26px + var(--i) * 54px) * var(--depth)));
+  }
+  .part-edge {
+    fill: none;
+    stroke: color-mix(in oklab, var(--color-prime-300) calc(68% + var(--i) * 32%), transparent);
+    stroke-width: calc(2.4px + var(--i) * 0.8px);
+    vector-effect: non-scaling-stroke;
+  }
+  .part-tick {
+    fill: none;
+    stroke: rgb(255 228 208 / 0.95);
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .part-lens {
+    fill: none;
+    stroke: var(--color-amber-500);
+    stroke-width: 2.8;
+    vector-effect: non-scaling-stroke;
+  }
+  .part-lens-core {
+    fill: var(--color-amber-500);
+  }
+  /* The datum the parts are exploded along. */
+  .datum {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 1.5px;
+    height: 0;
+    translate: -50% 0;
+    transform: rotateZ(calc(-1 * var(--spin))) rotateX(calc(-1 * var(--tilt)));
+    transform-origin: 50% 100%;
+  }
+  .datum::before {
     content: '';
     position: absolute;
     bottom: 0;
     left: 0;
-    width: 1.5px;
-    /* Reaches the top slab: 148px of elevation at a 50deg tilt is 113px of
-       screen rise, and the leader is measured in screen space because it
-       is counter-rotated, so this is 7.1rem and not 9.25. */
-    height: calc(7.1rem * var(--depth));
+    width: 2px;
+    height: calc(var(--datum-h, 9.4rem) * var(--depth));
     background-image: linear-gradient(
       to top,
       transparent,
-      rgb(255 157 92 / 0.75) 18%,
-      rgb(255 157 92 / 0.75) 88%,
+      rgb(255 189 140 / 0.8) 14%,
+      rgb(255 189 140 / 0.8) 90%,
       transparent
     );
   }
@@ -555,25 +576,35 @@ const TERRAIN = Array.from({ length: TERRAIN_LEVELS }, (_, i) => ({
      CONVERGENCE — contact.
 
      Eight routes, one for each industry the site serves, arriving at one
-     point. They are bowed alternately off their own straight line, because
-     eight straight spokes is a compass rose and eight curves is traffic.
+     point. Bowed alternately off their own straight line, because eight
+     straight spokes is a compass rose and eight curves is traffic.
   --------------------------------------------------------------------- */
   [data-scene='converge'] {
     --tilt: 64deg;
     --spin: -12deg;
   }
-  /* Eight roads on a near-black field at a 64deg tilt lose most of their
-     length to foreshortening, so they are drawn at full strength and the
-     DEPTH is carried by width and opacity per road rather than by fading
-     the ink. A hairline that fades out is just a hairline that is not
-     there. */
   .route {
     fill: none;
     stroke: url(#phs-route);
-    stroke-width: calc(2.4px - mod(var(--i), 3) * 0.4px);
+    stroke-width: calc(3.4px - mod(var(--i), 3) * 0.5px);
     stroke-linecap: round;
-    stroke-opacity: calc(0.62 + mod(var(--i), 4) * 0.12);
+    stroke-opacity: calc(0.74 + mod(var(--i), 4) * 0.08);
     vector-effect: non-scaling-stroke;
+  }
+  /* At rest the pulse is the road: fully drawn, so the static scene is the
+     finished composition rather than a road with a gap in it. */
+  .pulse {
+    fill: none;
+    stroke: #ffe4d2;
+    stroke-width: 4.2;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+    stroke-dasharray: 0.14 1;
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+  [data-live] .pulse {
+    opacity: 1;
   }
   .origin {
     fill: var(--color-prime-200);
@@ -581,8 +612,8 @@ const TERRAIN = Array.from({ length: TERRAIN_LEVELS }, (_, i) => ({
   }
   .hub-ring {
     fill: rgb(243 93 1 / 0.22);
-    stroke: var(--color-prime-300);
-    stroke-width: 1.6;
+    stroke: var(--color-prime-200);
+    stroke-width: 2.4;
     vector-effect: non-scaling-stroke;
   }
   .hub-core {
@@ -591,77 +622,223 @@ const TERRAIN = Array.from({ length: TERRAIN_LEVELS }, (_, i) => ({
   }
 
   /* ---------------------------------------------------------------------
-     TERRAIN — the quiet default.
+     THE LAND, AS LINES — warranty, careers, tools, blog, legal, 404 and
+     the articles.
 
-     Warranty, careers, tools, the blog index, the legal pages and 404. A
-     loud object on a privacy policy would be a mistake, so this is the
-     hill and nothing else: five contours at five elevations, no road, no
-     instrumentation, no light on it beyond the edges.
+     A loud object on a privacy policy is a mistake, so this is the hill
+     with nothing on it: seven contours at seven elevations, unfilled, each
+     one visible through all the others.
   --------------------------------------------------------------------- */
-  [data-scene='terrain'] {
-    --tilt: 53deg;
+  [data-scene='contours'] {
+    --tilt: 58deg;
     --spin: -24deg;
   }
   .contour {
     position: absolute;
     inset: 0;
-    transform: translateZ(calc(var(--i) * 13px * var(--depth)));
+    transform: translateZ(calc(var(--i) * 15px * var(--depth)));
   }
-  .contour svg {
-    display: block;
-    width: 100%;
-    height: 100%;
-    overflow: visible;
-  }
-  /* The fills start at #1a212a, not at the page's own ink. Mixing rock
-     INTO the ground colour on top of the ground colour is how the first
-     version of this managed to be a hill you could not see: every plate
-     resolved to within a few percent of the background it was sitting on.
-     The stack now climbs from slate to steel, and each cut edge is lit. */
   .contour path {
-    fill: color-mix(in oklab, #55636f calc(26% + var(--t) * 74%), #10151c);
-    stroke: color-mix(in oklab, var(--color-prime-400) calc(40% + var(--t) * 55%), transparent);
-    stroke-width: 2;
+    fill: none;
+    stroke: color-mix(in oklab, var(--color-prime-300) calc(48% + var(--t) * 52%), transparent);
+    stroke-width: calc(2.2px + var(--t) * 1.8px);
     vector-effect: non-scaling-stroke;
   }
 
   /* ---------------------------------------------------------------------
-     RECOMPOSED, NOT HIDDEN.
-
-     Under the copy as its own band, smaller, and flatter: at this width the
-     scene is read at a glance on the way past rather than studied, and a
-     steep camera that was legible at 420px is a smear at 240.
+     RECOMPOSED, NOT HIDDEN. Under the copy as its own band, smaller, and
+     with most of the relief taken out: at this width the scene is read at
+     a glance on the way past rather than studied.
   --------------------------------------------------------------------- */
   @media (width < 64rem) {
     .phs {
-      max-width: 17rem;
-      --depth: 0.62;
-    }
-    [data-scene='rings'] {
-      --tilt: 62deg;
-    }
-    [data-scene='wall'] {
-      --turn: -18deg;
-    }
-    [data-scene='device'] {
-      --tilt: 52deg;
-    }
-    [data-scene='converge'] {
-      --tilt: 58deg;
-    }
-    [data-scene='terrain'] {
-      --tilt: 58deg;
-    }
-    [data-scene='rings'] {
-      --mast-h: 2.9rem;
+      max-width: 18rem;
+      --depth: 0.58;
+      --post-h: 4.4rem;
+      --col-h: 4.2rem;
+      --datum-h: 5.6rem;
     }
   }
 
+  /* =====================================================================
+     DRIVEN. Everything above is the finished, static composition; nothing
+     below applies until the handler has attached, so reduced motion, a
+     failed script and a blocked module all leave a complete scene.
+
+     Every camera here swings on `--s`, which is what buys the parallax: at
+     a given sweep the near parts of a scene travel several times as far
+     across the screen as the far ones, and that difference is the only
+     depth cue in a browser the eye really trusts.
+  --------------------------------------------------------------------- */
+
+  /* `--t` IS NOT JUST `--s` RESCALED. A hero sits at the top of its page,
+     so it is already on screen when the page loads and can never play an
+     "entering" half: at load `--s` is about 0.2 and only ever climbs.
+     Mapping events to (s+1)/2 spent half of every event on scroll
+     positions that do not exist, so each one arrived half-finished. This
+     is the band actually available — load to gone — mapped onto 0..1. */
+  .phs[data-live] {
+    --t: clamp(0, (var(--s, 0) - 0.12) * 1.15, 1);
+  }
+
+  /* The platform fans into its layers. */
+  [data-live][data-scene='layers'] {
+    --tilt: calc(64deg - var(--s, 0) * 24deg);
+    --spin: calc(-36deg + var(--s, 0) * 48deg);
+  }
+  [data-live][data-scene='layers'] .plate {
+    transform: translateZ(calc(var(--i) * (10px + var(--t) * 34px) * var(--depth)));
+  }
+  [data-live][data-scene='layers'] .post::before {
+    height: calc((2.2rem + 6.6rem * var(--t)) * var(--depth));
+  }
+
+  /* The operations rise off the ground, each at its own rate, so the
+     skyline builds rather than switching on. */
+  [data-live][data-scene='field'] {
+    --tilt: calc(70deg - var(--s, 0) * 24deg);
+    --spin: calc(-30deg + var(--s, 0) * 48deg);
+    /* Floored at half height. The event is the skyline BUILDING, and a
+       skyline that starts at nothing is an empty scene for whoever lands
+       on the page and does not scroll. */
+    --rise: calc(0.5 + var(--t) * 0.5);
+  }
+  [data-live][data-scene='field'] .column-shaft {
+    height: calc(var(--h) * var(--col-h, 7rem) * var(--depth) * var(--rise));
+  }
+  [data-live][data-scene='field'] .column-cap {
+    bottom: calc(var(--h) * var(--col-h, 7rem) * var(--depth) * var(--rise));
+  }
+
+  /* The unit puts itself together: blown open at the bottom of the
+     viewport, assembled by the time the scene reaches the top. The one
+     event here that is a mechanism rather than a light, and it is on the
+     product pages because that is what a product page is about. */
+  [data-live][data-scene='blueprint'] {
+    --tilt: calc(60deg - var(--s, 0) * 24deg);
+    --spin: calc(-38deg + var(--s, 0) * 46deg);
+    --sep: calc(1.15 - var(--t) * 1);
+  }
+  [data-live][data-scene='blueprint'] .part {
+    transform: translateZ(calc((26px + var(--i) * 54px * var(--sep)) * var(--depth)));
+  }
+  [data-live][data-scene='blueprint'] .datum::before {
+    height: calc((2.4rem + 7rem * var(--sep)) * var(--depth));
+  }
+
+  /* Eight arrivals, in sequence. A 14% dash on a `pathLength="1"` road,
+     offset by `--t` and staggered by index so the eight do not pulse in
+     unison. */
+  [data-live][data-scene='converge'] {
+    --tilt: calc(68deg - var(--s, 0) * 22deg);
+    --spin: calc(-20deg + var(--s, 0) * 40deg);
+  }
+  [data-live][data-scene='converge'] .pulse {
+    stroke-dashoffset: calc(0.07 - var(--t) * 1.5 + var(--i) * 0.055);
+  }
+  [data-live][data-scene='converge'] .hub-ring {
+    r: calc(17px + var(--t) * 7px);
+    stroke-opacity: calc(0.55 + var(--t) * 0.45);
+  }
+
+  /* The land lifts into its contours. Seven lines at seven elevations is a
+     fact about the object that a still picture cannot tell you; pulling
+     them apart as the page moves says it in one gesture. */
+  [data-live][data-scene='contours'] {
+    --tilt: calc(62deg - var(--s, 0) * 22deg);
+    --spin: calc(-32deg + var(--s, 0) * 46deg);
+  }
+  [data-live][data-scene='contours'] .contour {
+    transform: translateZ(calc(var(--i) * (5px + var(--t) * 26px) * var(--depth)));
+  }
+
   /* The composition is finished at rest, so this only ever removes the
-     arrival, never the scene. */
+     arrival, never the scene. The handler declines to attach at all. */
   @media (prefers-reduced-motion: reduce) {
     .phs {
       animation: none;
     }
   }
 </style>
+
+<script>
+  /**
+   * Drives every hero scene on the page.
+   *
+   * Writes ONE custom property per scene, `--s`: how far that scene has
+   * travelled up the viewport, -1 at the bottom edge, 0 dead centre, +1 at
+   * the top. Where the camera points and what each scene is doing are both
+   * derived from it in CSS; nothing here knows about plates, columns or
+   * parts.
+   *
+   * One handler for every scene rather than one per scene, and an
+   * IntersectionObserver keeps the per-frame loop to the scenes actually on
+   * screen — which, on these pages, is at most one. Reads are batched into a
+   * requestAnimationFrame, so a scroll burst costs one layout read per frame
+   * however fast the wheel is turning.
+   *
+   * `data-live` is only set once this runs, and every rule that moves
+   * anything is scoped to it. If the script never executes, if the module is
+   * blocked, or if the visitor has asked for reduced motion, the scene
+   * renders as the finished static composition rather than as a broken one.
+   */
+  const scenes = Array.from(document.querySelectorAll<HTMLElement>('.phs'));
+
+  if (scenes.length && 'IntersectionObserver' in window) {
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const live = new Set<HTMLElement>();
+    let frame = 0;
+
+    const update = () => {
+      frame = 0;
+      const vh = window.innerHeight || 1;
+      for (const el of live) {
+        const rect = el.getBoundingClientRect();
+        const mid = rect.top + rect.height / 2;
+        const s = Math.max(-1, Math.min(1, 1 - (2 * mid) / vh));
+        el.style.setProperty('--s', s.toFixed(4));
+      }
+    };
+
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+
+    /* A generous margin so a scene is already being driven by the time its
+       first pixel is visible, and never arrives mid-pose. */
+    const seen = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) live.add(entry.target as HTMLElement);
+          else live.delete(entry.target as HTMLElement);
+        }
+        schedule();
+      },
+      { rootMargin: '30% 0px' },
+    );
+
+    const apply = () => {
+      if (still.matches) {
+        window.removeEventListener('scroll', schedule);
+        window.removeEventListener('resize', schedule);
+        live.clear();
+        for (const el of scenes) {
+          seen.unobserve(el);
+          el.removeAttribute('data-live');
+          el.style.removeProperty('--s');
+        }
+        return;
+      }
+      for (const el of scenes) {
+        el.setAttribute('data-live', '');
+        seen.observe(el);
+      }
+      window.addEventListener('scroll', schedule, { passive: true });
+      window.addEventListener('resize', schedule, { passive: true });
+      schedule();
+    };
+
+    still.addEventListener('change', apply);
+    apply();
+  }
+</script>

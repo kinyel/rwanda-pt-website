@@ -86,8 +86,13 @@ const { locale, eyebrow, title, lead, chips, crumbs, scene } = Astro.props;
      sensible measure. */
   @media (width >= 64rem) {
     .pagehero-body-scene {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 0.58fr);
-      gap: 3.5rem;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 0.78fr);
+      gap: 3rem;
+      /* The scene needs scroll to play its event through, and a hero only
+         gets as much scroll as it is tall. This is the floor that buys it
+         roughly 500px on a laptop without making any page's first screen
+         a picture with a sentence on it. */
+      min-height: 26rem;
     }
   }
 </style>
