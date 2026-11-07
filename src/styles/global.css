@@ -2047,6 +2047,15 @@
       margin-top: 3rem;
     }
   }
+  /* The list takes the extra width when it goes to three columns; the
+     tower keeps its presence by being bigger, not by holding more of the
+     page than it needs. */
+  @media (width >= 80rem) {
+    .brief-body {
+      grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.8fr);
+      gap: 4.5rem;
+    }
+  }
 
   /* ---- The tower ------------------------------------------------------ */
   .brief-visual {
@@ -2295,6 +2304,15 @@
     }
     .brief-option-other {
       grid-column: 1 / -1;
+    }
+  }
+  /* Three across once the band is wide enough to give a card a readable
+     column. Not before: each one carries a line of body as well as a
+     label, and at 1024px a third of the list column is 158px, which wraps
+     that body to six lines and turns a scannable grid into a wall. */
+  @media (width >= 80rem) {
+    .brief-options {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
   }
   .brief-option {
