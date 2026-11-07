@@ -131,7 +131,51 @@ const RINGS = [0, 1, 2, 3].map((level) => {
 
   <ol class="iw-list" role="list">
     {
-      industries.map((industry, i) => {
+      industries.slice(0, 4).map((industry, i) => {
+        const copy = items[industry.key];
+        return (
+          <li class="iw-row" style={`--i:${i}; --tone:${TONES[i]}`}>
+            <a href={localizePath(industryPath(industry.slug), locale)} class="iw-link">
+              <span class="iw-n" aria-hidden="true">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <span class="iw-text">
+                <span class="iw-name">{copy.name}</span>
+                <span class="iw-sum">{copy.summary}</span>
+              </span>
+              <span class="iw-go" aria-hidden="true">
+                <svg viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M3 8h9m0 0L8.5 4.5M12 8l-3.5 3.5"
+                    stroke="currentColor"
+                    stroke-width="1.7"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </span>
+            </a>
+          </li>
+        );
+      })
+    }
+  </ol>
+
+  {/* THE SECOND FOUR RUN ACROSS THE FOOT OF THE SECTION.
+
+      Eight rows beside a map left the map floating in half a column of
+      nothing: the list was twice as tall as the thing it annotates. Four
+      beside it and four across the bottom squares the composition up, and
+      the strip doubles as the section's own baseline — the eye lands on
+      the map, reads down the four, then runs left to right out of the
+      block, which is the direction it wants to leave in anyway.
+
+      `start` keeps the ordinals honest: this is a continuation of the
+      list above it, not a second list that happens to begin at five. */}
+  <ol class="iw-strip" role="list" start="5">
+    {
+      industries.slice(4).map((industry, n) => {
+        const i = n + 4;
         const copy = items[industry.key];
         return (
           <li class="iw-row" style={`--i:${i}; --tone:${TONES[i]}`}>
@@ -174,16 +218,46 @@ const RINGS = [0, 1, 2, 3].map((level) => {
   @media (width >= 64rem) {
     .iw-has-map {
       grid-template-columns: minmax(0, 0.95fr) minmax(0, 1fr);
-      gap: 4.5rem;
-      align-items: start;
+      grid-template-areas:
+        'map list'
+        'strip strip';
+      gap: 3.5rem 4.5rem;
+      align-items: center;
     }
-    /* The map holds while the list runs past it. Centred against eight
-       rows it parked halfway down and looked like something the layout
-       had nowhere else to put; pinned, it is the thing the list is
-       annotating and it is on screen for the whole of the read. */
-    .iw-visual {
-      position: sticky;
-      top: calc(var(--header-h) + 3rem);
+    .iw-visual { grid-area: map; }
+    .iw-list { grid-area: list; }
+    .iw-strip { grid-area: strip; }
+
+    /* Four across, and the only thing dividing them is a rule and a
+       column of air. Each still carries its numeral, its name and its
+       sentence, so the strip is the same object as the list above it
+       turned on its side rather than a different, smaller treatment. */
+    .iw-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      column-gap: 2.25rem;
+      border-top: 1px solid var(--color-ink-200);
+      padding-top: 0.5rem;
+    }
+    .iw-strip .iw-row + .iw-row {
+      border-top: 0;
+    }
+    .iw-strip .iw-link {
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: start;
+      column-gap: 0.85rem;
+      padding-block: 1.5rem 0.5rem;
+    }
+    /* The arrow has nowhere sensible to sit in a narrow column, and the
+       row stepping in says the same thing. */
+    .iw-strip .iw-go {
+      display: none;
+    }
+    .iw-strip .iw-name {
+      font-size: 1.0625rem;
+    }
+    .iw-strip .iw-sum {
+      font-size: 0.875rem;
     }
   }
 
@@ -345,6 +419,25 @@ const RINGS = [0, 1, 2, 3].map((level) => {
     display: flex;
     flex-direction: column;
   }
+
+  /* THE STRIP'S STACKED FORM IS SCOPED TO NARROW ON PURPOSE.
+
+     It was an unconditional `display: flex` sitting further down the file
+     than the lg block that makes it a four-column grid. Same specificity,
+     later in source, so flex won at every width and the four ran down the
+     page in one column while `grid-template-columns` sat there computing
+     correctly and doing nothing. Putting the stacked form behind its own
+     query means the two never compete.
+
+     Below lg the strip is simply more rows, so it also needs the rule
+     that would otherwise only exist between siblings of one list. */
+  @media (width < 64rem) {
+    .iw-strip {
+      display: flex;
+      flex-direction: column;
+      border-top: 1px solid var(--color-ink-200);
+    }
+  }
   /* ink-200, not ink-100. This section sits on the tint, where ink-100 is
      within a couple of percent of the ground and the rules disappear —
      and a list with no rules is eight paragraphs. */
@@ -436,27 +529,33 @@ const RINGS = [0, 1, 2, 3].map((level) => {
   /* ---------------------------------------------------------------------
      THE LINK BETWEEN THE TWO HALVES.
 
-     Eight rules, written out rather than generated, because eight is few
-     enough to read and a generated block would have to escape Astro's
-     scoping to exist. Each one publishes the hovered row's index; the pins
+     Sixteen rules, written out rather than generated, because sixteen is
+     few enough to read and a generated block would have to escape Astro's
+     scoping to exist. Each publishes the hovered row's index and the pins
      work out the rest for themselves.
+
+     They are scoped to `.iw-list` and `.iw-strip` separately on purpose.
+     `nth-child` counts within a parent, so once the eight were split
+     across two lists an unscoped `:nth-child(1)` matched both the first
+     row beside the map and the first row in the strip, and pointing at
+     industry five lit industry one's pin.
   --------------------------------------------------------------------- */
-  .iw:has(.iw-row:nth-child(1) .iw-link:hover) { --active: 0; }
-  .iw:has(.iw-row:nth-child(2) .iw-link:hover) { --active: 1; }
-  .iw:has(.iw-row:nth-child(3) .iw-link:hover) { --active: 2; }
-  .iw:has(.iw-row:nth-child(4) .iw-link:hover) { --active: 3; }
-  .iw:has(.iw-row:nth-child(5) .iw-link:hover) { --active: 4; }
-  .iw:has(.iw-row:nth-child(6) .iw-link:hover) { --active: 5; }
-  .iw:has(.iw-row:nth-child(7) .iw-link:hover) { --active: 6; }
-  .iw:has(.iw-row:nth-child(8) .iw-link:hover) { --active: 7; }
-  .iw:has(.iw-row:nth-child(1) .iw-link:focus-visible) { --active: 0; }
-  .iw:has(.iw-row:nth-child(2) .iw-link:focus-visible) { --active: 1; }
-  .iw:has(.iw-row:nth-child(3) .iw-link:focus-visible) { --active: 2; }
-  .iw:has(.iw-row:nth-child(4) .iw-link:focus-visible) { --active: 3; }
-  .iw:has(.iw-row:nth-child(5) .iw-link:focus-visible) { --active: 4; }
-  .iw:has(.iw-row:nth-child(6) .iw-link:focus-visible) { --active: 5; }
-  .iw:has(.iw-row:nth-child(7) .iw-link:focus-visible) { --active: 6; }
-  .iw:has(.iw-row:nth-child(8) .iw-link:focus-visible) { --active: 7; }
+  .iw:has(.iw-list .iw-row:nth-child(1) .iw-link:hover) { --active: 0; }
+  .iw:has(.iw-list .iw-row:nth-child(2) .iw-link:hover) { --active: 1; }
+  .iw:has(.iw-list .iw-row:nth-child(3) .iw-link:hover) { --active: 2; }
+  .iw:has(.iw-list .iw-row:nth-child(4) .iw-link:hover) { --active: 3; }
+  .iw:has(.iw-strip .iw-row:nth-child(1) .iw-link:hover) { --active: 4; }
+  .iw:has(.iw-strip .iw-row:nth-child(2) .iw-link:hover) { --active: 5; }
+  .iw:has(.iw-strip .iw-row:nth-child(3) .iw-link:hover) { --active: 6; }
+  .iw:has(.iw-strip .iw-row:nth-child(4) .iw-link:hover) { --active: 7; }
+  .iw:has(.iw-list .iw-row:nth-child(1) .iw-link:focus-visible) { --active: 0; }
+  .iw:has(.iw-list .iw-row:nth-child(2) .iw-link:focus-visible) { --active: 1; }
+  .iw:has(.iw-list .iw-row:nth-child(3) .iw-link:focus-visible) { --active: 2; }
+  .iw:has(.iw-list .iw-row:nth-child(4) .iw-link:focus-visible) { --active: 3; }
+  .iw:has(.iw-strip .iw-row:nth-child(1) .iw-link:focus-visible) { --active: 4; }
+  .iw:has(.iw-strip .iw-row:nth-child(2) .iw-link:focus-visible) { --active: 5; }
+  .iw:has(.iw-strip .iw-row:nth-child(3) .iw-link:focus-visible) { --active: 6; }
+  .iw:has(.iw-strip .iw-row:nth-child(4) .iw-link:focus-visible) { --active: 7; }
 
   @media (width < 64rem) {
     .iw-visual {
