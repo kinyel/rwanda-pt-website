@@ -169,11 +169,13 @@ const whyKeys = ['regulator', 'support', 'hardware'] as const;
        assembles into a stack beside them and then into an email. The question
        at the top of the block stopped being rhetorical. -->
   <Section tone="light">
-    <SectionHeader eyebrow={t.home.challenges.eyebrow} title={t.home.challenges.title} lead={t.home.challenges.lead} />
-    <div class="mt-10 reveal">
+    <div class="reveal">
       <FleetBrief
         client:visible
         formId={FORMSPREE_ID}
+        eyebrow={t.home.challenges.eyebrow}
+        title={t.home.challenges.title}
+        lead={t.home.challenges.lead}
         seeAnswer={t.home.challenges.seeAnswer}
         labels={t.home.challenges.form}
         items={challenges.map((challenge) => ({
