@@ -125,7 +125,7 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
           <ul class="spiral-list" role="list">
             {
               items.map((item, i) => (
-                <li>
+                <li style={`--i:${i}`}>
                   <a href={localizePath(item.href, locale)} class="spiral-link" data-spiral-link style={`--i:${i}`}>
                     <span class="spiral-link-index">{String(i + 1).padStart(2, '0')}</span>
                     <span class="spiral-link-label">{resolveKey(t, item.titleKey)}</span>
@@ -142,7 +142,6 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
                layers at three real depths behind the staircase: see the
                block comment on `.spiral-aurora` below. -->
           <div class="spiral-spine" aria-hidden="true">
-            <span class="spiral-aurora"></span>
             <span class="spiral-stars">
               {STARS.map((star) => (
                 <i style={`--x:${star.x}%; --y:${star.y}%; --z:${star.z}px; --o:${star.o}`} />
@@ -150,6 +149,7 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
             </span>
             <span class="spiral-ground"></span>
             <span class="spiral-spine-line"></span>
+            <span class="spiral-spine-node"></span>
             <span class="spiral-glow"></span>
           </div>
 
@@ -158,8 +158,17 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
               items.map((item, i) => (
                 <a href={localizePath(item.href, locale)} class="spiral-item" style={`--i:${i}`} data-spiral-item>
                   <span class="spiral-card">
-                    <span class="spiral-card-icon" aria-hidden="true">
-                      <Icon name={item.icon} size={20} />
+                    {/* A header row rather than a stack. The icon had been
+                        sitting on its own line with nothing to balance it,
+                        which left the top of every card lopsided; the index
+                        gives it a counterweight and ties the card to the
+                        numbered list on the left. Hidden from assistive
+                        technology because that list is the real one. */}
+                    <span class="spiral-card-top" aria-hidden="true">
+                      <span class="spiral-card-icon">
+                        <Icon name={item.icon} size={20} />
+                      </span>
+                      <span class="spiral-card-n" data-n={String(i + 1).padStart(2, '0')} />
                     </span>
                     <span class="spiral-card-label">{resolveKey(t, item.titleKey)}</span>
                     <span class="spiral-card-desc">{resolveKey(t, item.descriptorKey)}</span>
@@ -275,7 +284,7 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
   }
 
   .spiral-menu-title {
-    margin-top: 1.75rem;
+    margin-top: 2.25rem;
     font-size: var(--text-label);
     font-weight: 700;
     letter-spacing: 0.15em;
@@ -285,25 +294,105 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
     color: var(--color-ink-400);
   }
 
+  /* THE INDEX IS AN INSTRUMENT, NOT A LIST OF LINKS.
+
+     It was six rows of text with the current one turned white, which is a
+     perfectly good menu and says nothing about the thing it is attached
+     to. It now runs down a rail: hairline rules between the rows, a track
+     down the left, and — once the helix is driving — a lit segment on that
+     track that slides with the descent.
+
+     The segment's position is `--k`, the fractional card index the camera
+     is on, which is the same number the staircase turns by. It is not
+     synchronised with the stage; it is the stage's own number, read twice.
+     No JavaScript, no second source of truth, and nothing to fall out of
+     step. */
   .spiral-list {
-    margin-top: 0.5rem;
+    position: relative;
+    margin-top: 1rem;
+    padding-left: 1.6rem;
     display: flex;
     flex-direction: column;
   }
+  /* The track, faded at both ends so it reads as a run rather than a box
+     edge. */
+  .spiral-list::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    width: 1px;
+    background-image: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(255 255 255 / 0.16) 7%,
+      rgb(255 255 255 / 0.16) 93%,
+      transparent
+    );
+  }
+  /* THE RULES DESCEND TOO.
+
+     A list of six evenly ruled rows beside a staircase is two different
+     rhythms in one column. Each rule is shorter than the one above it, so
+     the index steps down to the right exactly as the helix steps down past
+     the camera, and the whole left column reads as part of the same
+     mechanism rather than as a menu that happens to be next to it.
+
+     Width comes from the row's own index, so adding a seventh product is
+     still one line of markup. */
+  .spiral-list > li {
+    position: relative;
+  }
+  .spiral-list > li + li::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 1px;
+    width: calc(100% - (var(--i) - 1) * 15%);
+    background-image: linear-gradient(
+      to right,
+      rgb(255 255 255 / 0.14),
+      rgb(255 255 255 / 0.03)
+    );
+  }
 
   .spiral-link {
-    display: flex;
-    align-items: baseline;
-    gap: 0.85rem;
-    padding-block: 0.6rem;
+    position: relative;
+    display: grid;
+    grid-template-columns: 1.75rem minmax(0, 1fr) 1.1rem;
+    align-items: center;
+    gap: 0.5rem;
+    padding-block: 0.7rem;
     color: var(--color-ink-400);
     transition:
       color var(--duration-base) var(--ease-prime),
       transform var(--duration-base) var(--ease-prime);
   }
+  /* A short rule pointing at the stage, on the row being looked at and on
+     whatever the pointer is over. It is the only ornament in the column and
+     it earns its place by saying which way the eye should go next. */
+  .spiral-link::after {
+    content: '';
+    justify-self: end;
+    width: 1.1rem;
+    height: 1px;
+    background-color: currentColor;
+    opacity: 0;
+    transform: translateX(-0.4rem);
+    transition:
+      opacity var(--duration-base) var(--ease-prime),
+      transform var(--duration-base) var(--ease-prime);
+  }
+  .spiral-link:hover::after,
+  .spiral-link[data-current]::after {
+    opacity: 0.75;
+    transform: none;
+  }
   .spiral-link-index {
     font-size: var(--text-label);
-    font-weight: 700;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
     /* ink-400, not ink-500 or ink-600. The reference sits these numerals much
        darker, but they are the list's ordinals, not decoration: on ink-950,
        ink-500 is 3.3:1 and ink-600 is 2.2:1, both under the 4.5:1 AA floor for
@@ -330,6 +419,21 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
      pairing, so the index and the stage read as one instrument. */
   .spiral-link[data-current] {
     color: var(--color-white);
+  }
+  /* The lit segment. One row tall, parked at `--k` rows down, so it slides
+     continuously rather than jumping between rows: during a turn it sits
+     between the two it is handing over between, exactly as the helix
+     does. */
+  .spiral[data-on] .spiral-list::after {
+    content: '';
+    position: absolute;
+    left: -1px;
+    width: 3px;
+    height: calc(100% / var(--count));
+    top: calc(var(--k) / var(--count) * 100%);
+    border-radius: 999px;
+    background-image: linear-gradient(to bottom, var(--color-amber-500), var(--color-prime-500));
+    box-shadow: 0 0 18px 1px rgb(243 93 1 / 0.45);
   }
   .spiral-link[data-current] .spiral-link-index {
     color: var(--color-prime-400);
@@ -376,25 +480,64 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
     height: 100%;
     padding: 1.5rem;
     /* THE SIGNATURE. A hairline that is brand orange on the card facing the
-       camera and all but gone on the ones turned away. On the dark ground this
-       edge is the whole read: it is what makes a card look lit rather than
-       drawn. */
+       camera and ordinary paper edge on the ones turned away. */
     border: 1px solid
-      color-mix(in oklab, var(--color-prime-500) calc(var(--lit) * 88%), rgb(255 255 255 / 0.09));
+      color-mix(in oklab, var(--color-prime-500) calc(var(--lit) * 80%), rgb(16 21 28 / 0.14));
     border-radius: var(--radius-panel);
-    /* Warm near-black, lifted at the top-left corner and falling away, so the
-       panel has a lit edge and a shaded one instead of reading as a flat hole
-       cut in the section. */
-    background-image: linear-gradient(158deg, #17130f 0%, #110e0c 56%, #0b0a09 100%);
+    /* WHITE, NOT NEAR-BLACK.
+
+       The cards were warm near-black on a warm near-black ground, which is
+       why the helix needed an orange hairline to be visible at all: the
+       only thing separating a card from the room was a 1px edge. Paper on
+       a dark ground separates itself. The staircase now reads as objects
+       lit in a dark space rather than as panels cut out of it, every
+       depth cue the room gained has something to land on, and the
+       hairline is free to do emphasis instead of basic legibility.
+
+       The gradient runs top-left to bottom-right, so each card has a lit
+       corner and a shaded one and does not read as a flat rectangle. */
+    background-image: linear-gradient(158deg, #ffffff 0%, #f7f9fb 52%, #e9edf2 100%);
     box-shadow:
-      0 1px 2px rgb(0 0 0 / 0.4),
-      0 26px 60px -26px rgb(0 0 0 / 0.85),
-      /* The orange spill, again tied to --lit. Sits inside the shadow list so
-         it costs nothing extra to paint. */
-      0 18px 60px -30px rgb(243 93 1 / calc(var(--lit) * 0.6));
+      /* Contact, then cast, then spill. A white card on near-black needs a
+         real shadow or it looks pasted on rather than standing in the
+         room. */
+      0 1px 2px rgb(0 0 0 / 0.55),
+      0 30px 70px -26px rgb(0 0 0 / 0.95),
+      0 20px 64px -28px rgb(243 93 1 / calc(var(--lit) * 0.7)),
+      /* A hairline of light along the top edge, inside the card. Paper
+         catches the light on the edge nearest it, and without this the
+         card is a flat rectangle of white rather than a sheet. */
+      inset 0 1px 0 rgb(255 255 255 / 0.9);
     transition:
       border-color var(--duration-base) var(--ease-prime),
       box-shadow var(--duration-base) var(--ease-prime);
+  }
+
+  .spiral-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+  /* Quiet: it is a marker, not a heading. ink-400 on paper is 3.4:1, which
+     is under the text floor, and that is the point — it is the one thing on
+     the card that is allowed to be furniture.
+
+     DRAWN FROM AN ATTRIBUTE, NOT WRITTEN INTO THE MARKUP. These numerals
+     already exist on this page, in the index list beside the stage, and
+     putting a second set into the card text changed the body copy of the
+     two busiest pages on the site for the sake of a design flourish. The
+     page-text diff caught it. Generated content keeps the text exactly
+     what it was. */
+  .spiral-card-n::before {
+    content: attr(data-n);
+  }
+  .spiral-card-n {
+    font-size: 0.8125rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.08em;
+    color: var(--color-ink-400);
   }
 
   .spiral-card-icon {
@@ -404,24 +547,25 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
     width: 2.5rem;
     height: 2.5rem;
     border-radius: 999px;
-    background-color: rgb(243 93 1 / calc(0.05 + var(--lit) * 0.13));
-    border: 1px solid rgb(243 93 1 / calc(0.10 + var(--lit) * 0.28));
-    color: var(--color-prime-400);
+    background-color: rgb(243 93 1 / calc(0.06 + var(--lit) * 0.1));
+    border: 1px solid rgb(243 93 1 / calc(0.14 + var(--lit) * 0.32));
+    /* prime-700 is 5.8:1 on paper, where prime-400 was the dark-ground
+       colour and would be 2.1:1 here. */
+    color: var(--color-prime-700);
   }
 
   .spiral-card-label {
     font-size: var(--text-h4);
     font-weight: 700;
-    color: var(--color-white);
+    color: var(--color-ink-950);
   }
 
   .spiral-card-desc {
     font-size: var(--text-small);
     line-height: 1.5;
-    /* ink-300 is 9.2:1 on the card ground. The reference sits this text darker,
-       but at 15px that would land under the AA floor, and the card is already
-       separated from its label by size and weight. */
-    color: var(--color-ink-300);
+    /* ink-600 is 9.1:1 on paper — the same separation the dark card got
+       from ink-300, read the other way up. */
+    color: var(--color-ink-600);
   }
 
   .spiral-card-cta {
@@ -432,17 +576,17 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
     padding-top: 0.4rem;
     font-size: var(--text-small);
     font-weight: 700;
-    /* prime-400, not prime-700: 7.8:1 on this ground where the light-mode
-       orange would have been 1.3:1. */
-    color: var(--color-prime-400);
+    /* prime-700: 5.8:1 on paper. prime-400, which this used to be, is the
+       dark-ground orange and lands at 2.1:1 here. */
+    color: var(--color-prime-700);
   }
 
   .spiral-item:hover .spiral-card {
-    border-color: var(--color-prime-400);
+    border-color: var(--color-prime-500);
     box-shadow:
-      0 1px 2px rgb(0 0 0 / 0.4),
-      0 26px 60px -26px rgb(0 0 0 / 0.85),
-      0 22px 64px -26px rgb(243 93 1 / 0.5);
+      0 1px 2px rgb(0 0 0 / 0.55),
+      0 30px 70px -26px rgb(0 0 0 / 0.95),
+      0 24px 68px -24px rgb(243 93 1 / 0.6);
   }
   .spiral-item:focus-visible {
     /* prime-400 on dark, where prime-500 would be the light-mode ring. */
@@ -516,7 +660,17 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
   .spiral-spine-line {
     width: 1px;
     height: 100%;
-    background-image: linear-gradient(transparent, rgb(243 93 1 / 0.42) 22% 78%, transparent);
+    background-image: linear-gradient(transparent, rgb(255 125 41 / 0.55) 20% 80%, transparent);
+  }
+  /* The read head of the whole mechanism. The card the camera is square to
+     is always at the centre of the stage, so this never has to move: it is
+     simply the point the staircase turns past, lit. */
+  .spiral-spine-node {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+    background-color: var(--color-amber-500);
+    box-shadow: 0 0 20px 4px rgb(243 93 1 / 0.55);
   }
   .spiral-glow {
     width: 26rem;
@@ -539,11 +693,13 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
      Three layers fix that, and all three are depth cues rather than
      decoration:
 
-     AURORA, far back and COOL. Distance desaturates and cools — that is
-     atmospheric perspective, and it is the cheapest honest way to say
-     "this is further away" to an eye that has no stereo to go on. The warm
-     helix now sits in front of a cool night instead of in front of more of
-     itself.
+     There was a third, a cool wash far at the back, on the theory that
+     distance desaturates and cools. It does — but a blue at 30% over
+     near-black is grey, and a 760px-wide blurred grey sitting between the
+     index column and the staircase read as a smudge on the screen rather
+     than as air. Atmospheric perspective needs something to be atmospheric
+     ABOUT, and this room is too dark for it. Gone, and the section is
+     cleaner without it.
 
      STARS, scattered through the middle distance at 26 different depths.
      The perspective sizes them for free, so the near ones are visibly
@@ -556,16 +712,6 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
      converging toward the horizon say how far down it goes.
 
      None of it animates. It is a room, and rooms hold still. */
-  .spiral-aurora {
-    width: 165%;
-    height: 90%;
-    transform: translateZ(-520px);
-    background-image:
-      radial-gradient(58% 46% at 32% 34%, rgb(68 108 178 / 0.3), transparent 72%),
-      radial-gradient(54% 58% at 74% 68%, rgb(243 93 1 / 0.24), transparent 74%);
-    filter: blur(34px);
-  }
-
   .spiral-stars {
     width: 100%;
     height: 100%;
@@ -585,7 +731,7 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
   }
 
   .spiral-ground {
-    width: 180%;
+    width: 122%;
     height: 150%;
     max-width: none;
     max-height: none;
@@ -610,14 +756,14 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
     background-image:
       repeating-radial-gradient(
         ellipse 100% 100% at 50% 50%,
-        rgb(255 255 255 / 0.2) 0 2px,
+        rgb(255 196 148 / 0.22) 0 2px,
         transparent 2px 58px
       ),
-      radial-gradient(ellipse 38% 40% at 50% 50%, rgb(243 93 1 / 0.2), transparent 72%);
+      radial-gradient(ellipse 38% 40% at 50% 50%, rgb(243 93 1 / 0.22), transparent 72%);
     /* Fades out well before its own edge, so the floor has a horizon
        instead of a rectangle's corner, and never reaches the index list
        in the left column. */
-    mask-image: radial-gradient(ellipse 44% 48% at 50% 50%, #000 0%, transparent 74%);
+    mask-image: radial-gradient(ellipse 40% 46% at 50% 50%, #000 0%, transparent 70%);
   }
 
   .spiral[data-on] .spiral-ring {
@@ -640,6 +786,39 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
                translateY(calc(var(--i) * var(--step-rise) * -1))
                translate(-50%, -50%);
     backface-visibility: hidden;
+    /* So the light pool below can be laid flat rather than standing up in
+       the card's own plane. */
+    transform-style: preserve-3d;
+    /* Hoisted off the card: the pool reads the same facing number the
+       card's border and glow do, and two elements reading one number is
+       what keeps them from disagreeing. */
+    --face: cos(calc((var(--i) - var(--k)) * var(--step-angle)));
+    --facing: max(0, var(--face));
+    --lit: calc(var(--facing) * var(--facing));
+  }
+  /* A WHITE CARD IN A DARK ROOM THROWS LIGHT DOWN.
+
+     Not a shadow: a shadow is black on black here and does nothing. This
+     is the warm bounce off a sheet of paper onto the floor under it, laid
+     flat with `rotateX` so it belongs to the ground rather than hanging in
+     the card's plane, and tied to `--lit` so only the card actually in the
+     light casts one. It is the cue that stops six cards reading as
+     stickers on a backdrop. */
+  .spiral[data-on] .spiral-item::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -1.1rem;
+    width: 108%;
+    height: 7rem;
+    translate: -50% 0;
+    transform: rotateX(82deg);
+    transform-origin: 50% 0;
+    border-radius: 999px;
+    background-image: radial-gradient(closest-side, rgb(255 150 70 / 0.3), transparent 70%);
+    filter: blur(10px);
+    opacity: var(--lit);
+    pointer-events: none;
   }
 
   .spiral[data-on] .spiral-card {
@@ -650,17 +829,23 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
        this card and the one being looked at, squared so the falloff is gentle
        near the front and quick around the back.
 
-       The floor drops back to 0.26 now the ground is dark. On white a card at
-       that opacity washed out into the background instead of reading as
-       "behind", which is why the light version had to hold it at 0.46 and lean
-       on blur instead. On ink-950 a dim card simply recedes, so opacity can do
-       the work it is for and the blur can stay a light depth-of-field pass. */
-    --face: cos(calc((var(--i) - var(--k)) * var(--step-angle)));
-    --facing: max(0, var(--face));
-    /* The one number the border, the glow and the icon chip all read from. */
-    --lit: calc(var(--facing) * var(--facing));
-    opacity: min(1, 0.26 + 0.78 * var(--facing) * var(--facing));
-    filter: blur(calc((1 - var(--facing)) * 2.2px));
+       A WHITE CARD RECEDES BY GOING INTO SHADOW, NOT BY GOING SEE-THROUGH.
+       Fading a white card toward a near-black ground turns it grey and then
+       translucent, and a translucent card reads as a rendering state rather
+       than as a card further away. `brightness` keeps it solid and takes
+       the light off it, which is what actually happens to an object at the
+       back of a lit room, and it leaves the card's own shadow doing the
+       work of separating it from the ones in front.
+
+       Opacity still runs, but only over the last of the turn, so a card
+       does not have to pop out of existence as it goes edge-on. */
+    opacity: min(1, 0.32 + 1.1 * var(--facing));
+    filter:
+      brightness(calc(0.3 + 0.7 * var(--lit)))
+      blur(calc((1 - var(--facing)) * 2.2px));
+    /* The card at the head of the turn is nearer the reader as well as
+       brighter. Small: it is the subject, not a pop-up. */
+    scale: calc(1 + var(--lit) * 0.04);
   }
 
   .spiral[data-on] .spiral-card-icon {
