@@ -12,6 +12,7 @@
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHero from '../components/PageHero.astro';
+import { heroScenes } from '../data/hero-scenes';
 import Section from '../components/Section.astro';
 import CTA from '../components/CTA.astro';
 import { routes } from '../data/navigation';
@@ -41,7 +42,7 @@ const url = new URL(localizePath(routes.warranty, locale), site).href;
     ]),
   ]}
 >
-  <PageHero locale={locale} eyebrow={w.eyebrow} title={w.title} lead={w.lead} crumbs={[{ name: w.title, href: routes.warranty }]} />
+  <PageHero scene={heroScenes.quiet} locale={locale} eyebrow={w.eyebrow} title={w.title} lead={w.lead} crumbs={[{ name: w.title, href: routes.warranty }]} />
 
   <Section tone="light">
     <p class="measure-wide text-lead text-ink-700">{w.intro}</p>

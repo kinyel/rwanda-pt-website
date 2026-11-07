@@ -8,6 +8,7 @@
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHero from '../components/PageHero.astro';
+import { heroScenes } from '../data/hero-scenes';
 import Section from '../components/Section.astro';
 import { routes } from '../data/navigation';
 import { breadcrumbSchema } from '../data/schema';
@@ -42,7 +43,7 @@ const contactEmail = page === 'terms' ? t.companyPages.terms.legalEmail : 'admin
     ]),
   ]}
 >
-  <PageHero locale={locale} eyebrow={doc.eyebrow} title={doc.title} crumbs={[{ name: doc.title, href: path }]} />
+  <PageHero scene={heroScenes.quiet} locale={locale} eyebrow={doc.eyebrow} title={doc.title} crumbs={[{ name: doc.title, href: path }]} />
 
   <Section tone="light">
     <div class="prose-prime">

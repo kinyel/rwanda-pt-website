@@ -8,6 +8,7 @@
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHero from '../components/PageHero.astro';
+import { heroScenes } from '../data/hero-scenes';
 import Section from '../components/Section.astro';
 import ChallengeSelector from '../components/ChallengeSelector';
 import CTA from '../components/CTA.astro';
@@ -60,7 +61,7 @@ const items = challenges.map((challenge) => ({
     ]),
   ]}
 >
-  <PageHero locale={locale} eyebrow={a.eyebrow} title={a.title} lead={a.lead} crumbs={[{ name: a.title, href: routes.analyzeFleet }]} />
+  <PageHero scene={heroScenes.quiet} locale={locale} eyebrow={a.eyebrow} title={a.title} lead={a.lead} crumbs={[{ name: a.title, href: routes.analyzeFleet }]} />
 
   <Section tone="light">
     <ChallengeSelector

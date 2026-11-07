@@ -9,6 +9,7 @@
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHero from '../components/PageHero.astro';
+import { heroScenes } from '../data/hero-scenes';
 import Section from '../components/Section.astro';
 import Picture from '../components/Picture.astro';
 import CTA from '../components/CTA.astro';
@@ -61,6 +62,7 @@ const crumbs = [{ name: product.name, href: path }];
   ]}
 >
   <PageHero
+    scene={heroScenes.product}
     locale={locale}
     eyebrow={product.heroKicker}
     title={product.productName}

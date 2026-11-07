@@ -1,0 +1,667 @@
+---
+/**
+ * The inner pages' hero scene.
+ *
+ * THE PROBLEM IT SOLVES. Every page except the homepage shared one hero: a
+ * dark band, a contour wash, a heading. That is a fine hero and it is the
+ * same hero 108 times, so the site had exactly one piece of real geometry in
+ * it and the rest was wallpaper.
+ *
+ * THE ORGANISING IDEA, which is the homepage's. Rwanda is a landscape, not a
+ * plane, and the design system already treats contour geometry as the local
+ * substrate because gradient drives fuel burn and hills drive route times.
+ * Each scene below is A DIFFERENT CAMERA ON THAT SAME WORLD rather than a
+ * repeated object: looking straight down at coverage, along a wall, at a unit
+ * on a plinth, at roads arriving. That is what keeps the pages distinct from
+ * each other and the site coherent as one product.
+ *
+ * WHY IT IS GENUINELY 3D. Every part sits at its own `translateZ` inside one
+ * `preserve-3d` stage under a shared `perspective`, and the stage is tilted.
+ * The browser projects it, so parts occlude each other correctly and edges
+ * foreshorten. Nothing here is a painted highlight pretending to be depth.
+ *
+ * COST. No WebGL, no 3D library, no model file, no images and NO JAVASCRIPT.
+ * One short entrance on load, transform and opacity only, and none of it runs
+ * under reduced motion. The scene is `aria-hidden` and carries no text, so it
+ * is invisible to search engines and to assistive technology: nothing here can
+ * touch a heading, a link or a word of copy.
+ *
+ * MOBILE. Not hidden, recomposed. The scene moves under the copy as its own
+ * band and the stage flattens toward a plan view, because at that width it is
+ * a header ornament rather than half the composition.
+ */
+
+import type { SceneKind } from '../data/hero-scenes';
+
+interface Props {
+  kind: SceneKind;
+}
+
+const { kind } = Astro.props as Props;
+
+/* ---------------------------------------------------------------------------
+   Geometry is generated, not hand-written.
+
+   Hand-authored repeats drift: a ring that is 3% off, a tile whose stagger
+   breaks the pattern, a contour that pokes through the one above it. None of
+   these generators can make that mistake, and changing the look is changing a
+   number rather than editing forty attributes.
+--------------------------------------------------------------------------- */
+
+/** RINGS: range rings, and the sites standing on them. */
+const RING_COUNT = 6;
+const SITES = [
+  { r: 0.3, a: 214 },
+  { r: 0.56, a: 326 },
+  { r: 0.84, a: 28 },
+  { r: 0.66, a: 118 },
+].map(({ r, a }) => {
+  const rad = (a * Math.PI) / 180;
+  return {
+    x: +(50 + Math.cos(rad) * r * 48).toFixed(2),
+    y: +(50 + Math.sin(rad) * r * 48).toFixed(2),
+  };
+});
+
+/** WALL: the lattice, and how far each tile stands off it.
+    A repeating 4-term offset rather than a random one, so the stagger reads
+    as a woven pattern instead of as noise. */
+const TILES = Array.from({ length: 12 }, (_, i) => ({
+  z: [26, 8, 18, 0][(i + Math.floor(i / 4)) % 4],
+  /* Three tiles carry the brand edge: one per row, never adjacent. */
+  lit: i === 1 || i === 6 || i === 8,
+}));
+
+/** CONVERGE: eight routes arriving at one point.
+    Bowed alternately left and right off their own straight line, so eight
+    arrivals read as roads rather than as a starburst. */
+const HUB = { x: 200, y: 208 };
+const ROUTES = Array.from({ length: 8 }, (_, i) => {
+  const a = (i / 8) * Math.PI * 2 + 0.4;
+  const ex = HUB.x + Math.cos(a) * 184;
+  const ey = HUB.y + Math.sin(a) * 148;
+  const nx = -(ey - HUB.y);
+  const ny = ex - HUB.x;
+  const nl = Math.hypot(nx, ny) || 1;
+  const bow = (i % 2 ? 1 : -1) * 36;
+  const cx = (HUB.x + ex) / 2 + (nx / nl) * bow;
+  const cy = (HUB.y + ey) / 2 + (ny / nl) * bow;
+  const f = (n: number) => n.toFixed(1);
+  return { d: `M${f(ex)} ${f(ey)}Q${f(cx)} ${f(cy)} ${HUB.x} ${HUB.y}`, x: +f(ex), y: +f(ey), i };
+});
+
+/** TERRAIN: the quiet default. The homepage's hill, seen from much further
+    away and with none of its instrumentation — five contours and nothing
+    else. Different radius falloff and ridge phase from the homepage model, so
+    it is the same landscape rather than the same object. */
+const TERRAIN_LEVELS = 5;
+function contour(level: number): string {
+  const steps = 34;
+  const t = level / (TERRAIN_LEVELS - 1);
+  const radius = 150 * (1 - t) ** 0.72 + 22;
+  const pts: [number, number][] = [];
+  for (let i = 0; i < steps; i++) {
+    const a = (i / steps) * Math.PI * 2;
+    const ridge =
+      1 + 0.15 * Math.sin(a * 3 - level * 0.8) + 0.09 * Math.sin(a * 5 + level * 0.44);
+    const r = radius * ridge;
+    pts.push([200 + Math.cos(a) * r, 200 + Math.sin(a) * r * 0.84]);
+  }
+  const mid = (p: [number, number], q: [number, number]) =>
+    [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2] as [number, number];
+  const f = (n: number) => n.toFixed(1);
+  let d = `M${f(mid(pts[steps - 1], pts[0])[0])} ${f(mid(pts[steps - 1], pts[0])[1])}`;
+  for (let i = 0; i < steps; i++) {
+    const m = mid(pts[i], pts[(i + 1) % steps]);
+    d += `Q${f(pts[i][0])} ${f(pts[i][1])} ${f(m[0])} ${f(m[1])}`;
+  }
+  return `${d}Z`;
+}
+const TERRAIN = Array.from({ length: TERRAIN_LEVELS }, (_, i) => ({
+  d: contour(i),
+  t: +(i / (TERRAIN_LEVELS - 1)).toFixed(3),
+  i,
+}));
+---
+
+<div class="phs" data-scene={kind} aria-hidden="true">
+  <div class="phs-cam">
+    <div class="phs-stage">
+      {
+        kind === 'rings' && (
+          <>
+            {Array.from({ length: RING_COUNT }, (_, i) => (
+              <span class="ring" style={`--i:${i}`} />
+            ))}
+            {SITES.map((s) => (
+              <span class="site" style={`--x:${s.x}%; --y:${s.y}%`} />
+            ))}
+            {/* The high point the signal comes from. It is the only upright
+                thing in the scene, which is what tells you the rest is
+                lying flat. */}
+            <span class="mast">
+              <i class="mast-shaft" />
+              <i class="mast-cap" />
+            </span>
+          </>
+        )
+      }
+
+      {
+        kind === 'wall' &&
+          TILES.map((tile) => (
+            <span class="tile" data-lit={tile.lit ? '' : undefined} style={`--z:${tile.z}`}>
+              <i class="tile-side" />
+            </span>
+          ))
+      }
+
+      {
+        kind === 'device' && (
+          <>
+            {/* The plinth: three contour steps, lightest on top. */}
+            <span class="plinth" style="--i:0" />
+            <span class="plinth" style="--i:1" />
+            <span class="plinth" style="--i:2" />
+            {/* The unit, taken apart. The leader runs through all three so
+                the separation reads as an exploded view rather than as
+                three unrelated slabs floating. */}
+            <span class="leader" />
+            <span class="slab" style="--i:0" />
+            <span class="slab" style="--i:1" />
+            <span class="slab" data-face style="--i:2" />
+            {/* The aerial. The only upright thing up there, which is what
+                fixes the stack as an object standing on the landscape
+                rather than three plates hanging in front of it. */}
+            <span class="aerial">
+              <i class="mast-shaft" />
+              <i class="mast-cap" />
+            </span>
+          </>
+        )
+      }
+
+      {
+        kind === 'converge' && (
+          <svg class="phs-svg" viewBox="0 0 400 400" focusable="false">
+            <defs>
+              <!-- Along the ROUTE, not across the canvas: each road starts
+                   faint at the edge of the country and arrives bright, so
+                   the eight read as traffic converging rather than as a
+                   fan of wires lit from one side. -->
+              <linearGradient id="phs-route" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="400">
+                <stop offset="0%" stop-color="#ff9d5c" stop-opacity="0.95" />
+                <stop offset="100%" stop-color="#ff7d29" stop-opacity="0.5" />
+              </linearGradient>
+              <filter id="phs-hub" x="-120%" y="-120%" width="340%" height="340%">
+                <feGaussianBlur stdDeviation="5" result="b" />
+                <feMerge>
+                  <feMergeNode in="b" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+            {ROUTES.map((r) => (
+              <path class="route" d={r.d} style={`--i:${r.i}`} />
+            ))}
+            {ROUTES.map((r) => (
+              <circle class="origin" cx={r.x} cy={r.y} r="3.4" />
+            ))}
+            <circle class="hub-ring" cx={HUB.x} cy={HUB.y} r="17" />
+            <circle class="hub-core" cx={HUB.x} cy={HUB.y} r="6" />
+          </svg>
+        )
+      }
+
+      {
+        kind === 'terrain' &&
+          TERRAIN.map((plate) => (
+            <span class="contour" style={`--i:${plate.i}; --t:${plate.t}`}>
+              <svg viewBox="0 0 400 400" focusable="false">
+                <path d={plate.d} />
+              </svg>
+            </span>
+          ))
+      }
+    </div>
+  </div>
+
+  <span class="phs-floor"></span>
+</div>
+
+<style>
+  /* ---------------------------------------------------------------------
+     THE FRAME. Shared by every scene: one box, one camera, one ground
+     shadow. Only `--tilt`, `--spin`, `--turn` and the contents differ, so a
+     new scene is a block of markup and three numbers rather than a new
+     component.
+  --------------------------------------------------------------------- */
+  .phs {
+    position: relative;
+    width: 100%;
+    max-width: 26rem;
+    aspect-ratio: 5 / 4;
+    margin-inline: auto;
+    pointer-events: none;
+    /* The camera, as three numbers, so an upright element can counter-rotate
+       by the exact negative of them and face the viewer. Written out twice
+       they would drift the moment one changed. */
+    --tilt: 60deg;
+    --spin: -22deg;
+    --turn: 0deg;
+    /* Every `translateZ` in here is multiplied by this. Depth is the one
+       dimension CSS cannot express as a percentage of the box, so a scene
+       authored at 26rem would keep its full relief at 17rem and burst out
+       of its own frame. One number, set once per breakpoint. */
+    --depth: 1;
+    /* Arrives rather than appears. One animation on the whole scene, not
+       forty on its parts: the parts are a composition, and a composition
+       that assembles itself in front of you is a loading screen. */
+    animation: phs-arrive 760ms var(--ease-out) both;
+  }
+  @keyframes phs-arrive {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .phs-cam {
+    position: absolute;
+    inset: 0;
+    perspective: 1100px;
+    perspective-origin: 50% 46%;
+  }
+
+  .phs-stage {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    transform: rotateX(var(--tilt)) rotateY(var(--turn)) rotateZ(var(--spin));
+  }
+
+  /* The scene floats, so it needs something to float above or it reads as
+     pasted on. Flat on the floor, blurred, warm. */
+  .phs-floor {
+    position: absolute;
+    left: 50%;
+    bottom: 4%;
+    width: 72%;
+    height: 22%;
+    transform: translateX(-50%);
+    border-radius: 999px;
+    background-image: radial-gradient(closest-side, rgb(243 93 1 / 0.2), transparent 72%);
+    filter: blur(16px);
+  }
+
+  /* A NOTE ON LINE WEIGHT AT A TILT.
+
+     A 1px edge lying on a plane tilted 62deg is 0.47px of screen once
+     projected, and a half-pixel line on a near-black field is a rumour.
+     Every hairline in here is therefore specified for its FINAL size, not
+     its authored one, and the cameras that were steepest have been
+     flattened until their edges survive the projection. Two scenes were
+     invisible on the first pass for exactly this reason and both looked,
+     wrongly, like a colour problem. */
+  .phs-svg {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  /* ---------------------------------------------------------------------
+     SIGNAL FROM ALTITUDE — solutions, security, why PrimeTrack.
+
+     Coverage, seen from directly above the thing doing the covering. The
+     rings are not concentric circles drawn on one plane: each sits at its
+     own depth, stepping DOWN as it widens, so the set reads as a cone of
+     reach falling away from the mast rather than as a target painted on
+     the ground.
+  --------------------------------------------------------------------- */
+  [data-scene='rings'] {
+    --tilt: 67deg;
+    --spin: -14deg;
+  }
+  .ring {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: calc(14% + var(--i) * 16.4%);
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    transform: translateZ(calc(var(--i) * -8px * var(--depth)));
+    border: 1.5px solid
+      color-mix(in oklab, var(--color-prime-400) calc(78% - var(--i) * 9%), transparent);
+    border-radius: 999px;
+  }
+  /* The innermost ring is the only one with a floor: it is the footprint of
+     the site itself, and it stops the middle of the scene being a hole.
+     `:first-of-type` is safe here only because the rings are emitted first;
+     anything added above them in the markup would take this with it. */
+  .ring:first-of-type {
+    background-image: radial-gradient(closest-side, rgb(243 93 1 / 0.3), transparent);
+  }
+  .site {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: 0.4rem;
+    height: 0.4rem;
+    translate: -50% -50%;
+    border-radius: 999px;
+    background-color: var(--color-prime-300);
+    box-shadow: 0 0 0 3px rgb(243 93 1 / 0.18);
+  }
+  .mast {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 2px;
+    height: 0;
+    translate: -50% 0;
+    /* The exact inverse of the stage, innermost rotation first, so the mast
+       stands up out of the plane instead of lying on it. */
+    transform: rotateZ(calc(-1 * var(--spin))) rotateX(calc(-1 * var(--tilt)));
+    transform-origin: 50% 100%;
+  }
+  .mast-shaft {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 2px;
+    height: calc(var(--mast-h, 3.6rem) * var(--depth));
+    background-image: linear-gradient(to top, var(--color-prime-400), transparent);
+  }
+  .mast-cap {
+    position: absolute;
+    bottom: calc(var(--mast-h, 3.6rem) * var(--depth));
+    left: 50%;
+    width: 0.45rem;
+    height: 0.45rem;
+    margin-left: -0.225rem;
+    border-radius: 999px;
+    background-color: var(--color-prime-400);
+    box-shadow: 0 0 12px 3px rgb(243 93 1 / 0.5);
+  }
+
+  /* ---------------------------------------------------------------------
+     THE WALL, GIVEN DEPTH — industries.
+
+     The eight verticals are already a wall of tiles further down the page.
+     Here it is the same wall seen from the side, turned on `rotateY` so the
+     stagger is visible: every tile stands off the lattice by its own amount
+     and carries a real side face, so the grid has thickness. Turned flat it
+     would be a chequerboard.
+  --------------------------------------------------------------------- */
+  [data-scene='wall'] {
+    --tilt: 7deg;
+    --spin: -2deg;
+    --turn: -26deg;
+  }
+  [data-scene='wall'] .phs-stage {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: 1fr;
+    gap: 0.5rem;
+    padding: 12% 6%;
+  }
+  .tile {
+    position: relative;
+    transform-style: preserve-3d;
+    transform: translateZ(calc(var(--z) * 1px * var(--depth)));
+    border: 1px solid rgb(255 255 255 / 0.17);
+    border-radius: 0.45rem;
+    background-image: linear-gradient(152deg, rgb(255 255 255 / 0.1), transparent 62%);
+  }
+  .tile[data-lit] {
+    border-color: rgb(255 125 41 / 0.55);
+    background-image: linear-gradient(152deg, rgb(243 93 1 / 0.26), transparent 66%);
+    box-shadow: 0 0 22px -6px rgb(243 93 1 / 0.5);
+  }
+  /* The side face. A tile is a slab, and the slab is what the turn is for:
+     without this the wall is twelve rectangles at twelve depths, which the
+     eye reads as a misaligned grid rather than as relief. */
+  .tile-side {
+    position: absolute;
+    inset: 0;
+    transform: translateZ(calc(-9px * var(--depth)));
+    border-radius: 0.45rem;
+    background-color: #0b0e13;
+    border: 1px solid rgb(255 255 255 / 0.06);
+  }
+
+  /* ---------------------------------------------------------------------
+     EXPLODED UNIT ON A PLINTH — products and services.
+
+     The thing the page is about, taken apart and held above a contour
+     floor. The plinth is the landscape; the slabs are the unit. One leader
+     runs through all three slabs, which is what makes the separation read
+     as an exploded view rather than as three unrelated plates floating.
+  --------------------------------------------------------------------- */
+  [data-scene='device'] {
+    --tilt: 50deg;
+    --spin: -26deg;
+  }
+  .plinth {
+    position: absolute;
+    left: 50%;
+    top: 60%;
+    width: calc(82% - var(--i) * 18%);
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    transform: translateZ(calc(var(--i) * 12px * var(--depth)));
+    border-radius: 999px;
+    border: 1.5px solid
+      color-mix(in oklab, var(--color-prime-400) calc(34% + var(--i) * 24%), transparent);
+    background-color: color-mix(in oklab, #55636f calc(22% + var(--i) * 30%), #0d1218);
+  }
+
+  /* THE SEPARATION IS A SIZE PROBLEM BEFORE IT IS A SPACING ONE.
+
+     A slab 100px deep lying on a plane tilted 50deg is 64px of screen
+     height. Three of those 31px apart overlap almost completely, and no
+     amount of extra elevation fixes it while each part is twice as tall as
+     the gap. The parts are smaller and the gaps are wider: 52px of
+     elevation is 40px of rise, against a foreshortened part height of
+     about 50. They still overlap, the way parts in any exploded view do,
+     but every edge is its own. */
+  .slab {
+    position: absolute;
+    left: 50%;
+    top: 60%;
+    width: calc(36% - var(--i) * 5%);
+    aspect-ratio: 7 / 5;
+    translate: -50% -50%;
+    transform: translateZ(calc((44px + var(--i) * 52px) * var(--depth)));
+    border-radius: 0.45rem;
+    border: 1.5px solid rgb(255 255 255 / 0.34);
+    background-image: linear-gradient(148deg, #5a6878, #232c37 76%);
+    box-shadow: 0 12px 30px -10px rgb(0 0 0 / 0.95);
+  }
+  /* The face. Lit, because it is the part of a tracker anyone ever sees,
+     and carrying the one round thing in the scene: three stacked
+     rectangles are a diagram, and a lens makes them a device. */
+  /* `data-face`, not `:last-of-type`. Every part of this scene is a
+     `span`, so `:last-of-type` means "the last span in the stage" and it
+     silently moved off the top slab and onto the aerial the moment the
+     aerial was added. The face is named rather than counted. */
+  .slab[data-face] {
+    border-color: rgb(255 157 92 / 0.85);
+    background-image: linear-gradient(148deg, #8a4f22, #2a1a10 78%);
+    box-shadow: 0 0 34px -6px rgb(243 93 1 / 0.75);
+  }
+  .slab[data-face]::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 34%;
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    border-radius: 999px;
+    border: 1.5px solid rgb(255 213 184 / 0.75);
+    background-image: radial-gradient(closest-side, rgb(255 157 92 / 0.45), transparent);
+  }
+
+  .aerial {
+    position: absolute;
+    left: 50%;
+    top: 60%;
+    width: 2px;
+    height: 0;
+    --mast-h: 1.5rem;
+    translate: -50% 0;
+    transform: translateZ(calc(148px * var(--depth))) rotateZ(calc(-1 * var(--spin)))
+      rotateX(calc(-1 * var(--tilt)));
+    transform-origin: 50% 100%;
+  }
+  .leader {
+    position: absolute;
+    left: 50%;
+    top: 60%;
+    width: 1px;
+    height: 0;
+    translate: -50% 0;
+    transform: rotateZ(calc(-1 * var(--spin))) rotateX(calc(-1 * var(--tilt)));
+    transform-origin: 50% 100%;
+  }
+  .leader::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 1.5px;
+    /* Reaches the top slab: 148px of elevation at a 50deg tilt is 113px of
+       screen rise, and the leader is measured in screen space because it
+       is counter-rotated, so this is 7.1rem and not 9.25. */
+    height: calc(7.1rem * var(--depth));
+    background-image: linear-gradient(
+      to top,
+      transparent,
+      rgb(255 157 92 / 0.75) 18%,
+      rgb(255 157 92 / 0.75) 88%,
+      transparent
+    );
+  }
+
+  /* ---------------------------------------------------------------------
+     CONVERGENCE — contact.
+
+     Eight routes, one for each industry the site serves, arriving at one
+     point. They are bowed alternately off their own straight line, because
+     eight straight spokes is a compass rose and eight curves is traffic.
+  --------------------------------------------------------------------- */
+  [data-scene='converge'] {
+    --tilt: 64deg;
+    --spin: -12deg;
+  }
+  /* Eight roads on a near-black field at a 64deg tilt lose most of their
+     length to foreshortening, so they are drawn at full strength and the
+     DEPTH is carried by width and opacity per road rather than by fading
+     the ink. A hairline that fades out is just a hairline that is not
+     there. */
+  .route {
+    fill: none;
+    stroke: url(#phs-route);
+    stroke-width: calc(2.4px - mod(var(--i), 3) * 0.4px);
+    stroke-linecap: round;
+    stroke-opacity: calc(0.62 + mod(var(--i), 4) * 0.12);
+    vector-effect: non-scaling-stroke;
+  }
+  .origin {
+    fill: var(--color-prime-200);
+    fill-opacity: 0.8;
+  }
+  .hub-ring {
+    fill: rgb(243 93 1 / 0.22);
+    stroke: var(--color-prime-300);
+    stroke-width: 1.6;
+    vector-effect: non-scaling-stroke;
+  }
+  .hub-core {
+    fill: #fff;
+    filter: url(#phs-hub);
+  }
+
+  /* ---------------------------------------------------------------------
+     TERRAIN — the quiet default.
+
+     Warranty, careers, tools, the blog index, the legal pages and 404. A
+     loud object on a privacy policy would be a mistake, so this is the
+     hill and nothing else: five contours at five elevations, no road, no
+     instrumentation, no light on it beyond the edges.
+  --------------------------------------------------------------------- */
+  [data-scene='terrain'] {
+    --tilt: 53deg;
+    --spin: -24deg;
+  }
+  .contour {
+    position: absolute;
+    inset: 0;
+    transform: translateZ(calc(var(--i) * 13px * var(--depth)));
+  }
+  .contour svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  /* The fills start at #1a212a, not at the page's own ink. Mixing rock
+     INTO the ground colour on top of the ground colour is how the first
+     version of this managed to be a hill you could not see: every plate
+     resolved to within a few percent of the background it was sitting on.
+     The stack now climbs from slate to steel, and each cut edge is lit. */
+  .contour path {
+    fill: color-mix(in oklab, #55636f calc(26% + var(--t) * 74%), #10151c);
+    stroke: color-mix(in oklab, var(--color-prime-400) calc(40% + var(--t) * 55%), transparent);
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+  }
+
+  /* ---------------------------------------------------------------------
+     RECOMPOSED, NOT HIDDEN.
+
+     Under the copy as its own band, smaller, and flatter: at this width the
+     scene is read at a glance on the way past rather than studied, and a
+     steep camera that was legible at 420px is a smear at 240.
+  --------------------------------------------------------------------- */
+  @media (width < 64rem) {
+    .phs {
+      max-width: 17rem;
+      --depth: 0.62;
+    }
+    [data-scene='rings'] {
+      --tilt: 62deg;
+    }
+    [data-scene='wall'] {
+      --turn: -18deg;
+    }
+    [data-scene='device'] {
+      --tilt: 52deg;
+    }
+    [data-scene='converge'] {
+      --tilt: 58deg;
+    }
+    [data-scene='terrain'] {
+      --tilt: 58deg;
+    }
+    [data-scene='rings'] {
+      --mast-h: 2.9rem;
+    }
+  }
+
+  /* The composition is finished at rest, so this only ever removes the
+     arrival, never the scene. */
+  @media (prefers-reduced-motion: reduce) {
+    .phs {
+      animation: none;
+    }
+  }
+</style>

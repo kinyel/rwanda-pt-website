@@ -9,6 +9,7 @@
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHero from '../components/PageHero.astro';
+import { heroScenes } from '../data/hero-scenes';
 import Section from '../components/Section.astro';
 import Picture from '../components/Picture.astro';
 import StatBand from '../components/StatBand.astro';
@@ -44,7 +45,7 @@ const numbered = ['regulator', 'support', 'hardware', 'ai', 'warranty', 'scale']
     ]),
   ]}
 >
-  <PageHero locale={locale} eyebrow={w.eyebrow} title={w.title} lead={w.lead} crumbs={[{ name: w.title, href: routes.whyChoose }]} />
+  <PageHero scene={heroScenes.solutions} locale={locale} eyebrow={w.eyebrow} title={w.title} lead={w.lead} crumbs={[{ name: w.title, href: routes.whyChoose }]} />
 
   <Section tone="light">
     <div class="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.6fr)] lg:gap-16">

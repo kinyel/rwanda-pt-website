@@ -6,6 +6,7 @@
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHero from '../components/PageHero.astro';
+import { heroScenes } from '../data/hero-scenes';
 import Section from '../components/Section.astro';
 import IndustryWall from '../components/IndustryWall.astro';
 import CTA from '../components/CTA.astro';
@@ -36,6 +37,7 @@ const url = new URL(localizePath(routes.industries, locale), site).href;
   ]}
 >
   <PageHero
+    scene={heroScenes.industries}
     locale={locale}
     eyebrow={t.industries.index.eyebrow}
     title={t.industries.index.pageTitle}

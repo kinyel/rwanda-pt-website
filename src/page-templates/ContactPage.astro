@@ -8,6 +8,7 @@
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHero from '../components/PageHero.astro';
+import { heroScenes } from '../data/hero-scenes';
 import Section from '../components/Section.astro';
 import Picture from '../components/Picture.astro';
 import ContactForm from '../components/ContactForm';
@@ -44,6 +45,7 @@ const c = t.companyPages.contact;
   ]}
 >
   <PageHero
+    scene={heroScenes.contact}
     locale={locale}
     eyebrow={c.eyebrow}
     title={c.title}

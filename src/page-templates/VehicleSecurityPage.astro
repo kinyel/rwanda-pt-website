@@ -10,6 +10,7 @@
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHero from '../components/PageHero.astro';
+import { heroScenes } from '../data/hero-scenes';
 import Section from '../components/Section.astro';
 import SectionHeader from '../components/SectionHeader.astro';
 import CTA from '../components/CTA.astro';
@@ -53,6 +54,7 @@ const description =
   ]}
 >
   <PageHero
+    scene={heroScenes.solutions}
     locale={locale}
     eyebrow={t.solutions.index.eyebrow}
     title={s.title}

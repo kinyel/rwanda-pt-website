@@ -5,6 +5,7 @@
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHero from '../components/PageHero.astro';
+import { heroScenes } from '../data/hero-scenes';
 import Section from '../components/Section.astro';
 import Button from '../components/Button.astro';
 import { routes } from '../data/navigation';
@@ -35,7 +36,7 @@ const url = new URL(localizePath(routes.careers, locale), site).href;
     ]),
   ]}
 >
-  <PageHero locale={locale} eyebrow={c.eyebrow} title={c.title} lead={c.lead} crumbs={[{ name: c.title, href: routes.careers }]} />
+  <PageHero scene={heroScenes.quiet} locale={locale} eyebrow={c.eyebrow} title={c.title} lead={c.lead} crumbs={[{ name: c.title, href: routes.careers }]} />
 
   <Section tone="light">
     <div class="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)] lg:gap-20">
