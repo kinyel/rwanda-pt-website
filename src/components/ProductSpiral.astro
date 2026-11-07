@@ -481,8 +481,11 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
     padding: 1.5rem;
     /* THE SIGNATURE. A hairline that is brand orange on the card facing the
        camera and ordinary paper edge on the ones turned away. */
+    /* The resting edge is brighter than it was. A darker card leans on its
+       border for the bottom two thirds of its outline, where the surface
+       has run out of light to separate with. */
     border: 1px solid
-      color-mix(in oklab, var(--color-prime-400) calc(var(--lit) * 90%), rgb(255 255 255 / 0.1));
+      color-mix(in oklab, var(--color-prime-400) calc(var(--lit) * 90%), rgb(255 255 255 / 0.16));
     border-radius: var(--radius-panel);
     /* DARK GREY. Three passes to get here and the reasoning is worth
        keeping, because each failure explains the next move.
@@ -501,9 +504,25 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
        brightest things on it; and it keeps the family dark, which is what
        the rest of this page is.
 
-       The gradient runs top-left to bottom-right, so each card has a lit
-       corner and a shaded one and does not read as a flat rectangle. */
-    background-image: linear-gradient(158deg, #3f454c 0%, #2c3137 54%, #1f2328 100%);
+       THE GRADIENT IS THE LIGHTING, so it is steep rather than decorative.
+       It runs from the top-left corner the room's light comes from down to
+       a bottom-right that is nearly out of it — four stops over a range of
+       about 0.16 to 0.02 in luminance, where the flat version only managed
+       0.21 to 0.09 and read as a grey rectangle with a slight sheen.
+
+       AND IT IS COOL, which is what lets it go this dark without
+       disappearing. The section's ground is a warm near-black; a neutral
+       card at this value would merge into it at the shaded corner. A card
+       that is blue-grey separates by HUE where it can no longer separate
+       by brightness, which is the same trick the relief uses to keep its
+       valleys off the page colour. */
+    background-image: linear-gradient(
+      158deg,
+      #333a44 0%,
+      #262d37 32%,
+      #1a212a 62%,
+      #0e141c 100%
+    );
     box-shadow:
       /* Contact, then cast, then spill. A white card on near-black needs a
          real shadow or it looks pasted on rather than standing in the
@@ -514,7 +533,7 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
          against a near-black room, and a grey card does that on its own.
          Kept, it put a halo round every object in the scene and the
          section read as lit by the cards rather than by the spine. */
-      inset 0 1px 0 rgb(255 255 255 / 0.14);
+      inset 0 1px 0 rgb(255 255 255 / 0.17);
     transition:
       border-color var(--duration-base) var(--ease-prime),
       box-shadow var(--duration-base) var(--ease-prime);
