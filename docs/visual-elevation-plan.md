@@ -49,14 +49,48 @@ distinct from each other and the site coherent as one product.
 
 Each is a different camera on the same world, not a repeated object.
 
-| Page | Concept | Technique |
+**All of it is built.** The table records what shipped, which is the plan
+with three deliberate departures, noted underneath.
+
+| Page | Concept | Where it lives |
 |---|---|---|
-| **Homepage hero** | **A route crossing terrain, in perspective.** Layered ridgelines at real `translateZ` depths, a road threading them, the vehicle riding it as you scroll. The camera dollies and tilts with scroll, so near hills part faster than far ones. | `perspective` + `preserve-3d`, layered SVG ridges, `offset-path`, one `--p` |
-| **Products (helix)** | Already a CSS 3D helix. Gains Nigeria's missing depth cues: night ground, aurora wash, star points. | existing helix, extended |
-| **Solutions** | **Signal from altitude.** Concentric range rings in perspective, tilted away from the camera. | `rotateX` rings |
-| **Industries** | **The wall, given depth.** Tiles on a slight Z-stagger so the lattice has thickness. | `translateZ` per tile |
-| **Product pages** | **Exploded device on a plinth.** The unit lifted off a contour floor. | `preserve-3d` stack |
-| **Contact** | **Convergence.** Routes from the eight industries arriving at one point. | SVG paths + depth |
+| **Homepage hero** | **A route crossing terrain, in perspective.** A laminated relief model at real `translateZ` depths, a road cut across it, the vehicle riding it as you scroll, and the rock going to glass while the vehicle is inside it. | `HeroRelief.astro` |
+| **Products (helix)** | The existing CSS 3D helix, plus the depth cues it was missing: cool aurora far back, 26 star points through the middle distance, and a tilted contour ground with a pool of light under the spine. | `ProductSpiral.astro` |
+| **Solutions**, security, why PrimeTrack | **Signal from altitude.** Range rings in perspective, each stepping *down* as it widens, with a mast at the centre. | `PageHeroScene` `rings` |
+| **Industries** hub and verticals | **The wall, given depth.** Tiles on a Z-stagger, turned on `rotateY`, each with a real side face. | `PageHeroScene` `wall` |
+| **Product and service pages** | **Exploded unit on a plinth.** The unit taken apart above a contour floor, lit face and lens on top, aerial above. | `PageHeroScene` `device` |
+| **Contact** | **Convergence.** Eight routes arriving at one point, bowed alternately off their own straight line. | `PageHeroScene` `converge` |
+| Warranty, careers, tools, blog, legal, 404 | **The hill and nothing else.** A loud object on a privacy policy is a mistake. | `PageHeroScene` `terrain` |
+| Articles | The same hill, in the gutter beside the headline, absolutely positioned so it costs no height. | `ArticlePage.astro` |
+
+### Three departures from the plan, and why
+
+**Services share the products' camera.** The plan gave a scene to product
+pages and said nothing about the three service pages. A service here is a
+unit's output, so an exploded unit is a fair picture of where the data comes
+from, and inventing a seventh composition to avoid a repeat would have been
+the wrong kind of variety.
+
+**Articles get a background motif, not a feature object.** Every other inner
+page puts its scene in a second grid column. Article headlines run to 137
+characters and the h1 is given 76ch to do it in; at 58% of the width the
+longest wrap to six lines. A decorative object that costs a reader two extra
+lines of headline is a worse page. It sits in the gutter instead, and on a
+phone it goes to the bottom-right corner beside the byline.
+
+**Nothing animates except one arrival.** The scenes are static compositions
+with a single 760ms entrance on the whole scene, disabled under reduced
+motion. The benchmark's premium feel is restraint, and a site of perpetually
+turning objects is a different, worse thing.
+
+### The lesson that cost the most time
+
+A 1px edge on a plane tilted 62deg is 0.47px once projected, and a
+half-pixel line on a near-black field is a rumour. Two of the five scenes and
+the helix's new ground all rendered invisible on their first pass, and every
+one of them looked like a colour problem. Line weights in a tilted scene are
+specified for their **final** size, and any camera steeper than about 60deg
+has to earn it.
 
 ## Non-negotiables carried from the brief
 

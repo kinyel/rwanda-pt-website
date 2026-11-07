@@ -7,6 +7,8 @@
  * these articles are meant to do and which the WordPress versions never did.
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeroScene from '../components/PageHeroScene.astro';
+import { heroScenes } from '../data/hero-scenes';
 import Section from '../components/Section.astro';
 import Breadcrumbs from '../components/Breadcrumbs.astro';
 import RelatedLinks from '../components/RelatedLinks.astro';
@@ -65,6 +67,24 @@ const pageTitle =
   <article>
     <header data-nav="dark" class="on-dark relative overflow-hidden bg-ink-950 bg-contour-prime">
       <div class="absolute inset-0 bg-prime-glow" aria-hidden="true"></div>
+
+      <!-- THE ONE FAMILY THAT CANNOT TAKE A SIDE COLUMN.
+
+           Every other inner page puts its scene in a second grid column
+           beside the copy. These headlines run to 137 characters and the
+           h1 is deliberately given 76ch to do it in; at 58% of the width
+           the longest of them wrap to six lines, and a decorative object
+           that costs a reader two extra lines of headline is a worse page,
+           not a better one.
+
+           So it sits in the gutter the measure already leaves, absolutely
+           positioned and therefore costing no height at all, and it is
+           pushed further out and turned down on a phone rather than
+           removed. Same landscape, same camera as the other reading
+           pages, out of the way of the only thing anyone came here for. -->
+      <div class="article-scene" aria-hidden="true">
+        <PageHeroScene kind={heroScenes.quiet} />
+      </div>
       <div class="container-prime relative py-14 sm:py-16">
         <Breadcrumbs
           locale={locale}
@@ -98,3 +118,35 @@ const pageTitle =
 
   <CTA locale={locale} title={t.home.finalCta.title} body={t.home.finalCta.body} />
 </BaseLayout>
+
+<style>
+  /* Clear of a 76ch measure at desktop, and tucked into the top-right
+     corner behind the copy on a phone, where the measure takes the whole
+     column. The header clips, so nothing can escape it either way. */
+  /* On a phone the headline takes the whole column, so there is no gutter
+     to sit in: the scene goes to the bottom-right corner beside the
+     byline, mostly past the edge, and turned down. Behind the dateline
+     rather than behind the title, which is the difference between a
+     texture and an obstruction. */
+  .article-scene {
+    position: absolute;
+    right: -7rem;
+    bottom: -2.5rem;
+    width: 16rem;
+    opacity: 0.4;
+  }
+
+  /* From lg the measure leaves real room on the right, so it comes out of
+     the corner, up to full strength, and reads as an object beside the
+     headline rather than a watermark under it. */
+  @media (width >= 64rem) {
+    .article-scene {
+      top: 50%;
+      right: -2rem;
+      bottom: auto;
+      width: 24rem;
+      transform: translateY(-50%);
+      opacity: 0.85;
+    }
+  }
+</style>
