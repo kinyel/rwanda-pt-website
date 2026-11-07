@@ -594,9 +594,25 @@ const RAMP = +(0.5 / RIM).toFixed(3);
        hill turns into a lit wireframe of itself and the road, the stops
        and the vehicle inside it all show through. It reseals the moment
        the vehicle comes out the far side. */
+    /* THE MODEL IS FLOWN, NOT FADED.
+
+       Scrolling does five things to it at once, all off the same `--p`, so
+       the object reads as reacting to the reader rather than as a picture
+       being replaced: the camera drops 26 degrees of tilt and swings 52 of
+       yaw, the whole model dollies 90px toward the lens, the lens itself
+       shortens from 1500 to 1040 so the perspective deepens as it comes,
+       and the frame lifts and shrinks slightly so it clears out of the
+       copy's way on the climb.
+
+       Shortening the perspective is the one that does the most work for
+       the least: a long lens flattens an object and a short one wraps it,
+       so the hill goes from a map you are looking at to a thing you are
+       standing over, without a single extra element being drawn. */
     :global(.hero-journey[data-journey-live]) .relief {
-      --tilt: calc(58deg - var(--p, 0) * 13deg);
-      --spin: calc(-26deg + var(--p, 0) * 30deg);
+      --tilt: calc(58deg - var(--p, 0) * 26deg);
+      --spin: calc(-26deg + var(--p, 0) * 52deg);
+      perspective: calc(1500px - var(--p, 0) * 460px);
+      transform: translateY(calc(var(--p, 0) * -3.5%)) scale(calc(1 - var(--p, 0) * 0.07));
       /* Linear in, linear out, then smoothstepped as one, so the glass
          arrives and leaves without either end of the dissolve having a
          corner in it. Same curve the report strip glides on. */
@@ -642,13 +658,16 @@ const RAMP = +(0.5 / RIM).toFixed(3);
     }
     :global(.hero-journey[data-journey-live]) .relief-model {
       transform: rotateX(var(--tilt)) rotateZ(var(--spin))
-                 translateZ(calc(var(--p, 0) * 40px));
+                 translateZ(calc(var(--p, 0) * 90px));
     }
     /* Rides the model's dolly as well, or the window would drift off the
        road the moment the model started moving toward the camera. */
+    /* Mirrors the model's dolly exactly. The two have to agree to the
+       pixel: this layer is the road's own plane, and a value that drifts
+       here is the window sliding off the road it is a window onto. */
     :global(.hero-journey[data-journey-live]) .relief-signals {
       transform: rotateX(var(--tilt)) rotateZ(var(--spin))
-                 translateZ(calc(var(--p, 0) * 40px + var(--road-level) * var(--lift) + 1px));
+                 translateZ(calc(var(--p, 0) * 90px + var(--road-level) * var(--lift) + 1px));
     }
     :global(.hero-journey[data-journey-live]) .route-lit {
       stroke-dashoffset: calc(1 - var(--p, 0));

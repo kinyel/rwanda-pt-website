@@ -128,7 +128,7 @@ export const primeValues = ['performance', 'reliability', 'innovation', 'multifu
    To point a deployment at a different form, set PUBLIC_FORMSPREE_ID in that
    environment; it wins over this default. Genuine secrets must never be
    handled this way, and none exist in this project. */
-const FORMSPREE_ID_DEFAULT = 'xaeynrge';
+const FORMSPREE_ID_DEFAULT = 'mjyyderd';
 
 export const FORMSPREE_ID: string =
   import.meta.env.PUBLIC_FORMSPREE_ID || FORMSPREE_ID_DEFAULT;

@@ -1,0 +1,479 @@
+---
+/**
+ * The eight verticals, as an index beside a map.
+ *
+ * WHAT THIS REPLACES AND WHY. It was a lattice of eight bordered tiles, and
+ * every pass at improving it was another pass at decorating a box: the
+ * structure was the problem. Eight compartments, eight borders, eight icon
+ * chips and eight numerals is a lot of furniture around sixteen short lines
+ * of copy, and on a near-white page the furniture is most of what you see.
+ *
+ * There is no box in here now. The right-hand column is eight rows of type
+ * separated by hairlines — a numeral, a name, a sentence — and the left is a
+ * map of the country they operate in with a pin for each one. Hierarchy comes
+ * from size, weight, colour and space; separation comes from a 1px rule and
+ * generous leading. That is the whole of it.
+ *
+ * THE TWO HALVES ARE ONE INSTRUMENT. Pointing at a row lifts and lights its
+ * pin on the map, and dims the other seven. It is done with `:has()` and one
+ * number: the wrapper publishes `--active`, the index of the row under the
+ * pointer, and every pin works out its own state from that and its own `--i`.
+ * No JavaScript, and nothing that can fall out of step, because there is only
+ * one thing to be in step with.
+ *
+ * THE MAP IS GENUINELY 3D: a tilted plate of contour rings under a shared
+ * `perspective`, with each pin standing out of it on its own mast and
+ * counter-rotated to face the reader. It drifts slowly on its own and stops
+ * when anyone interacts with the block.
+ *
+ * Every row is a real link to its industry page, so this section still
+ * carries eight internal links to sector pages, and every word of the eight
+ * names and summaries is still on the page.
+ */
+import { industries, industryPath } from '../data/industries';
+import { useTranslations, localizePath, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+  /** The industries page already has a 3D hero; it takes the list alone. */
+  map?: boolean;
+}
+
+const { locale, map = true } = Astro.props as Props;
+const t = useTranslations(locale);
+const items = t.industries.items as Record<string, { name: string; summary: string }>;
+
+/* Gold to ember, eight stops: the ramp the fleet brief and the hero scenes
+   are built from. Colour means "which one of the set is this" everywhere on
+   this site and never anything else. */
+const TONES = [
+  '#ffc24d',
+  '#ffa92e',
+  '#ff8f1c',
+  '#ff7a1f',
+  '#f3620b',
+  '#e04f0c',
+  '#c94110',
+  '#ad3514',
+];
+
+/* WHERE THE PINS STAND.
+   A golden-angle walk pushed out to varied radii, so the eight scatter like
+   places on a map rather than sitting on a clock face. Deterministic, so the
+   markup is identical on every build and nothing shifts between the server's
+   HTML and the client's. */
+const PINS = industries.map((_industry, i) => {
+  const a = i * 2.39996 + 0.7;
+  const r = 0.34 + ((i * 5) % 8) / 8 * 0.52;
+  return {
+    i,
+    x: +(50 + Math.cos(a) * r * 42).toFixed(2),
+    y: +(50 + Math.sin(a) * r * 38).toFixed(2),
+    /* Masts of three heights, so the set has a skyline rather than a fringe. */
+    h: [3.2, 4.4, 2.6][i % 3],
+  };
+});
+
+/* The plate the pins stand on: four nested contours, same generator idea as
+   everywhere else on the site, different falloff so it is the same landscape
+   rather than the same object. */
+const RINGS = [0, 1, 2, 3].map((level) => {
+  const steps = 34;
+  const t = level / 3;
+  const radius = 160 * (1 - t) ** 0.62 + 26;
+  const pts: [number, number][] = [];
+  for (let i = 0; i < steps; i++) {
+    const a = (i / steps) * Math.PI * 2;
+    const ridge = 1 + 0.13 * Math.sin(a * 3 + level * 0.9) + 0.07 * Math.sin(a * 5 - level * 0.5);
+    const rr = radius * ridge;
+    pts.push([200 + Math.cos(a) * rr, 200 + Math.sin(a) * rr * 0.88]);
+  }
+  const mid = (p: [number, number], q: [number, number]) =>
+    [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2] as [number, number];
+  const f = (n: number) => n.toFixed(1);
+  let d = `M${f(mid(pts[steps - 1], pts[0])[0])} ${f(mid(pts[steps - 1], pts[0])[1])}`;
+  for (let i = 0; i < steps; i++) {
+    const m = mid(pts[i], pts[(i + 1) % steps]);
+    d += `Q${f(pts[i][0])} ${f(pts[i][1])} ${f(m[0])} ${f(m[1])}`;
+  }
+  return { d, t, i: level };
+});
+---
+
+<div class:list={['iw', map && 'iw-has-map']}>
+  {
+    map && (
+      <div class="iw-visual" aria-hidden="true">
+        <div class="iw-cam">
+          <div class="iw-world">
+            <span class="iw-plate">
+              <svg viewBox="0 0 400 400" focusable="false">
+                {RINGS.map((ring) => (
+                  <path class="iw-ring" d={ring.d} style={`--t:${ring.t}`} />
+                ))}
+              </svg>
+            </span>
+            {PINS.map((pin) => (
+              <span
+                class="iw-pin"
+                style={`--i:${pin.i}; --x:${pin.x}%; --y:${pin.y}%; --h:${pin.h}rem; --tone:${TONES[pin.i]}`}
+              >
+                <i class="iw-pin-base" />
+                <i class="iw-pin-mast" />
+                <i class="iw-pin-head" />
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  <ol class="iw-list" role="list">
+    {
+      industries.map((industry, i) => {
+        const copy = items[industry.key];
+        return (
+          <li class="iw-row" style={`--i:${i}; --tone:${TONES[i]}`}>
+            <a href={localizePath(industryPath(industry.slug), locale)} class="iw-link">
+              <span class="iw-n" aria-hidden="true">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <span class="iw-text">
+                <span class="iw-name">{copy.name}</span>
+                <span class="iw-sum">{copy.summary}</span>
+              </span>
+              <span class="iw-go" aria-hidden="true">
+                <svg viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M3 8h9m0 0L8.5 4.5M12 8l-3.5 3.5"
+                    stroke="currentColor"
+                    stroke-width="1.7"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </span>
+            </a>
+          </li>
+        );
+      })
+    }
+  </ol>
+</div>
+
+<style>
+  .iw {
+    /* Which row the pointer is on, as an index. -1 is nobody, and every pin
+       reads it; see the `:has()` block at the bottom, which is the only
+       place this is ever written. */
+    --active: -1;
+    display: grid;
+    gap: 3rem;
+  }
+  @media (width >= 64rem) {
+    .iw-has-map {
+      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1fr);
+      gap: 4.5rem;
+      align-items: start;
+    }
+    /* The map holds while the list runs past it. Centred against eight
+       rows it parked halfway down and looked like something the layout
+       had nowhere else to put; pinned, it is the thing the list is
+       annotating and it is on screen for the whole of the read. */
+    .iw-visual {
+      position: sticky;
+      top: calc(var(--header-h) + 3rem);
+    }
+  }
+
+  /* ---------------------------------------------------------------------
+     THE MAP
+  --------------------------------------------------------------------- */
+  .iw-visual {
+    position: relative;
+    width: 100%;
+    max-width: 34rem;
+    aspect-ratio: 1;
+    margin-inline: auto;
+    pointer-events: none;
+  }
+  /* The ground the plate floats over. A radial with no edge is the only
+     kind of container this section is allowed: it gives the object
+     somewhere to be without drawing a box round it. */
+  .iw-visual::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 56%;
+    width: 82%;
+    height: 42%;
+    transform: translate(-50%, -50%);
+    border-radius: 999px;
+    background-image: radial-gradient(closest-side, rgb(243 93 1 / 0.1), transparent 72%);
+    filter: blur(20px);
+  }
+  .iw-cam {
+    position: absolute;
+    inset: 0;
+    perspective: 1150px;
+    perspective-origin: 50% 48%;
+  }
+  .iw-world {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    /* `--turn` is animated as an ANGLE rather than as a transform, so the
+       counter-rotation on every pin can read the current value and stay
+       facing the reader. A keyframe on `rotateZ` here would leave the heads
+       spinning with the plate within a second. */
+    transform: rotateX(var(--tilt)) rotateZ(calc(var(--spin) + var(--turn, 0deg)));
+    --tilt: 62deg;
+    --spin: -18deg;
+    animation: iw-drift 54s linear infinite;
+  }
+  @keyframes iw-drift {
+    from {
+      --turn: -180deg;
+    }
+    to {
+      --turn: 180deg;
+    }
+  }
+  /* It is the only thing moving on a still page, so it stops the moment
+     anyone is actually reading the list. */
+  .iw:hover .iw-world,
+  .iw:focus-within .iw-world {
+    animation-play-state: paused;
+  }
+
+  .iw-plate {
+    position: absolute;
+    inset: 0;
+  }
+  .iw-plate svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  /* A contour lying at 62deg is a third of its height once projected, so
+     these weights are specified for what they become, not what they are. */
+  .iw-ring {
+    fill: none;
+    stroke: color-mix(in oklab, var(--color-prime-600) calc(40% + var(--t) * 55%), transparent);
+    stroke-width: calc(2px + var(--t) * 1.6px);
+    vector-effect: non-scaling-stroke;
+  }
+
+  .iw-pin {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: 2.5px;
+    height: 0;
+    /* How lit this pin is: 1 when the pointer is on its row, 0 otherwise.
+       One expression reading one number, so eight pins cannot disagree
+       about which of them is current. */
+    --on: clamp(
+      0,
+      1 - max(calc(var(--i) - var(--active)), calc(var(--active) - var(--i))) * 4,
+      1
+    );
+    /* And how much the others get out of its way. */
+    --rest: clamp(0, 1 - max(calc(0 - var(--active)), var(--active)) * 4, 1);
+    translate: -50% 0;
+    transform: rotateZ(calc(-1 * (var(--spin) + var(--turn, 0deg)))) rotateX(calc(-1 * var(--tilt)));
+    transform-origin: 50% 100%;
+  }
+  /* The footprint, lying flat on the plate rather than standing with the
+     mast: it is the only part of a pin that belongs to the ground. */
+  .iw-pin-base {
+    position: absolute;
+    bottom: -0.3rem;
+    left: 50%;
+    width: 0.6rem;
+    height: 0.6rem;
+    margin-left: -0.3rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in oklab, var(--tone) 55%, transparent);
+    transform: rotateX(90deg);
+    transform-origin: 50% 100%;
+  }
+  .iw-pin-mast {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 2.5px;
+    /* Rises when its row is pointed at. The height is the animation, which
+       is why it is a transform on a fixed box rather than a height. */
+    height: calc(var(--h) * (0.72 + var(--on) * 0.5));
+    background-image: linear-gradient(
+      to top,
+      color-mix(in oklab, var(--tone) 18%, transparent),
+      var(--tone)
+    );
+    opacity: calc(0.5 + var(--on) * 0.5);
+    transition:
+      height var(--duration-slow) var(--ease-out),
+      opacity var(--duration-base) var(--ease-prime);
+  }
+  .iw-pin-head {
+    position: absolute;
+    bottom: calc(var(--h) * (0.72 + var(--on) * 0.5));
+    left: 50%;
+    width: calc(0.52rem + var(--on) * 0.28rem);
+    height: calc(0.52rem + var(--on) * 0.28rem);
+    margin-left: calc(-0.26rem - var(--on) * 0.14rem);
+    border-radius: 999px;
+    background-color: var(--tone);
+    box-shadow: 0 0 calc(10px + var(--on) * 20px) calc(1px + var(--on) * 4px)
+      color-mix(in oklab, var(--tone) calc(40% + var(--on) * 40%), transparent);
+    transition:
+      bottom var(--duration-slow) var(--ease-out),
+      width var(--duration-base) var(--ease-out),
+      height var(--duration-base) var(--ease-out),
+      margin-left var(--duration-base) var(--ease-out),
+      box-shadow var(--duration-base) var(--ease-prime);
+  }
+
+  /* ---------------------------------------------------------------------
+     THE INDEX. No box, no card, no border: a numeral, a name, a sentence
+     and a rule between them.
+  --------------------------------------------------------------------- */
+  .iw-list {
+    display: flex;
+    flex-direction: column;
+  }
+  /* ink-200, not ink-100. This section sits on the tint, where ink-100 is
+     within a couple of percent of the ground and the rules disappear —
+     and a list with no rules is eight paragraphs. */
+  .iw-row + .iw-row {
+    border-top: 1px solid var(--color-ink-200);
+  }
+
+  .iw-link {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: baseline;
+    column-gap: 1.1rem;
+    padding-block: 1.15rem;
+    transition: padding-inline-start var(--duration-base) var(--ease-out);
+  }
+  /* The row steps in rather than lighting up a background. There is no
+     surface here to light. */
+  @media (prefers-reduced-motion: no-preference) {
+    .iw-link:hover,
+    .iw-link:focus-visible {
+      padding-inline-start: 0.65rem;
+    }
+  }
+  .iw-link:focus-visible {
+    outline: 2px solid var(--color-prime-700);
+    outline-offset: 4px;
+    border-radius: 0.25rem;
+  }
+
+  .iw-n {
+    font-size: 0.8125rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.08em;
+    color: var(--color-ink-400);
+    transition: color var(--duration-base) var(--ease-prime);
+  }
+  .iw-link:hover .iw-n,
+  .iw-link:focus-visible .iw-n {
+    color: var(--tone);
+  }
+
+  .iw-text {
+    display: block;
+  }
+  .iw-name {
+    display: block;
+    font-size: var(--text-h4);
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--color-ink-950);
+    text-wrap: balance;
+  }
+  .iw-sum {
+    display: block;
+    margin-top: 0.3rem;
+    max-width: 48ch;
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    color: var(--color-ink-500);
+  }
+
+  .iw-go {
+    align-self: center;
+    display: grid;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    color: var(--color-ink-300);
+    transition:
+      color var(--duration-base) var(--ease-prime),
+      transform var(--duration-base) var(--ease-out);
+  }
+  .iw-go svg {
+    width: 1rem;
+    height: 1rem;
+  }
+  .iw-link:hover .iw-go,
+  .iw-link:focus-visible .iw-go {
+    color: var(--tone);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .iw-link:hover .iw-go,
+    .iw-link:focus-visible .iw-go {
+      transform: translateX(4px);
+    }
+  }
+
+  /* ---------------------------------------------------------------------
+     THE LINK BETWEEN THE TWO HALVES.
+
+     Eight rules, written out rather than generated, because eight is few
+     enough to read and a generated block would have to escape Astro's
+     scoping to exist. Each one publishes the hovered row's index; the pins
+     work out the rest for themselves.
+  --------------------------------------------------------------------- */
+  .iw:has(.iw-row:nth-child(1) .iw-link:hover) { --active: 0; }
+  .iw:has(.iw-row:nth-child(2) .iw-link:hover) { --active: 1; }
+  .iw:has(.iw-row:nth-child(3) .iw-link:hover) { --active: 2; }
+  .iw:has(.iw-row:nth-child(4) .iw-link:hover) { --active: 3; }
+  .iw:has(.iw-row:nth-child(5) .iw-link:hover) { --active: 4; }
+  .iw:has(.iw-row:nth-child(6) .iw-link:hover) { --active: 5; }
+  .iw:has(.iw-row:nth-child(7) .iw-link:hover) { --active: 6; }
+  .iw:has(.iw-row:nth-child(8) .iw-link:hover) { --active: 7; }
+  .iw:has(.iw-row:nth-child(1) .iw-link:focus-visible) { --active: 0; }
+  .iw:has(.iw-row:nth-child(2) .iw-link:focus-visible) { --active: 1; }
+  .iw:has(.iw-row:nth-child(3) .iw-link:focus-visible) { --active: 2; }
+  .iw:has(.iw-row:nth-child(4) .iw-link:focus-visible) { --active: 3; }
+  .iw:has(.iw-row:nth-child(5) .iw-link:focus-visible) { --active: 4; }
+  .iw:has(.iw-row:nth-child(6) .iw-link:focus-visible) { --active: 5; }
+  .iw:has(.iw-row:nth-child(7) .iw-link:focus-visible) { --active: 6; }
+  .iw:has(.iw-row:nth-child(8) .iw-link:focus-visible) { --active: 7; }
+
+  @media (width < 64rem) {
+    .iw-visual {
+      max-width: 19rem;
+    }
+    .iw-sum {
+      font-size: 0.875rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .iw-world {
+      animation: none;
+    }
+    .iw-pin-mast,
+    .iw-pin-head {
+      transition: none;
+    }
+  }
+</style>

@@ -121,11 +121,11 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
       <div class="journey-column">
         <!-- Screen one: the hero proper. -->
         <div class="journey-panel">
-          <p class="eyebrow mb-6">{t.home.hero.eyebrow}</p>
-          <h1 class="text-display-xl text-white">{t.home.hero.title}</h1>
-          <p class="mt-7 measure text-lead text-ink-300">{t.home.hero.lead}</p>
+          <p class="eyebrow mb-6 enter" style="--d:0">{t.home.hero.eyebrow}</p>
+          <h1 class="text-display-xl text-white enter" style="--d:1">{t.home.hero.title}</h1>
+          <p class="mt-7 measure text-lead text-ink-300 enter" style="--d:2">{t.home.hero.lead}</p>
 
-          <div class="mt-10 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
+          <div class="mt-10 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap enter" style="--d:3">
             <Button href={localizePath(routes.contact, locale)} variant="primary" size="lg">
               {t.home.hero.primaryCta}
             </Button>
@@ -239,7 +239,7 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
 
       <!-- ============ Right: the relief model ============ -->
       <div class="journey-rail">
-        <div class="journey-stage">
+        <div class="journey-stage enter enter-stage" style="--d:1">
           <HeroRelief locale={locale} waypoints={waypoints} />
         </div>
       </div>
@@ -255,6 +255,63 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
     syntax: '<percentage>';
     inherits: false;
     initial-value: 0%;
+  }
+
+  /* ---------------------------------------------------------------------
+     THE HERO ARRIVES.
+
+     The site's reveal system deliberately never touches anything above the
+     fold — it only hides what starts below it, so nothing can be left
+     invisible by an observer callback that never comes. That is the right
+     rule and it leaves the one screen everybody sees with no entrance at
+     all, so the hero gets its own: a plain CSS animation on load, no
+     observer, no script, nothing that can fail to fire.
+
+     WHY THE ORDER IS THIS ORDER. Four beats at 110ms, which is slow enough
+     to read as a sequence and short enough that the whole thing is over in
+     under a second: kicker, headline, lead, buttons. The model comes in on
+     the headline's beat rather than after the buttons, because it is the
+     other half of the first impression and arriving last would make it
+     read as an afterthought loading in.
+
+     AND THE DELAYS ARE SMALL ON PURPOSE. Largest Contentful Paint ignores
+     an element while its opacity is zero, so a long start delay on the
+     headline would push LCP back by exactly that delay. 110ms is inside
+     the noise; a fashionable 600ms stagger would not be. */
+  .enter {
+    animation: hero-enter var(--duration-enter) var(--ease-out) both;
+    animation-delay: calc(var(--d, 0) * 110ms);
+  }
+  @keyframes hero-enter {
+    from {
+      opacity: 0;
+      transform: translateY(22px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  /* The model does not rise, it settles: it is an object in space, and an
+     object that slides up from below is a card. */
+  .enter-stage {
+    animation-name: hero-enter-stage;
+    animation-duration: 1100ms;
+  }
+  @keyframes hero-enter-stage {
+    from {
+      opacity: 0;
+      transform: scale(0.88) translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .enter {
+      animation: none;
+    }
   }
 
   .journey-wash {
