@@ -1837,3 +1837,365 @@
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
 }
+
+/* ===========================================================================
+   THE FLEET BRIEF
+   ===========================================================================
+   Styles for `FleetBrief.tsx`, the homepage's "what are you trying to stop
+   losing?" block. They live here rather than in a component because a React
+   island has no scoped-style mechanism, which is the same reason `.field-error`
+   and the form fields above are here.
+
+   WHY THE WHOLE BLOCK IS A DARK PANEL on a light section. The 3D vocabulary
+   this site uses is lit line-work, and lit line-work needs a dark field: an
+   orange glow on white is a smudge. Making the section itself dark would break
+   the page's light run, which holds deliberately from the descriptor band
+   through industries and the value proposition, so the brief carries its own
+   night with it instead. It also does the block a favour — a console sitting
+   on the page is a thing you operate, which is what this now is.
+=========================================================================== */
+@layer components {
+  .brief {
+    display: grid;
+    gap: 2rem;
+    padding: 1.5rem;
+    border-radius: var(--radius-panel);
+    background-color: var(--color-ink-950);
+    background-image: radial-gradient(58% 64% at 86% 16%, rgb(243 93 1 / 0.16), transparent 70%);
+    overflow: hidden;
+  }
+
+  /* The stack leads on a phone. It is the thing that explains what the
+     checkboxes are for, and a reader who meets the checkboxes first has no
+     reason to expect anything to happen. */
+  @media (width >= 64rem) {
+    .brief {
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+      gap: 3rem;
+      padding: 2.5rem;
+      align-items: center;
+    }
+    .brief-form { order: 1; }
+    .brief-visual { order: 2; }
+  }
+
+  /* ---- The stack ------------------------------------------------------ */
+  .brief-stage {
+    position: relative;
+    width: 100%;
+    max-width: 22rem;
+    aspect-ratio: 1;
+    margin-inline: auto;
+    perspective: 1100px;
+    perspective-origin: 50% 50%;
+    /* Written by the pointer handler; 0,0 until something moves, which is
+       also what a touch device and a reduced-motion visitor get. */
+    --mx: 0;
+    --my: 0;
+    --tilt: calc(58deg + var(--my) * 11deg);
+    --spin: calc(-24deg + var(--mx) * 20deg);
+    /* How far apart the plates sit. Nine of them at full spacing stand
+       about 200px above the floor once projected, which is taller than
+       the stage is on a phone and the panel clips: depth is the one
+       dimension that cannot be a percentage of the box. */
+    --lift: 1;
+  }
+  .brief-world {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    /* Pushed down before it is tilted, so a full stack has headroom to
+       grow into rather than climbing out of the top of the frame. */
+    transform: translateY(13%) rotateX(var(--tilt)) rotateZ(var(--spin));
+    /* The lag is the point. Tracking the cursor exactly reads as a rigged
+       prop; a tenth of a second behind reads as mass. */
+    transition: transform 140ms linear;
+  }
+
+  /* The floor the brief is assembled on. Dashed, because it is the only
+     thing in the scene that is not yet something the reader has said. */
+  .brief-base {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 64%;
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    border-radius: 999px;
+    border: 1.5px dashed rgb(255 157 92 / 0.42);
+    background-image: radial-gradient(closest-side, rgb(243 93 1 / 0.1), transparent 72%);
+  }
+
+  .brief-plate {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 50%;
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    transform: translateZ(calc((24px + var(--i) * 26px) * var(--lift)));
+    transform-style: preserve-3d;
+    animation: brief-land 460ms var(--ease-out) both;
+  }
+  /* It arrives from above and settles, which is the whole reason to animate
+     anything here: a plate that simply appears is a list item. */
+  @keyframes brief-land {
+    from {
+      opacity: 0;
+      transform: translateZ(calc((180px + var(--i) * 26px) * var(--lift)));
+    }
+    to {
+      opacity: 1;
+      transform: translateZ(calc((24px + var(--i) * 26px) * var(--lift)));
+    }
+  }
+  .brief-plate-face {
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    border: 2px solid var(--color-prime-400);
+    background-image: radial-gradient(closest-side, rgb(243 93 1 / 0.12), transparent 74%);
+    box-shadow: 0 0 26px -8px rgb(243 93 1 / 0.7);
+  }
+
+  /* The tags spiral up around the tower rather than stacking in one place,
+     so nine of them can be read at once. `--a` is set per plate in the
+     component; `cos`/`sin` put the chip on the rim at that angle, and the
+     counter-rotation is the exact inverse of the world's, so a chip faces
+     the reader however the stack is turned. */
+  .brief-tag {
+    position: absolute;
+    left: calc(50% + cos(var(--a)) * 44%);
+    top: calc(50% + sin(var(--a)) * 44%);
+    translate: -50% -50%;
+    transform: rotateZ(calc(-1 * var(--spin))) rotateX(calc(-1 * var(--tilt)));
+    max-width: 9rem;
+    padding: 0.26rem 0.55rem;
+    border-radius: 0.4rem;
+    border: 1px solid rgb(255 125 41 / 0.55);
+    background-color: #0a0e14;
+    box-shadow: 0 10px 24px -14px rgb(0 0 0 / 0.95);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    line-height: 1.2;
+    text-transform: uppercase;
+    color: #ffe4d2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .brief-readout {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.6rem;
+    margin-top: 0.25rem;
+  }
+  .brief-readout-n {
+    font-size: 2rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--color-prime-400);
+  }
+  .brief-readout-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-ink-400);
+  }
+  @media (width < 64rem) {
+    .brief-stage {
+      --lift: 0.62;
+    }
+  }
+  .brief-hint {
+    margin-top: 0.5rem;
+    text-align: center;
+    font-size: 0.875rem;
+    color: var(--color-ink-400);
+  }
+
+  /* ---- The options ---------------------------------------------------- */
+  .brief-options {
+    display: grid;
+    gap: 0.5rem;
+  }
+  @media (width >= 40rem) {
+    .brief-options {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .brief-option-other {
+      grid-column: 1 / -1;
+    }
+  }
+  .brief-option {
+    position: relative;
+  }
+  .brief-choice {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.7rem;
+    width: 100%;
+    padding: 0.8rem 2.2rem 0.8rem 0.85rem;
+    text-align: left;
+    border: 1px solid rgb(255 255 255 / 0.1);
+    border-radius: 0.7rem;
+    background-color: rgb(255 255 255 / 0.03);
+    transition:
+      border-color var(--duration-fast) var(--ease-prime),
+      background-color var(--duration-fast) var(--ease-prime);
+  }
+  .brief-choice:hover {
+    border-color: rgb(255 255 255 / 0.2);
+    background-color: rgb(255 255 255 / 0.06);
+  }
+  .brief-choice[aria-pressed='true'] {
+    border-color: rgb(255 125 41 / 0.6);
+    background-color: rgb(243 93 1 / 0.12);
+  }
+  .brief-choice:focus-visible {
+    outline: 2px solid var(--color-prime-400);
+    outline-offset: 2px;
+  }
+  .brief-box {
+    display: grid;
+    place-items: center;
+    width: 1.15rem;
+    height: 1.15rem;
+    margin-top: 0.1rem;
+    border-radius: 0.35rem;
+    border: 1.5px solid rgb(255 255 255 / 0.28);
+    transition:
+      background-color var(--duration-fast) var(--ease-prime),
+      border-color var(--duration-fast) var(--ease-prime);
+  }
+  .brief-choice[aria-pressed='true'] .brief-box {
+    border-color: var(--color-prime-500);
+    background-color: var(--color-prime-500);
+  }
+  .brief-check {
+    width: 0.85rem;
+    height: 0.85rem;
+    color: #fff;
+    opacity: 0;
+  }
+  .brief-choice[aria-pressed='true'] .brief-check {
+    opacity: 1;
+  }
+  .brief-choice-label {
+    display: block;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--color-white);
+  }
+  .brief-choice-body {
+    display: block;
+    margin-top: 0.2rem;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    /* ink-400 is 5.8:1 on this ground. Nothing darker is used for text. */
+    color: var(--color-ink-400);
+  }
+
+  /* The link the block has always carried, with no text of its own. */
+  .brief-jump {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.5rem;
+    display: grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 999px;
+    color: var(--color-ink-400);
+    transition:
+      color var(--duration-fast) var(--ease-prime),
+      background-color var(--duration-fast) var(--ease-prime);
+  }
+  .brief-jump svg {
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+  .brief-jump:hover {
+    color: var(--color-prime-400);
+    background-color: rgb(255 255 255 / 0.07);
+  }
+
+  /* ---- The fields ----------------------------------------------------- */
+  .brief-fields {
+    display: grid;
+    gap: 0.9rem;
+    margin-top: 1.25rem;
+  }
+  @media (width >= 40rem) {
+    .brief-fields {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .brief-field-label {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-ink-400);
+  }
+  .brief-input,
+  .brief-other-input {
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0.6rem 0.85rem;
+    border: 1px solid rgb(255 255 255 / 0.14);
+    border-radius: 0.6rem;
+    background-color: rgb(255 255 255 / 0.04);
+    font-size: 0.9375rem;
+    color: var(--color-white);
+  }
+  .brief-other-input {
+    margin-top: 0.5rem;
+  }
+  .brief-input::placeholder,
+  .brief-other-input::placeholder {
+    color: var(--color-ink-400);
+  }
+  .brief-input:focus-visible,
+  .brief-other-input:focus-visible {
+    outline: 2px solid var(--color-prime-400);
+    outline-offset: 2px;
+  }
+
+  .brief-send {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  .brief-privacy {
+    flex: 1 1 14rem;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    color: var(--color-ink-400);
+  }
+
+  .brief-done {
+    background-image: radial-gradient(60% 80% at 50% 0%, var(--color-prime-50), transparent 70%);
+  }
+
+  /* The scene is finished at rest, so this removes the arrival and the
+     tracking and leaves the stack standing. */
+  @media (prefers-reduced-motion: reduce) {
+    .brief-plate {
+      animation: none;
+    }
+    .brief-world {
+      transition: none;
+    }
+  }
+}

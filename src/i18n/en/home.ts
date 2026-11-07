@@ -54,6 +54,31 @@ export const home = {
       reporting: { label: 'Reporting', body: 'Fifteen analytics capabilities covering location, cost, safety and vehicle condition.' },
     },
     seeAnswer: 'See how we handle this',
+    /** The block is a working brief now, not a list, so it needs the words a
+     *  form needs. Everything here is new UI copy; nothing replaces an
+     *  existing string, and the eight labels and bodies above are untouched. */
+    form: {
+      otherLabel: 'Something else',
+      otherPlaceholder: 'Tell us what it is',
+      emailLabel: 'Where should we send it?',
+      emailPlaceholder: 'you@company.rw',
+      nameLabel: 'Your name',
+      namePlaceholder: 'Optional',
+      submit: 'Send my brief',
+      sending: 'Sending',
+      successTitle: 'On its way',
+      successBody:
+        'We have your brief. PrimeCARE will come back to you with what we would put on your fleet, and what it costs.',
+      emptyTitle: 'Nothing picked yet',
+      emptyBody: 'Tick what is costing you most and it will stack up here.',
+      countOne: 'thing to fix',
+      countMany: 'things to fix',
+      needOne: 'Pick at least one, or tell us what else it is.',
+      needEmail: 'Add an email so we can reply.',
+      privacy: 'We use this to answer you and nothing else.',
+      unconfigured:
+        'The form is not connected yet. In the meantime, PrimeCARE is on the number and the WhatsApp line above.',
+    },
   },
 
   /** The live site's "OUR VALUE PROPOSTION" trio, kept in their own framing. */

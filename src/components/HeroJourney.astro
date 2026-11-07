@@ -125,7 +125,7 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
           <h1 class="text-display-xl text-white">{t.home.hero.title}</h1>
           <p class="mt-7 measure text-lead text-ink-300">{t.home.hero.lead}</p>
 
-          <div class="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          <div class="mt-10 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
             <Button href={localizePath(routes.contact, locale)} variant="primary" size="lg">
               {t.home.hero.primaryCta}
             </Button>
@@ -294,7 +294,7 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
        number that sets the pace of everything here, the drive on the right
        included, so it is declared once, at the top, rather than buried in the
        rule that uses it. Only applied in the driven state. */
-    --report-track: 280svh;
+    --report-track: 250svh;
 
     /* The report drum.
        The four reports are not a list that slides, they are panels on a drum
@@ -570,6 +570,56 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
     color: var(--color-ink-300);
   }
 
+  /* TWO ACROSS ON A PHONE.
+
+     Four full-width reports is four screenfuls for a set the reader is
+     meant to take in as a group — they are one instrument's four outputs,
+     and reading them as a 2x2 is how you see that. The index column stays
+     (the numerals are what pair the strip to the model) but loses its
+     hairline and most of its width, because at 160px a column of furniture
+     is a column of text not written. */
+  @media (width < 64rem) {
+    .journey-strip {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.6rem 1.15rem;
+    }
+    .journey-row {
+      column-gap: 0.6rem;
+    }
+    .journey-row-spine {
+      display: none;
+    }
+    .journey-row-index {
+      align-self: start;
+    }
+    .journey-row-n {
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+    }
+    .journey-row-text {
+      gap: 0.4rem;
+    }
+    .journey-row-label {
+      gap: 0.4rem;
+      font-size: 0.625rem;
+      letter-spacing: 0.13em;
+      line-height: 1.25rem;
+    }
+    .journey-row-icon {
+      width: 1.25rem;
+      height: 1.25rem;
+      border-radius: 0.35rem;
+    }
+    .journey-row-refrain {
+      font-size: 1rem;
+      line-height: 1.26;
+    }
+    .journey-row-body {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+    }
+  }
+
   @media (width >= 40rem) {
     .journey-panel {
       padding-block: 6rem;
@@ -788,7 +838,12 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
            only ever see one side of the rotation, which reads as a list
            fading rather than as an object turning. */
         --row-h: clamp(5.5rem, 12.5svh, 7.5rem);
-        --focus: calc(var(--row-h) * 0.55);
+        /* 0.62 of a row, not 0.55. Everything below the read head is empty
+           once the last report has reached it, so every pixel the head
+           sits further down is a pixel of dead space removed from the end
+           of the section — and the clearance it gives up at the top is
+           filled by the reports still to come. */
+        --focus: calc(var(--row-h) * 0.62);
       }
 
       /* `--cur` is 1 for the report currently at the read head and falls to 0
@@ -906,7 +961,12 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
         position: relative;
         flex: 1;
         min-height: 0;
-        max-height: calc(var(--row-h) * 3 + 0.75rem);
+        /* 2.5 rows, not 3. The window has to be tall enough to show the
+           turn either side of the head and no taller: the half row this
+           gives up was only ever visible at the END of the sequence, as a
+           blank below the final report, which read as the section having
+           stopped half a screen before it ended. */
+        max-height: calc(var(--row-h) * 2.5 + 0.75rem);
         margin-top: 1.75rem;
       }
 

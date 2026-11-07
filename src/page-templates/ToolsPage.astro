@@ -47,7 +47,7 @@ const url = new URL(localizePath(routes.tools, locale), site).href;
     <div class="rounded-[--radius-panel] border border-prime-200 bg-prime-50 p-7 sm:p-10">
       <h2 class="text-h3">{tools.pendingTitle}</h2>
       <p class="mt-4 measure text-ink-700">{tools.pendingBody}</p>
-      <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+      <div class="mt-8 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
         <Button href={company.whatsappUrl} variant="primary" external>{tools.pendingCta}</Button>
         <Button href={`mailto:${company.email}`} variant="secondary">{company.email}</Button>
       </div>

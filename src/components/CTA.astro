@@ -29,7 +29,7 @@ const t = useTranslations(locale);
         {body && <p class="mt-5 measure text-lead text-ink-300">{body}</p>}
       </div>
 
-      <div class="flex flex-col gap-3 sm:flex-row lg:flex-col lg:items-stretch">
+      <div class="grid grid-cols-2 gap-3 sm:flex sm:flex-row lg:flex lg:flex-col lg:items-stretch">
         <Button href={localizePath(routes.contact, locale)} variant="primary" size="lg">
           {t.home.finalCta.primary}
         </Button>

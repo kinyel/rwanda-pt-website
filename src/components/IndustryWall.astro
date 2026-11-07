@@ -77,7 +77,11 @@ const items = t.industries.items as Record<string, { name: string; summary: stri
      instead of eight borders that would double up wherever two tiles meet. */
   .industry-wall {
     display: grid;
-    grid-template-columns: 1fr;
+    /* Two across from the smallest screen. Eight full-width rows is eight
+       screenfuls of scrolling for a set the reader is meant to scan and
+       pick from, and a cell carries a short label and one line of body:
+       it fits a half-width column at 320px. */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1px;
     background-color: var(--color-ink-100);
     border: 1px solid var(--color-ink-100);

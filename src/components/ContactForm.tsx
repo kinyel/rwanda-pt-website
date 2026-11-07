@@ -108,7 +108,7 @@ export default function ContactForm({ formId, labels, email, whatsappUrl, whatsa
       <div className="rounded-[--radius-panel] border border-prime-200 bg-prime-50 p-6 sm:p-8">
         <p className="text-label uppercase text-prime-700">{labels.unconfiguredTitle}</p>
         <p className="mt-3 measure text-ink-700">{labels.unconfiguredBody}</p>
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
           <a href={`mailto:${email}`} className="btn btn-md btn-primary">{email}</a>
           <a href={whatsappUrl} rel="noopener noreferrer" target="_blank" className="btn btn-md btn-secondary">
             {whatsappLabel}
@@ -169,7 +169,7 @@ export default function ContactForm({ formId, labels, email, whatsappUrl, whatsa
           ))}
         </ol>
 
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+        <div className="mt-8 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
           <a href={whatsappUrl} rel="noopener noreferrer" target="_blank" className="btn btn-md btn-primary">
             {whatsappLabel}
           </a>
