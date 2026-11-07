@@ -411,7 +411,21 @@ const jsonLd = [organizationSchema(logoUrl), ...schemas];
           seen.observe(item);
         }
 
-        requestAnimationFrame(() => document.documentElement.classList.add('reveal-ready'));
+        /* Turning transitions on, one tick after the hide, so the initial
+           hide is committed without animating.
+
+           BOTH A FRAME AND A TIMER, because `requestAnimationFrame` does
+           not run in a background tab. A page opened in one — middle
+           click, "open in new tab", a restored session — would run the
+           synchronous hide, never reach this line, and sit with
+           forty-six elements at `opacity: 0` until the tab was looked at.
+           It self-healed on focus, which is exactly the kind of bug that
+           never shows up in testing and loses a reader who switches to
+           the tab and scrolls before the frame lands. The class is
+           idempotent, so whichever arrives first is the one that counts. */
+        const ready = () => document.documentElement.classList.add('reveal-ready');
+        requestAnimationFrame(ready);
+        setTimeout(ready, 120);
       })();
     </script>
 

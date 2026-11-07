@@ -482,37 +482,39 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
     /* THE SIGNATURE. A hairline that is brand orange on the card facing the
        camera and ordinary paper edge on the ones turned away. */
     border: 1px solid
-      color-mix(in oklab, var(--color-prime-600) calc(var(--lit) * 88%), rgb(16 21 28 / 0.2));
+      color-mix(in oklab, var(--color-prime-400) calc(var(--lit) * 90%), rgb(255 255 255 / 0.1));
     border-radius: var(--radius-panel);
-    /* GREY, NOT WHITE AND NOT NEAR-BLACK.
+    /* DARK GREY. Three passes to get here and the reasoning is worth
+       keeping, because each failure explains the next move.
 
-       The cards were warm near-black on a warm near-black ground, which is
-       why the helix needed an orange hairline to be visible at all: the
-       only thing separating a card from the room was a 1px edge. A light
-       card separates itself.
+       Warm near-black on a warm near-black ground was the original: the
+       only thing separating a card from the room was one pixel of orange
+       edge, which is why the helix needed that edge to be visible at all.
 
-       White was the first answer and it was too loud — six sheets of pure
+       White fixed the separation and overcorrected — six sheets of pure
        paper in a dark room is a lightbox, and the brand orange on the
-       facing card had nothing left to be brighter than. Grey keeps the
-       separation and gives the lit edge somewhere to go. It also behaves
-       better under the brightness falloff that takes cards into shadow as
-       they turn away: white goes grey and reads as a rendering state,
-       whereas grey going darker simply reads as further from the light.
+       facing card had nothing left to be brighter than.
+
+       Dark grey is the answer to both. It is four or five stops above the
+       section's ground, so a card separates on VALUE and needs no help; it
+       is far enough below white that the lit edge and the icon are the
+       brightest things on it; and it keeps the family dark, which is what
+       the rest of this page is.
 
        The gradient runs top-left to bottom-right, so each card has a lit
        corner and a shaded one and does not read as a flat rectangle. */
-    background-image: linear-gradient(158deg, #e8ecf0 0%, #dce1e7 52%, #c7ced7 100%);
+    background-image: linear-gradient(158deg, #3f454c 0%, #2c3137 54%, #1f2328 100%);
     box-shadow:
       /* Contact, then cast, then spill. A white card on near-black needs a
          real shadow or it looks pasted on rather than standing in the
          room. */
       0 1px 2px rgb(0 0 0 / 0.55),
       0 30px 70px -26px rgb(0 0 0 / 0.95),
-      0 20px 64px -28px rgb(243 93 1 / calc(var(--lit) * 0.7)),
-      /* A hairline of light along the top edge, inside the card. Paper
-         catches the light on the edge nearest it, and without this the
-         card is a flat rectangle of white rather than a sheet. */
-      inset 0 1px 0 rgb(255 255 255 / 0.75);
+      /* NO ORANGE SPILL. It was there to make a near-black card readable
+         against a near-black room, and a grey card does that on its own.
+         Kept, it put a halo round every object in the scene and the
+         section read as lit by the cards rather than by the spine. */
+      inset 0 1px 0 rgb(255 255 255 / 0.14);
     transition:
       border-color var(--duration-base) var(--ease-prime),
       box-shadow var(--duration-base) var(--ease-prime);
@@ -544,6 +546,10 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
     letter-spacing: 0.08em;
     color: var(--color-ink-400);
   }
+  /* The card went dark again, so its ink goes light again. ink-300 is
+     8.4:1 on the card's mid tone and prime-300 is 6.1:1, both clear of
+     the AA floor; prime-700, which is the colour for paper, would be
+     2.0:1 here. */
 
   .spiral-card-icon {
     display: flex;
@@ -552,25 +558,21 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
     width: 2.5rem;
     height: 2.5rem;
     border-radius: 999px;
-    background-color: rgb(243 93 1 / calc(0.06 + var(--lit) * 0.1));
-    border: 1px solid rgb(243 93 1 / calc(0.14 + var(--lit) * 0.32));
-    /* prime-700 is 5.8:1 on paper, where prime-400 was the dark-ground
-       colour and would be 2.1:1 here. */
-    color: var(--color-prime-700);
+    background-color: rgb(243 93 1 / calc(0.1 + var(--lit) * 0.16));
+    border: 1px solid rgb(255 125 41 / calc(0.2 + var(--lit) * 0.4));
+    color: var(--color-prime-300);
   }
 
   .spiral-card-label {
     font-size: var(--text-h4);
     font-weight: 700;
-    color: var(--color-ink-950);
+    color: var(--color-white);
   }
 
   .spiral-card-desc {
     font-size: var(--text-small);
     line-height: 1.5;
-    /* ink-600 is 9.1:1 on paper — the same separation the dark card got
-       from ink-300, read the other way up. */
-    color: var(--color-ink-600);
+    color: var(--color-ink-300);
   }
 
   .spiral-card-cta {
@@ -581,17 +583,15 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
     padding-top: 0.4rem;
     font-size: var(--text-small);
     font-weight: 700;
-    /* prime-700: 5.8:1 on paper. prime-400, which this used to be, is the
-       dark-ground orange and lands at 2.1:1 here. */
-    color: var(--color-prime-700);
+    color: var(--color-prime-300);
   }
 
   .spiral-item:hover .spiral-card {
-    border-color: var(--color-prime-600);
+    border-color: var(--color-prime-400);
     box-shadow:
       0 1px 2px rgb(0 0 0 / 0.55),
-      0 30px 70px -26px rgb(0 0 0 / 0.95),
-      0 24px 68px -24px rgb(243 93 1 / 0.6);
+      0 34px 76px -24px rgb(0 0 0 / 0.95),
+      inset 0 1px 0 rgb(255 255 255 / 0.2);
   }
   .spiral-item:focus-visible {
     /* prime-400 on dark, where prime-500 would be the light-mode ring. */
@@ -834,19 +834,21 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
        this card and the one being looked at, squared so the falloff is gentle
        near the front and quick around the back.
 
-       A WHITE CARD RECEDES BY GOING INTO SHADOW, NOT BY GOING SEE-THROUGH.
-       Fading a white card toward a near-black ground turns it grey and then
-       translucent, and a translucent card reads as a rendering state rather
-       than as a card further away. `brightness` keeps it solid and takes
-       the light off it, which is what actually happens to an object at the
-       back of a lit room, and it leaves the card's own shadow doing the
-       work of separating it from the ones in front.
+       A CARD RECEDES BY GOING INTO SHADOW, NOT BY GOING SEE-THROUGH.
+       Fading one toward the ground turns it translucent, and a translucent
+       card reads as a rendering state rather than as a card further away.
+       `brightness` keeps it solid and takes the light off it, which is what
+       happens to an object at the back of a lit room.
+
+       The floor is higher now the card is dark grey: 0.3 of a grey card is
+       indistinguishable from the room, so the falloff runs to 0.46 and the
+       separation at the back is carried by the lit edge instead.
 
        Opacity still runs, but only over the last of the turn, so a card
        does not have to pop out of existence as it goes edge-on. */
     opacity: min(1, 0.32 + 1.1 * var(--facing));
     filter:
-      brightness(calc(0.3 + 0.7 * var(--lit)))
+      brightness(calc(0.46 + 0.54 * var(--lit)))
       blur(calc((1 - var(--facing)) * 2.2px));
     /* The card at the head of the turn is nearer the reader as well as
        brighter. Small: it is the subject, not a pop-up. */

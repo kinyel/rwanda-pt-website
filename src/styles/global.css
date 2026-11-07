@@ -219,6 +219,13 @@
   --duration-fast: 160ms;
   --duration-base: 240ms;
   --duration-slow: 360ms;
+  /* ENTRANCES ARE NOT INTERACTIONS, so they do not belong on the scale
+     above. Everything there answers something the reader just did, and an
+     answer that takes most of a second is a slow interface. An entrance
+     answers nothing and nobody is waiting on it: at 240ms a 14px rise was
+     over before the eye found it, which is why the site read as having no
+     animation at all despite having forty-six of them. */
+  --duration-enter: 720ms;
 
   --ease-prime: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -233,7 +240,7 @@
   /* How far apart siblings arrive in a staggered group, and how many are
      allowed to stagger before the group reveals as one. Past six the last
      item lands so late it reads as broken rather than as sequenced. */
-  --stagger-step: 60ms;
+  --stagger-step: 95ms;
   --stagger-cap: 5;
 
   /* An unhurried arrival: something appearing on its own account rather than
@@ -1858,7 +1865,7 @@
   :root.reveal-ready .reveal,
   :root.reveal-ready .reveal-soft {
     transition-property: opacity, transform, filter;
-    transition-duration: var(--duration-base);
+    transition-duration: var(--duration-enter);
     transition-timing-function: var(--ease-out);
   }
 
@@ -1869,8 +1876,8 @@
   }
   /* A short rise. Not a slide from off-screen: the element is telling you it
      just arrived, not travelling across the page to get here. */
-  .reveal[data-reveal] { transform: translateY(14px); }
-  .reveal-soft[data-reveal] { transform: translateY(18px); filter: blur(6px); }
+  .reveal[data-reveal] { transform: translateY(30px); }
+  .reveal-soft[data-reveal] { transform: translateY(40px); filter: blur(10px); }
 
   /* Fade with no movement, for anything inside a clipped panel where a rise
      would show the panel's own background under the moving edge. A component
@@ -1878,7 +1885,7 @@
      industry wall, which is the one place this applies. */
   :root.reveal-ready .reveal-fade {
     transition-property: opacity;
-    transition-duration: var(--duration-base);
+    transition-duration: var(--duration-enter);
     transition-timing-function: var(--ease-out);
   }
   .reveal-fade[data-reveal] {
@@ -1902,7 +1909,7 @@
   :root.reveal-ready .reveal-scale,
   :root.reveal-ready .reveal-rise {
     transition-property: opacity, transform, filter;
-    transition-duration: var(--duration-slow);
+    transition-duration: var(--duration-enter);
     transition-timing-function: var(--ease-out);
   }
   .reveal-left[data-reveal],
@@ -1912,10 +1919,10 @@
     opacity: 0;
     will-change: opacity, transform;
   }
-  .reveal-left[data-reveal] { transform: translateX(-26px); }
-  .reveal-right[data-reveal] { transform: translateX(26px); }
-  .reveal-scale[data-reveal] { transform: scale(0.94); }
-  .reveal-rise[data-reveal] { transform: translateY(34px); }
+  .reveal-left[data-reveal] { transform: translateX(-64px); }
+  .reveal-right[data-reveal] { transform: translateX(64px); }
+  .reveal-scale[data-reveal] { transform: scale(0.88) translateY(18px); }
+  .reveal-rise[data-reveal] { transform: translateY(64px); }
 
   /* HEADINGS ARRIVE A WORD AT A TIME.
 
@@ -1931,13 +1938,15 @@
   .words > span {
     display: inline-block;
     transition:
-      opacity var(--duration-slow) var(--ease-out),
-      transform var(--duration-slow) var(--ease-out);
-    transition-delay: calc(var(--w, 0) * 38ms);
+      opacity var(--duration-enter) var(--ease-out),
+      transform var(--duration-enter) var(--ease-out),
+      filter var(--duration-enter) var(--ease-out);
+    transition-delay: calc(var(--w, 0) * 62ms);
   }
   .words[data-reveal] > span {
     opacity: 0;
-    transform: translateY(0.42em);
+    transform: translateY(0.9em) rotate(2deg);
+    filter: blur(5px);
   }
   /* The heading itself must not also fade, or the words fade twice. */
   .words[data-reveal] {
