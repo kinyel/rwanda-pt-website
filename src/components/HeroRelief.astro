@@ -357,36 +357,46 @@ const RAMP = +(0.5 / RIM).toFixed(3);
     transform: translateZ(calc(var(--z) * 1px));
   }
 
-  /* ROCK. Each plate names its own stone as a token rather than painting
-     it directly, because the x-ray has to interpolate away from whatever
-     that stone happens to be. One mix instead of three. */
+  /* THE HILL IS DRAWN IN LIGHT, NOT MODELLED IN STONE.
 
-  /* WALL. The four copies that build the riser between two contours. Darker
-     than the tread above them and unstroked, so the stack reads as one solid
-     mass with steps cut into it rather than as 45 separate outlines. */
+     It used to be shaded rock: teal in the valleys ramping to bronze at
+     the summit, with a hairline on each tread. That is a fair picture of a
+     landscape and it is a heavy, closed object — a mass with some lines on
+     it. The brief is a lit contour map standing in the dark, so the fills
+     are near the page's own ground at every elevation and the CUT EDGES do
+     all the work: forty-five of them, every one of them brand orange,
+     brighter as they climb.
+
+     The fills are not quite the ground. A plate that is exactly the page
+     colour stops occluding the plates behind it and the stack flattens
+     into a tangle of rings; a few percent of warmth above it keeps the
+     near contours in front of the far ones, which is the whole of the 3D.
+
+     `--rock` stays a token because the x-ray has to interpolate away from
+     whatever the stone happens to be, and it is now a much shorter trip. */
   .plate {
-    --rock: color-mix(in oklab, var(--relief-mid) calc(var(--t) * 72%), var(--relief-deep));
+    --rock: color-mix(in oklab, #1a1410 calc(18% + var(--t) * 40%), #0a0b0d);
   }
-
-  /* TREAD. The last copy of each contour is the surface you would stand on,
-     so it is lighter and carries the cut line that makes the lamination
-     legible. */
   .plate[data-face] {
-    --rock: color-mix(in oklab, var(--relief-lit) calc(var(--t) * 86%), #14262e);
+    --rock: color-mix(in oklab, #241a12 calc(22% + var(--t) * 48%), #0b0c0f);
   }
-
-  /* The summit catches the warm light directly. */
   .plate:last-of-type {
-    --rock: color-mix(in oklab, var(--relief-peak) 72%, var(--color-prime-500));
+    --rock: color-mix(in oklab, #3a2412 70%, #0b0c0f);
   }
 
   .plate path {
     fill: var(--rock);
-    stroke: none;
+    /* THE RISERS ARE LIT TOO, which is most of why the model now reads as
+       a drawing. Five copies build each riser, so this is 36 hairlines at
+       a whisper rather than four at full strength: any heavier and the
+       walls close back into a mass. */
+    stroke: color-mix(in oklab, var(--color-prime-500) calc(5% + var(--t) * 7%), transparent);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
   }
   .plate[data-face] path {
-    stroke: color-mix(in oklab, var(--color-prime-400) calc(22% + var(--t) * 50%), transparent);
-    stroke-width: 1.1;
+    stroke: color-mix(in oklab, var(--color-prime-400) calc(52% + var(--t) * 48%), transparent);
+    stroke-width: 1.6;
     vector-effect: non-scaling-stroke;
   }
 
@@ -609,9 +619,11 @@ const RAMP = +(0.5 / RIM).toFixed(3);
        `transparent` drops the alpha and leaves the colour alone. */
     :global(.hero-journey[data-journey-live]) .plate:not([data-face]) path {
       fill: color-mix(in oklab, var(--rock) calc(100% - var(--xray, 0) * 100%), transparent);
-      /* And a hairline appears as the mass goes, so the risers are still
-         edges when they are no longer volume. */
-      stroke: color-mix(in oklab, var(--color-prime-400) calc(var(--xray, 0) * 9%), transparent);
+      stroke: color-mix(
+        in oklab,
+        var(--color-prime-500) calc(5% + var(--t) * 7% + var(--xray, 0) * 10%),
+        transparent
+      );
       stroke-width: 1;
       vector-effect: non-scaling-stroke;
     }
@@ -623,10 +635,10 @@ const RAMP = +(0.5 / RIM).toFixed(3);
          vehicle are visible through it. */
       stroke: color-mix(
         in oklab,
-        var(--color-prime-400) calc(22% + var(--t) * 50% + var(--xray, 0) * 34%),
+        var(--color-prime-400) calc(52% + var(--t) * 48% + var(--xray, 0) * 20%),
         transparent
       );
-      stroke-width: calc(1.1px + var(--xray, 0) * 0.55px);
+      stroke-width: calc(1.6px + var(--xray, 0) * 0.7px);
     }
     :global(.hero-journey[data-journey-live]) .relief-model {
       transform: rotateX(var(--tilt)) rotateZ(var(--spin))

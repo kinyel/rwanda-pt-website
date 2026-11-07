@@ -482,21 +482,26 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
     /* THE SIGNATURE. A hairline that is brand orange on the card facing the
        camera and ordinary paper edge on the ones turned away. */
     border: 1px solid
-      color-mix(in oklab, var(--color-prime-500) calc(var(--lit) * 80%), rgb(16 21 28 / 0.14));
+      color-mix(in oklab, var(--color-prime-600) calc(var(--lit) * 88%), rgb(16 21 28 / 0.2));
     border-radius: var(--radius-panel);
-    /* WHITE, NOT NEAR-BLACK.
+    /* GREY, NOT WHITE AND NOT NEAR-BLACK.
 
        The cards were warm near-black on a warm near-black ground, which is
        why the helix needed an orange hairline to be visible at all: the
-       only thing separating a card from the room was a 1px edge. Paper on
-       a dark ground separates itself. The staircase now reads as objects
-       lit in a dark space rather than as panels cut out of it, every
-       depth cue the room gained has something to land on, and the
-       hairline is free to do emphasis instead of basic legibility.
+       only thing separating a card from the room was a 1px edge. A light
+       card separates itself.
+
+       White was the first answer and it was too loud — six sheets of pure
+       paper in a dark room is a lightbox, and the brand orange on the
+       facing card had nothing left to be brighter than. Grey keeps the
+       separation and gives the lit edge somewhere to go. It also behaves
+       better under the brightness falloff that takes cards into shadow as
+       they turn away: white goes grey and reads as a rendering state,
+       whereas grey going darker simply reads as further from the light.
 
        The gradient runs top-left to bottom-right, so each card has a lit
        corner and a shaded one and does not read as a flat rectangle. */
-    background-image: linear-gradient(158deg, #ffffff 0%, #f7f9fb 52%, #e9edf2 100%);
+    background-image: linear-gradient(158deg, #e8ecf0 0%, #dce1e7 52%, #c7ced7 100%);
     box-shadow:
       /* Contact, then cast, then spill. A white card on near-black needs a
          real shadow or it looks pasted on rather than standing in the
@@ -507,7 +512,7 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
       /* A hairline of light along the top edge, inside the card. Paper
          catches the light on the edge nearest it, and without this the
          card is a flat rectangle of white rather than a sheet. */
-      inset 0 1px 0 rgb(255 255 255 / 0.9);
+      inset 0 1px 0 rgb(255 255 255 / 0.75);
     transition:
       border-color var(--duration-base) var(--ease-prime),
       box-shadow var(--duration-base) var(--ease-prime);
@@ -582,7 +587,7 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
   }
 
   .spiral-item:hover .spiral-card {
-    border-color: var(--color-prime-500);
+    border-color: var(--color-prime-600);
     box-shadow:
       0 1px 2px rgb(0 0 0 / 0.55),
       0 30px 70px -26px rgb(0 0 0 / 0.95),

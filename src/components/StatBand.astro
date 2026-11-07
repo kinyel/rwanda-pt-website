@@ -26,8 +26,8 @@ const ruleTone = tone === 'dark' ? 'bg-white/10' : 'bg-ink-100';
 
 <dl class="grid grid-cols-2 gap-px lg:grid-cols-4">
   {
-    company.stats.map((stat) => (
-      <div class={`relative p-6 sm:p-8 ${ruleTone}`} style="outline:1px solid transparent">
+    company.stats.map((stat, i) => (
+      <div class={`reveal-scale relative p-6 sm:p-8 ${ruleTone}`} style={`--n:${i}; outline:1px solid transparent`}>
         <dt class={`text-[0.8125rem] font-semibold leading-snug ${labelTone}`}>{labels[stat.key]}</dt>
         <dd class={`mt-2 text-stat ${valueTone}`}>
           {stat.value.toLocaleString('en-US')}<span class="text-prime-500">{stat.suffix}</span>

@@ -194,7 +194,7 @@ const whyKeys = ['regulator', 'support', 'hardware'] as const;
     <ul class="mt-10 grid gap-8 md:grid-cols-3">
       {
         valuePropKeys.map((key, i) => (
-          <li class="reveal border-t-2 border-prime-500 pt-6" style={`--n:${i}`}>
+          <li class="reveal-rise border-t-2 border-prime-500 pt-6" style={`--n:${i}`}>
             <p class="text-label uppercase text-ink-400">{String(i + 1).padStart(2, '0')}</p>
             <h3 class="mt-3 text-h3">{t.home.valueProp.items[key].title}</h3>
             <p class="mt-3 text-ink-600">{t.home.valueProp.items[key].body}</p>
@@ -235,7 +235,7 @@ const whyKeys = ['regulator', 'support', 'hardware'] as const;
       <Picture
         imageKey="homeVideoTelematics"
         locale={locale}
-        wrapperClass="rounded-[--radius-panel] border border-white/10 reveal-soft"
+        wrapperClass="rounded-[--radius-panel] border border-white/10 reveal-right"
         sizes="(min-width: 1024px) 46vw, 100vw"
       />
     </div>
@@ -247,7 +247,7 @@ const whyKeys = ['regulator', 'support', 'hardware'] as const;
       <Picture
         imageKey="homeFuelMonitoring"
         locale={locale}
-        wrapperClass="rounded-[--radius-panel] border border-ink-100 reveal-soft lg:order-1"
+        wrapperClass="rounded-[--radius-panel] border border-ink-100 reveal-left lg:order-1"
         sizes="(min-width: 1024px) 46vw, 100vw"
       />
       <div>
@@ -302,7 +302,7 @@ const whyKeys = ['regulator', 'support', 'hardware'] as const;
       <ul class="grid gap-px overflow-hidden rounded-[--radius-panel] border border-white/10 bg-white/10 sm:grid-cols-2">
         {
           capabilityKeys.map((key, i) => (
-            <li class="reveal bg-ink-900 p-6 sm:p-7" style={`--n:${i}`}>
+            <li class="reveal-scale bg-ink-900 p-6 sm:p-7" style={`--n:${i}`}>
               <h3 class="text-h4 text-white">{t.home.capabilities.items[key].title}</h3>
               <p class="mt-2.5 text-[0.9375rem] leading-relaxed text-ink-400">{t.home.capabilities.items[key].body}</p>
             </li>

@@ -98,7 +98,16 @@
      sizes are tracked slightly tighter than Nigeria's Space Grotesk scale.
 
      Weights loaded: 400 body, 500 UI/nav, 700 headings, 800 display. Nothing
-     else is loaded, so nothing else may be used.                            */
+     else is loaded, so nothing else may be used.
+
+     HEADINGS RUN LIGHTER THAN THEY DID. Display dropped from 800 to 700 and
+     the h2/h3/h4 scale from 700 to 500: at the sizes this scale reaches,
+     800 is a poster weight and it was making every page shout before a
+     word had been read. Alegreya Sans has no 600 — the family goes 500,
+     700, 800 — so 500 is the step below 700 and there is nothing in
+     between to reach for. It holds at these sizes because the scale is
+     large and the tracking is already negative; hierarchy is carried by
+     size, colour and space rather than by mass.                            */
   --font-sans: "Alegreya Sans", ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-display: var(--font-sans);
@@ -106,27 +115,27 @@
   --text-display-xl: clamp(2.9rem, 1.65rem + 4.9vw, 5.6rem);
   --text-display-xl--line-height: 1.03;
   --text-display-xl--letter-spacing: -0.028em;
-  --text-display-xl--font-weight: 800;
+  --text-display-xl--font-weight: 700;
 
   --text-display: clamp(2.25rem, 1.4rem + 3.3vw, 4rem);
   --text-display--line-height: 1.07;
   --text-display--letter-spacing: -0.024em;
-  --text-display--font-weight: 800;
+  --text-display--font-weight: 700;
 
   --text-h2: clamp(1.85rem, 1.35rem + 1.9vw, 2.8rem);
   --text-h2--line-height: 1.13;
   --text-h2--letter-spacing: -0.02em;
-  --text-h2--font-weight: 700;
+  --text-h2--font-weight: 500;
 
   --text-h3: clamp(1.35rem, 1.2rem + 0.65vw, 1.75rem);
   --text-h3--line-height: 1.22;
   --text-h3--letter-spacing: -0.014em;
-  --text-h3--font-weight: 700;
+  --text-h3--font-weight: 500;
 
   --text-h4: 1.1875rem;
   --text-h4--line-height: 1.36;
   --text-h4--letter-spacing: -0.008em;
-  --text-h4--font-weight: 700;
+  --text-h4--font-weight: 500;
 
   --text-lead: clamp(1.125rem, 1.05rem + 0.36vw, 1.3125rem);
   --text-lead--line-height: 1.58;
@@ -145,7 +154,7 @@
   --text-stat: clamp(2.6rem, 1.85rem + 2.8vw, 4rem);
   --text-stat--line-height: 0.98;
   --text-stat--letter-spacing: -0.035em;
-  --text-stat--font-weight: 800;
+  --text-stat--font-weight: 700;
 
   /* --- Radius ------------------------------------------------------------
      Tighter than Nigeria's (0.875 / 1.5rem). Rwanda's surfaces read a little
@@ -1738,6 +1747,58 @@
       rgb(243 93 1 / 0.18) 0%,
       transparent 60%
     );
+  }
+
+  /* HOVER, AS A VOCABULARY.
+
+     Three moves, each tied to a kind of thing, so a reader learns what the
+     site does when they point at something rather than meeting a different
+     idea in every section:
+
+       a link in running text   an underline that wipes in from the left
+       a card                   a lift, and its own border warming
+       anything that leads on   a nudge in the direction of travel
+
+     The wipe is a `background-image` rather than `text-decoration` because
+     a decoration cannot be animated: it is there or it is not. A 1px
+     gradient sized from 0 to 100% can travel, and it sits on the text's
+     own box so it follows a wrapped link onto the second line. */
+  .link-wipe {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    background-size: 0 1px;
+    transition: background-size var(--duration-base) var(--ease-out);
+  }
+  .link-wipe:hover,
+  .link-wipe:focus-visible {
+    background-size: 100% 1px;
+  }
+
+  /* A card that answers the pointer. Opt-in, so a component that already
+     has a considered hover keeps it. */
+  .lift {
+    transition:
+      transform var(--duration-base) var(--ease-prime),
+      box-shadow var(--duration-base) var(--ease-prime),
+      border-color var(--duration-base) var(--ease-prime);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .lift:hover {
+      transform: translateY(-3px);
+    }
+  }
+
+  /* Anything whose job is to send you somewhere leans that way when asked. */
+  .nudge > svg,
+  .nudge svg[data-nudge] {
+    transition: transform var(--duration-base) var(--ease-out);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .nudge:hover > svg,
+    .nudge:hover svg[data-nudge] {
+      transform: translateX(3px);
+    }
   }
 
   /* The reader's progress, as a rule across the very top. Above the sticky

@@ -14,12 +14,19 @@
  * gets the same "not a list" quality out of construction rather than out of
  * displacement, and it holds still.
  *
+ * EACH COMPARTMENT OWNS A COLOUR. Eight identical white boxes on a near-white
+ * page is a table of contents; the wall is a set of eight DIFFERENT operations
+ * and it should look like one. Every tile takes a stop on the same gold-to-ember
+ * ramp the brief uses, and that one hue drives its spine, its icon, its numeral
+ * and the wash that fills it on hover. Nothing is coloured for decoration: the
+ * colour is how you tell two compartments apart at a glance.
+ *
  * The attention is in one move, not several: the compartment under the pointer
- * lights, an orange rule draws across the top of it in the direction of travel,
- * and its icon fills. Nothing lifts, because a tile lifting out of a lattice
- * breaks the very lines that make it a lattice. Nothing bounces, nothing spins,
- * and nothing hijacks the scroll. The page already has two pinned sections; a
- * third would be exhausting.
+ * fills from its spine outward, its rule draws across the top in the direction
+ * of travel, and its icon and numeral come up to full strength. Nothing lifts,
+ * because a tile lifting out of a lattice breaks the very lines that make it a
+ * lattice. Nothing bounces, nothing spins, and nothing hijacks the scroll. The
+ * page already has two pinned sections; a third would be exhausting.
  *
  * Entrance is a stagger by column, so the wall lights up left to right as it
  * arrives, once. It fades only: anything that MOVES on entrance would slide out
@@ -39,6 +46,20 @@ interface Props {
 const { locale } = Astro.props as Props;
 const t = useTranslations(locale);
 const items = t.industries.items as Record<string, { name: string; summary: string }>;
+
+/* Gold to ember, eight stops. The same ramp the fleet brief is built from,
+   so a reader who has met one has met the other: colour means "which one of
+   the set is this" everywhere on this page, and never anything else. */
+const TONES = [
+  '#e08a16',
+  '#e07c12',
+  '#dd6d0e',
+  '#d65f0c',
+  '#cc520c',
+  '#be460d',
+  '#ae3b10',
+  '#9c3213',
+];
 ---
 
 <ul class="industry-wall">
@@ -46,8 +67,10 @@ const items = t.industries.items as Record<string, { name: string; summary: stri
     industries.map((industry, i) => {
       const copy = items[industry.key];
       return (
-        <li class="industry-cell" style={`--n:${i % 4}`}>
+        <li class="industry-cell" style={`--n:${i % 4}; --tone:${TONES[i % TONES.length]}`}>
           <a href={localizePath(industryPath(industry.slug), locale)} class="industry-tile reveal-fade">
+            <span class="industry-wash" aria-hidden="true" />
+            <span class="industry-spine" aria-hidden="true" />
             <span class="industry-rule" aria-hidden="true" />
             <span class="industry-index" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
 
@@ -108,7 +131,7 @@ const items = t.industries.items as Record<string, { name: string; summary: stri
     display: flex;
     flex: 1;
     flex-direction: column;
-    padding: 1.75rem 1.5rem 1.5rem;
+    padding: 1.75rem 1.5rem 1.5rem 1.65rem;
     background-color: var(--color-white);
     /* Longhand, and opacity is listed here rather than left to `.reveal-fade`:
        a `transition` shorthand on a component silently replaces the utility's,
@@ -118,9 +141,48 @@ const items = t.industries.items as Record<string, { name: string; summary: stri
     transition-timing-function: var(--ease-prime), var(--ease-out);
   }
 
-  .industry-tile:hover,
-  .industry-tile:focus-visible {
-    background-color: var(--color-prime-50);
+  /* The fill arrives FROM THE SPINE rather than switching on. A flat colour
+     change is a state; a wash that travels is the tile answering you. */
+  .industry-wash {
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(
+      to right,
+      color-mix(in oklab, var(--tone) 13%, transparent),
+      color-mix(in oklab, var(--tone) 4%, transparent) 62%,
+      transparent
+    );
+    opacity: 0;
+    transform: translateX(-6%);
+    transition:
+      opacity var(--duration-base) var(--ease-out),
+      transform var(--duration-slow) var(--ease-out);
+  }
+  .industry-tile:hover .industry-wash,
+  .industry-tile:focus-visible .industry-wash {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* The spine. Always there at a whisper, so the wall is a colour chart
+     before anyone touches it, and full strength under the pointer. */
+  .industry-spine {
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    width: 3px;
+    background-color: var(--tone);
+    opacity: 0.3;
+    transform: scaleY(0.46);
+    transform-origin: top;
+    transition:
+      opacity var(--duration-base) var(--ease-prime),
+      transform var(--duration-slow) var(--ease-out);
+  }
+  .industry-tile:hover .industry-spine,
+  .industry-tile:focus-visible .industry-spine {
+    opacity: 1;
+    transform: none;
   }
 
   /* The focus ring is drawn inside, because the panel clips anything outside. */
@@ -134,7 +196,7 @@ const items = t.industries.items as Record<string, { name: string; summary: stri
     inset-inline: 0;
     top: 0;
     height: 2px;
-    background-image: linear-gradient(90deg, var(--color-prime-500), var(--color-amber-500));
+    background-image: linear-gradient(90deg, var(--tone), var(--color-amber-500));
     transform: scaleX(0);
     transform-origin: left;
     transition: transform var(--duration-slow) var(--ease-prime);
@@ -153,12 +215,20 @@ const items = t.industries.items as Record<string, { name: string; summary: stri
     font-weight: 800;
     line-height: 1;
     letter-spacing: -0.04em;
-    color: var(--color-ink-50);
-    transition: color var(--duration-base) var(--ease-prime);
+    color: color-mix(in oklab, var(--tone) 12%, transparent);
+    transition:
+      color var(--duration-base) var(--ease-prime),
+      transform var(--duration-slow) var(--ease-out);
   }
   .industry-tile:hover .industry-index,
   .industry-tile:focus-visible .industry-index {
-    color: var(--color-prime-100);
+    color: color-mix(in oklab, var(--tone) 28%, transparent);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .industry-tile:hover .industry-index,
+    .industry-tile:focus-visible .industry-index {
+      transform: translateY(-2px) scale(1.04);
+    }
   }
 
   .industry-icon {
@@ -169,19 +239,26 @@ const items = t.industries.items as Record<string, { name: string; summary: stri
     width: 2.375rem;
     height: 2.375rem;
     border-radius: 0.55rem;
-    background-color: var(--color-prime-50);
-    border: 1px solid rgb(243 93 1 / 0.16);
-    color: var(--color-prime-700);
+    background-color: color-mix(in oklab, var(--tone) 9%, transparent);
+    border: 1px solid color-mix(in oklab, var(--tone) 22%, transparent);
+    color: var(--tone);
     transition:
       background-color var(--duration-base) var(--ease-prime),
       border-color var(--duration-base) var(--ease-prime),
-      color var(--duration-base) var(--ease-prime);
+      color var(--duration-base) var(--ease-prime),
+      transform var(--duration-base) var(--ease-out);
   }
   .industry-tile:hover .industry-icon,
   .industry-tile:focus-visible .industry-icon {
-    background-color: var(--color-prime-500);
-    border-color: var(--color-prime-500);
+    background-color: var(--tone);
+    border-color: var(--tone);
     color: var(--color-white);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .industry-tile:hover .industry-icon,
+    .industry-tile:focus-visible .industry-icon {
+      transform: scale(1.06);
+    }
   }
 
   .industry-name {
@@ -207,7 +284,7 @@ const items = t.industries.items as Record<string, { name: string; summary: stri
     align-items: center;
     margin-top: auto;
     padding-top: 1.1rem;
-    color: var(--color-prime-700);
+    color: var(--tone);
     transition: transform var(--duration-base) var(--ease-prime);
   }
   @media (prefers-reduced-motion: no-preference) {
