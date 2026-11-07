@@ -551,10 +551,10 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
          the card, which is how a solid object with a chamfer catches a
          light that is above and in front of it. Two lines, and the panel
          stops reading as a sticker. */
-      inset 0 1.5px 0 rgb(255 255 255 / calc(0.14 + var(--lit) * 0.16)),
-      inset 0 -1.5px 0 rgb(0 0 0 / 0.5),
-      inset 1px 0 0 rgb(255 255 255 / 0.06),
-      inset -1px 0 0 rgb(0 0 0 / 0.35);
+      inset 0 1.5px 0 rgb(255 255 255 / calc(0.16 + var(--lit) * 0.2)),
+      inset 0 -2px 0 rgb(0 0 0 / 0.6),
+      inset 1.5px 0 0 rgb(255 255 255 / 0.08),
+      inset -1.5px 0 0 rgb(0 0 0 / 0.45);
     transition:
       border-color var(--duration-base) var(--ease-prime),
       box-shadow var(--duration-base) var(--ease-prime);
@@ -841,32 +841,15 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
     --facing: max(0, var(--face));
     --lit: calc(var(--facing) * var(--facing));
   }
-  /* THE CARD IS A SLAB, NOT A RECTANGLE.
+  /* NO BACK FACE. There was one here: a second panel 18px behind each
+     card, so a turning card showed its thickness the way a real slab
+     would. It is correct and it reads as a bug — at six cards on a
+     spiral the offset panels look like a second staircase standing
+     behind the first, and the eye counts twelve objects where there are
+     six. Depth on these comes from the bevel and the gradient below
+     instead, which cost nothing and cannot be mistaken for another card.
 
-     Six flat panels turning in space look like six flat panels turning in
-     space, however good the arrangement is. This is a second face 18px
-     behind the first, inside the item's own 3D context: the browser
-     projects it, so as a card turns away from the camera its back edge
-     slides out from behind its front one and you see the thickness. It is
-     the difference between a card and a card-shaped hole.
-
-     Unlit, and darker than anything on the front, because it is the side
-     of the object the light does not reach. It takes its own opacity from
-     `--lit` rather than inheriting the front's filter: the filter lives on
-     the card and would flatten this out of the 3D if it were moved up. */
-  .spiral[data-on] .spiral-item::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: var(--radius-panel);
-    background-image: linear-gradient(158deg, #1b2027 0%, #0c1014 100%);
-    border: 1px solid rgb(0 0 0 / 0.6);
-    transform: translateZ(-18px);
-    opacity: calc(0.35 + var(--lit) * 0.65);
-    pointer-events: none;
-  }
-
-  /* A WHITE CARD IN A DARK ROOM THROWS LIGHT DOWN.
+     A WHITE CARD IN A DARK ROOM THROWS LIGHT DOWN.
 
      Not a shadow: a shadow is black on black here and does nothing. This
      is the warm bounce off a sheet of paper onto the floor under it, laid
