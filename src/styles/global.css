@@ -153,6 +153,28 @@
   --radius-card: 0.625rem;
   --radius-panel: 1.125rem;
 
+  /* --- The 3D palette ----------------------------------------------------
+     Every modelled object on this site — the homepage relief, the five
+     inner-page hero scenes — is cut from these four and nothing else, so
+     the site's geometry is one material rather than a slate one here and a
+     slate one there that drifted apart.
+
+     WARM LIGHT, COOL SHADOW. The objects used to be slate grey at every
+     elevation, which is the colour of an untextured render and the reason
+     they read as diagrams. Real surfaces shift hue as well as value: the
+     lit faces go warm because the light is warm, and the shadowed ones go
+     cool and blue because what reaches them is ambient skylight. Ramping
+     deep -> mid -> lit -> peak with elevation is what turns a stack of
+     grey plates into a landscape at the end of the day, and it is the
+     brand's own orange arriving as light rather than as paint.
+
+     Hues, not just lightnesses, so a `color-mix` between any two of them
+     travels through the ramp instead of through mud.                       */
+  --relief-deep: #0c1920;   /* valley floor, almost the page's own ground  */
+  --relief-mid: #1c3b48;    /* the body of the rock                        */
+  --relief-lit: #91592a;    /* faces the light reaches                     */
+  --relief-peak: #d2893c;   /* the summit, and only the summit             */
+
   /* --- Shadow: restrained, never a glow --------------------------------- */
   --shadow-card: 0 1px 2px rgb(8 9 11 / 0.04), 0 8px 24px -12px rgb(8 9 11 / 0.12);
   --shadow-lift: 0 2px 4px rgb(8 9 11 / 0.05), 0 18px 40px -18px rgb(8 9 11 / 0.22);

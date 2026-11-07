@@ -365,19 +365,19 @@ const RAMP = +(0.5 / RIM).toFixed(3);
      than the tread above them and unstroked, so the stack reads as one solid
      mass with steps cut into it rather than as 45 separate outlines. */
   .plate {
-    --rock: color-mix(in oklab, #2b3340 calc(var(--t) * 70%), #0b0e13);
+    --rock: color-mix(in oklab, var(--relief-mid) calc(var(--t) * 72%), var(--relief-deep));
   }
 
   /* TREAD. The last copy of each contour is the surface you would stand on,
      so it is lighter and carries the cut line that makes the lamination
      legible. */
   .plate[data-face] {
-    --rock: color-mix(in oklab, #46525f calc(var(--t) * 88%), #141921);
+    --rock: color-mix(in oklab, var(--relief-lit) calc(var(--t) * 86%), #14262e);
   }
 
   /* The summit catches the warm light directly. */
   .plate:last-of-type {
-    --rock: color-mix(in oklab, var(--color-prime-500) 20%, #4d596a);
+    --rock: color-mix(in oklab, var(--relief-peak) 72%, var(--color-prime-500));
   }
 
   .plate path {
