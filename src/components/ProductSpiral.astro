@@ -75,6 +75,23 @@ interface Props {
 const { locale, eyebrow, title, menuTitle, items, cta } = Astro.props;
 const t = useTranslations(locale);
 const count = items.length;
+
+/* THE STAR FIELD.
+   A golden-angle walk rather than Math.random: it never clumps, it needs no
+   seed, and it is identical on every render, so the markup is stable across
+   builds and nothing shifts between the server's HTML and the client's. The
+   depths are spread over 340px, which is wider than the helix's own radius,
+   so the field reads as behind the staircase rather than level with it. */
+const STARS = Array.from({ length: 26 }, (_, i) => {
+  const a = i * 2.39996;
+  const r = Math.sqrt((i + 0.5) / 26);
+  return {
+    x: +(50 + Math.cos(a) * r * 54).toFixed(2),
+    y: +(50 + Math.sin(a) * r * 46).toFixed(2),
+    z: -130 - Math.round((((i * 37) % 26) / 26) * 340),
+    o: +(0.16 + (((i * 17) % 26) / 26) * 0.46).toFixed(2),
+  };
+});
 ---
 
 <section class="spiral on-dark" data-nav="dark" data-spiral style={`--count:${count}`}>
@@ -121,7 +138,17 @@ const count = items.length;
 
         <!-- ============ Stage ============ -->
         <div class="spiral-stage">
+          <!-- The space the helix is in, which it did not have. Three
+               layers at three real depths behind the staircase: see the
+               block comment on `.spiral-aurora` below. -->
           <div class="spiral-spine" aria-hidden="true">
+            <span class="spiral-aurora"></span>
+            <span class="spiral-stars">
+              {STARS.map((star) => (
+                <i style={`--x:${star.x}%; --y:${star.y}%; --z:${star.z}px; --o:${star.o}`} />
+              ))}
+            </span>
+            <span class="spiral-ground"></span>
             <span class="spiral-spine-line"></span>
             <span class="spiral-glow"></span>
           </div>
@@ -476,6 +503,10 @@ const count = items.length;
     place-items: center;
     position: absolute;
     inset: 0;
+    /* Was flat, which made everything in it a backdrop painted at the
+       camera's own plane. The layers below are at genuine depths and have
+       to be projected with the cards, not behind a picture of them. */
+    transform-style: preserve-3d;
   }
   .spiral-spine > * {
     grid-area: 1 / 1;
@@ -495,6 +526,98 @@ const count = items.length;
     border-radius: 999px;
     background-image: radial-gradient(circle, rgb(255 140 0 / 0.20), transparent 64%);
     filter: blur(10px);
+  }
+
+  /* THE SPACE THE HELIX IS IN.
+
+     The staircase was a lit object turning in nothing. It read as a lit
+     object turning in nothing, which is a different thing from turning in
+     the dark: there was no floor under it, no air behind it and no scale
+     to judge the descent against, so six cards at six depths looked like
+     six cards at one depth with different opacities.
+
+     Three layers fix that, and all three are depth cues rather than
+     decoration:
+
+     AURORA, far back and COOL. Distance desaturates and cools — that is
+     atmospheric perspective, and it is the cheapest honest way to say
+     "this is further away" to an eye that has no stereo to go on. The warm
+     helix now sits in front of a cool night instead of in front of more of
+     itself.
+
+     STARS, scattered through the middle distance at 26 different depths.
+     The perspective sizes them for free, so the near ones are visibly
+     nearer. They are what gives the volume a texture to be measured
+     against.
+
+     GROUND, tilted almost flat and marked with the same contour rings the
+     rest of the site is built from. It is the single biggest change: a
+     staircase standing ON something reads as a descent, and the rings
+     converging toward the horizon say how far down it goes.
+
+     None of it animates. It is a room, and rooms hold still. */
+  .spiral-aurora {
+    width: 165%;
+    height: 90%;
+    transform: translateZ(-520px);
+    background-image:
+      radial-gradient(58% 46% at 32% 34%, rgb(68 108 178 / 0.3), transparent 72%),
+      radial-gradient(54% 58% at 74% 68%, rgb(243 93 1 / 0.24), transparent 74%);
+    filter: blur(34px);
+  }
+
+  .spiral-stars {
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    position: relative;
+  }
+  .spiral-stars i {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: 2px;
+    height: 2px;
+    border-radius: 999px;
+    background-color: #fff;
+    opacity: var(--o);
+    transform: translateZ(var(--z));
+  }
+
+  .spiral-ground {
+    width: 180%;
+    height: 150%;
+    max-width: none;
+    max-height: none;
+    /* Down first, then laid flat: translate happens in the stage's frame,
+       so doing it after the tilt would send the plane away from the camera
+       rather than below it.
+
+       14%, not 40%. At 40% the whole floor sat below the fold of a 760px
+       screen and the only thing it changed was the paint cost. */
+    transform: translateY(4%) rotateX(68deg);
+    /* TWO LAYERS, AND THE ORDER MATTERS.
+
+       A ring 2px wide lying at 68deg is 0.75px of screen where it runs
+       across the view, so the rings are drawn at an alpha that would be
+       crass on a wall and is barely a suggestion here. Two earlier passes
+       at 0.055 and 0.11 were, respectively, invisible and nearly so.
+
+       Under them is a pool of warm light. It does more work than the rings
+       do: a staircase standing in a pool reads as standing on something
+       even where no line is resolvable, and it is the cue that survives
+       being scaled down to a phone. */
+    background-image:
+      repeating-radial-gradient(
+        ellipse 100% 100% at 50% 50%,
+        rgb(255 255 255 / 0.2) 0 2px,
+        transparent 2px 58px
+      ),
+      radial-gradient(ellipse 38% 40% at 50% 50%, rgb(243 93 1 / 0.2), transparent 72%);
+    /* Fades out well before its own edge, so the floor has a horizon
+       instead of a rectangle's corner, and never reaches the index list
+       in the left column. */
+    mask-image: radial-gradient(ellipse 44% 48% at 50% 50%, #000 0%, transparent 74%);
   }
 
   .spiral[data-on] .spiral-ring {
