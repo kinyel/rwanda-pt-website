@@ -368,6 +368,9 @@
      call rather than a code one. Left as brand orange deliberately. */
   .btn {
     position: relative;
+    /* So the hover sweep below is clipped to the button rather than
+       running out across whatever is beside it. */
+    overflow: hidden;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -400,6 +403,35 @@
      whether to accept the click. */
   .btn:active {
     transition-duration: var(--duration-instant);
+  }
+
+  /* A light passing over the button on hover. Clipped to the button's own
+     radius, pointer-events off, and purely a `::after` — it cannot affect
+     the label, the icon or the focus ring, which sits outside the box. */
+  .btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-image: linear-gradient(
+      108deg,
+      transparent 32%,
+      rgb(255 255 255 / 0.22) 48%,
+      transparent 64%
+    );
+    opacity: 0;
+    transform: translateX(-34%);
+    pointer-events: none;
+    transition:
+      opacity var(--duration-fast) var(--ease-prime),
+      transform var(--duration-slow) var(--ease-out);
+  }
+  .btn:hover::after {
+    opacity: 1;
+    transform: translateX(34%);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .btn::after { display: none; }
   }
 
   /* Long labels in Kinyarwanda must wrap rather than blow the layout open. */
@@ -1708,6 +1740,21 @@
     );
   }
 
+  /* The reader's progress, as a rule across the very top. Above the sticky
+     header, pointer-events off, and only created at all when motion is
+     allowed — see the script in BaseLayout. */
+  .scroll-progress {
+    position: fixed;
+    inset-inline: 0;
+    top: 0;
+    height: 2px;
+    z-index: 120;
+    transform: scaleX(var(--sp, 0));
+    transform-origin: 0 50%;
+    background-image: linear-gradient(to right, var(--color-amber-500), var(--color-prime-500));
+    pointer-events: none;
+  }
+
   .text-balance { text-wrap: balance; }
   .text-pretty { text-wrap: pretty; }
 
@@ -1778,6 +1825,65 @@
     will-change: opacity;
   }
 
+  /* FOUR MORE ENTRANCES, on the same one-shot machinery.
+
+     Every one of these is the same contract as `.reveal`: the hidden state
+     hangs off `[data-reveal]`, only ever written onto something below the
+     fold, never written at all under reduced motion or with the script off.
+     They differ only in which way the element comes from, so a page can
+     have a rhythm instead of everything rising by the same 14px.
+
+     Direction carries meaning: a thing on the left of a two-column block
+     comes from the left, a card scales up because it is an object arriving
+     rather than a paragraph being set. */
+  :root.reveal-ready .reveal-left,
+  :root.reveal-ready .reveal-right,
+  :root.reveal-ready .reveal-scale,
+  :root.reveal-ready .reveal-rise {
+    transition-property: opacity, transform, filter;
+    transition-duration: var(--duration-slow);
+    transition-timing-function: var(--ease-out);
+  }
+  .reveal-left[data-reveal],
+  .reveal-right[data-reveal],
+  .reveal-scale[data-reveal],
+  .reveal-rise[data-reveal] {
+    opacity: 0;
+    will-change: opacity, transform;
+  }
+  .reveal-left[data-reveal] { transform: translateX(-26px); }
+  .reveal-right[data-reveal] { transform: translateX(26px); }
+  .reveal-scale[data-reveal] { transform: scale(0.94); }
+  .reveal-rise[data-reveal] { transform: translateY(34px); }
+
+  /* HEADINGS ARRIVE A WORD AT A TIME.
+
+     The split happens in the browser, never in the markup: the server sends
+     one text node and the script rebuilds it as word spans with the original
+     whitespace preserved as real text nodes between them. Nothing a crawler
+     or a screen reader sees changes, and with the script off the heading is
+     simply a heading.
+
+     The delay rides on the span rather than being scheduled, which is safe
+     here where it would not be on an interactive element: a word has no
+     hover state for a stale delay to spoil. */
+  .words > span {
+    display: inline-block;
+    transition:
+      opacity var(--duration-slow) var(--ease-out),
+      transform var(--duration-slow) var(--ease-out);
+    transition-delay: calc(var(--w, 0) * 38ms);
+  }
+  .words[data-reveal] > span {
+    opacity: 0;
+    transform: translateY(0.42em);
+  }
+  /* The heading itself must not also fade, or the words fade twice. */
+  .words[data-reveal] {
+    opacity: 1;
+    transform: none;
+  }
+
   /* A section arriving as a unit: the header leads, its content follows. */
   .reveal-lead { --n: 0; }
   .reveal-follow { --n: 1; }
@@ -1785,6 +1891,11 @@
   /* Belt and braces. The script already declines to run under reduced motion,
      so nothing should ever be hidden here; this guarantees it. */
   @media (prefers-reduced-motion: reduce) {
+    .reveal-left,
+    .reveal-right,
+    .reveal-scale,
+    .reveal-rise,
+    .words > span,
     .reveal,
     .reveal-soft,
     .reveal-fade,
@@ -1846,14 +1957,18 @@
    island has no scoped-style mechanism, which is the same reason
    `.field-error` and the form fields above are here.
 
-   WHY THE WHOLE BLOCK IS ITS OWN DARK PANEL on a light section. The 3D
-   vocabulary this site uses is lit line-work, and lit line-work needs a dark
-   field: an orange glow on white is a smudge. Making the section itself dark
-   would break the page's light run, which holds deliberately from the
-   descriptor band through industries to the value proposition, so the brief
-   carries its own night with it instead. The heading is inside that night
-   too: on the light page above the panel it read as a caption floating over
-   an unrelated widget.
+   IT IS THE SECTION, EDGE TO EDGE. It began as a dark panel inset into a
+   light section, to protect the page's light run from the descriptor band
+   through industries to the value proposition. A panel is a widget sitting
+   on a page, though, and this block is the page's one direct question —
+   full width, it is a room the reader walks into. The light run pays for
+   it: the sequence is now light, light, dark, light, dark rather than one
+   unbroken stretch, which is a real cost and a fair trade for the block
+   that is supposed to convert.
+
+   The lighting is on the band and the layout is in the container, so the
+   glow reaches the screen edges while the content keeps the same measure
+   as every other section on the page.
 
    COLOUR IS DATA. `--tone` is set per choice by the component from a
    gold-to-ember ramp, and the same hue drives the dot in the list, the card
@@ -1876,23 +1991,19 @@
 }
 
 @layer components {
-  .brief {
-    position: relative;
-    padding: 1.75rem 1.5rem 2rem;
-    border-radius: var(--radius-panel);
-    border: 1px solid rgb(255 255 255 / 0.07);
-    background-color: var(--color-ink-950);
-    /* Warm from the top right where the tower stands, cool from the bottom
-       left under the list. Two lights rather than one is the difference
-       between a dark panel and a room. */
-    background-image:
-      radial-gradient(52% 58% at 84% 10%, rgb(243 93 1 / 0.2), transparent 68%),
-      radial-gradient(46% 52% at 4% 92%, rgb(28 59 72 / 0.55), transparent 70%);
+  /* The band: full width, and lit from two sides. Warm from the right
+     where the tower stands, cool from the left under the list — two lights
+     rather than one is the difference between a dark rectangle and a
+     room. */
+  .brief-band {
     overflow: hidden;
+    background-image:
+      radial-gradient(44% 62% at 78% 6%, rgb(243 93 1 / 0.22), transparent 70%),
+      radial-gradient(42% 58% at 2% 96%, rgb(28 59 72 / 0.6), transparent 72%);
   }
-  /* A hairline of brand along the top edge, so the panel reads as a lit
+  /* A hairline of brand along the top edge, so the band reads as a lit
      surface rather than a hole cut in the page. */
-  .brief::before {
+  .brief-band::before {
     content: '';
     position: absolute;
     inset-inline: 0;
@@ -1901,10 +2012,14 @@
     background-image: linear-gradient(
       to right,
       transparent,
-      var(--color-prime-500) 18%,
-      var(--color-amber-500) 46%,
-      transparent 86%
+      var(--color-prime-500) 22%,
+      var(--color-amber-500) 50%,
+      transparent 88%
     );
+  }
+
+  .brief {
+    position: relative;
   }
 
   .brief-head {
@@ -1925,14 +2040,11 @@
     margin-top: 2rem;
   }
   @media (width >= 64rem) {
-    .brief {
-      padding: 2.75rem;
-    }
     .brief-body {
-      grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
-      gap: 3rem;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 0.88fr);
+      gap: 4rem;
       align-items: center;
-      margin-top: 2.5rem;
+      margin-top: 3rem;
     }
   }
 
@@ -1943,7 +2055,7 @@
   .brief-stage {
     position: relative;
     width: 100%;
-    max-width: 23rem;
+    max-width: 27rem;
     aspect-ratio: 1;
     margin-inline: auto;
     perspective: 1150px;

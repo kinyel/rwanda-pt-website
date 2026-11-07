@@ -341,7 +341,40 @@ const jsonLd = [organizationSchema(logoUrl), ...schemas];
         if (!('IntersectionObserver' in window)) return;
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-        const items = document.querySelectorAll('.reveal, .reveal-soft, .reveal-fade');
+        /* HEADINGS ARE SPLIT INTO WORDS FIRST, in the browser and never in
+           the markup: the server sends one text node, and this rebuilds it
+           as word spans with the original whitespace preserved as real text
+           nodes between them. A crawler, a screen reader and a visitor with
+           this script blocked all see exactly the heading that was written.
+
+           It runs before the measure-and-hide pass below so the headings it
+           creates are part of the same pass, and it only ever touches an
+           element whose content is a single text node — anything with markup
+           inside it is left alone rather than flattened. */
+        for (const heading of document.querySelectorAll('[data-words]')) {
+          if (heading.childNodes.length !== 1 || heading.firstChild.nodeType !== 3) continue;
+          const text = heading.textContent || '';
+          if (!text.trim()) continue;
+          const frag = document.createDocumentFragment();
+          let w = 0;
+          for (const part of text.split(/(\s+)/)) {
+            if (!part) continue;
+            if (!part.trim()) {
+              frag.append(part);
+              continue;
+            }
+            const span = document.createElement('span');
+            span.textContent = part;
+            span.style.setProperty('--w', String(w++));
+            frag.append(span);
+          }
+          heading.replaceChildren(frag);
+          heading.classList.add('words');
+        }
+
+        const items = document.querySelectorAll(
+          '.reveal, .reveal-soft, .reveal-fade, .reveal-left, .reveal-right, .reveal-scale, .reveal-rise, .words',
+        );
         if (!items.length) return;
 
         /* The stagger's numbers stay in CSS, read once, so the tokens remain
@@ -379,6 +412,40 @@ const jsonLd = [organizationSchema(logoUrl), ...schemas];
         }
 
         requestAnimationFrame(() => document.documentElement.classList.add('reveal-ready'));
+      })();
+    </script>
+
+    <!--
+      How far down the page the reader is, as a 2px rule across the top.
+
+      One custom property, rAF-throttled, and nothing else: the bar is a
+      single element whose `scaleX` reads it. It is `aria-hidden` and purely
+      decorative — the information is the scrollbar's job and this is the
+      flourish — so it is skipped entirely under reduced motion rather than
+      being animated differently.
+    -->
+    <script is:inline>
+      (() => {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const bar = document.createElement('div');
+        bar.className = 'scroll-progress';
+        bar.setAttribute('aria-hidden', 'true');
+        document.body.prepend(bar);
+
+        const root = document.documentElement;
+        let frame = 0;
+        const update = () => {
+          frame = 0;
+          const travel = root.scrollHeight - window.innerHeight;
+          const p = travel > 0 ? Math.min(1, Math.max(0, window.scrollY / travel)) : 0;
+          root.style.setProperty('--sp', p.toFixed(4));
+        };
+        const onScroll = () => {
+          if (!frame) frame = requestAnimationFrame(update);
+        };
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', onScroll, { passive: true });
+        update();
       })();
     </script>
   </body>

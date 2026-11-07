@@ -19,6 +19,6 @@ const centered = align === 'center';
 
 <div class={`reveal ${centered ? 'mx-auto text-center' : ''} ${className}`}>
   {eyebrow && <p class="eyebrow mb-4">{eyebrow}</p>}
-  <Tag class={Tag === 'h1' ? 'text-display' : 'text-h2'}>{title}</Tag>
+  <Tag class={Tag === 'h1' ? 'text-display' : 'text-h2'} data-words>{title}</Tag>
   {lead && <p class={`mt-5 text-lead text-ink-600 ${centered ? 'mx-auto measure' : 'measure'}`}>{lead}</p>}
 </div>
