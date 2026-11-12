@@ -495,7 +495,7 @@ export default function FleetBrief({
             )}
           </div>
           <div
-            className="brief-stage"
+            className="brief-stage reveal-3d"
             ref={stageRef}
             data-filled={ready ? '' : undefined}
             aria-hidden="true"
@@ -505,7 +505,15 @@ export default function FleetBrief({
               <span className="brief-floor">
                 <svg viewBox="0 0 400 400" focusable="false">
                   {[0, 1, 2, 3, 4].map((i) => (
-                    <ellipse key={i} className="brief-ringline" cx="200" cy="200" rx={44 + i * 38} ry={36 + i * 31} />
+                    <ellipse
+                      key={i}
+                      className="brief-ringline"
+                      cx="200"
+                      cy="200"
+                      rx={44 + i * 38}
+                      ry={36 + i * 31}
+                      style={{ '--r': i } as React.CSSProperties}
+                    />
                   ))}
                 </svg>
               </span>

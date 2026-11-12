@@ -302,7 +302,7 @@ const whyKeys = ['regulator', 'support', 'hardware'] as const;
       <ul class="tile-grid sm:grid-cols-2">
         {
           capabilityKeys.map((key, i) => (
-            <li class="reveal-scale card card-dark p-6 sm:p-7" style={`--n:${i}`}>
+            <li class="reveal-scale card card-dark rounded-none p-6 sm:p-7" style={`--n:${i}`}>
               <h3 class="text-h4 text-white">{t.home.capabilities.items[key].title}</h3>
               <p class="mt-2.5 text-[0.9375rem] leading-relaxed text-ink-400">{t.home.capabilities.items[key].body}</p>
             </li>

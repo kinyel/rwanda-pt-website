@@ -101,10 +101,10 @@ const specs = [j.specs.accuracy, j.specs.interval];
    coordinate, which renders correctly everywhere, while only the moving
    vehicle needs offset-path. */
 const waypoints = [
-  { key: 'position', icon: 'truck', at: 8, x: 152.8, y: 94.5, side: 'right' },
-  { key: 'fuel', icon: 'fuel', at: 36, x: 220.6, y: 392.5, side: 'left' },
-  { key: 'driver', icon: 'shield', at: 64, x: 64, y: 655.2, side: 'right' },
-  { key: 'video', icon: 'video', at: 92, x: 189.2, y: 925.3, side: 'left' },
+  { key: 'position', icon: 'truck', at: 8, x: 152.8, y: 94.5, side: 'right', mside: 'right' },
+  { key: 'fuel', icon: 'fuel', at: 36, x: 220.6, y: 392.5, side: 'left', mside: 'right' },
+  { key: 'driver', icon: 'shield', at: 64, x: 64, y: 655.2, side: 'left', mside: 'left' },
+  { key: 'video', icon: 'video', at: 92, x: 189.2, y: 925.3, side: 'left', mside: 'left' },
 ] as const;
 
 /* THE CAR, in the route's own units, centred on its own middle with the nose
@@ -122,7 +122,7 @@ const CAR_ROOF = 'M-5.6 -6.2 L5.6 -6.2 L5.8 6.6 L-5.8 6.6 Z';
 const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
 ---
 
-<section class="hero-journey on-dark relative bg-ink-950" data-nav="dark">
+<section class="hero-journey on-dark relative bg-ink-950" data-nav="dark" data-nav-overlay>
   <div class="journey-wash pointer-events-none absolute inset-0" aria-hidden="true"></div>
   <!-- Rows of short dashes across the ground, pinned with the stage. -->
   <div class="journey-dashes" aria-hidden="true"><span></span></div>
@@ -251,6 +251,68 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
 
       <!-- ============ Right: the route ============ -->
       <div class="journey-rail">
+        <!-- THE UNIT. The four reports as four glass layers of one device,
+             in 3D: a closed block that opens into its layers, the layer for
+             the report being delivered lit as the car reaches its stop, and
+             at the end all four closed back into one. On a phone it stands
+             under the route, below the copy; on a wide screen, in this
+             column level with the hero's buttons. Shapes only, no words, and
+             hidden from the accessibility tree: the reports say all of it.
+             Not shown under reduced motion or without JavaScript. -->
+        <div class="journey-unit" aria-hidden="true">
+          <div class="journey-unit-in enter enter-stage" style="--d:3">
+              <div class="journey-unit-cam">
+                <div class="journey-unit-world">
+                  <span class="journey-unit-pool"></span>
+                  {[0, 1, 2, 3, 4, 5, 6, 7].map((g) => <span class="journey-unit-ghost" style={`--g:${g}`} />)}
+                  {
+                    waypoints.map((point, i) => (
+                      <span class="journey-unit-plate" style={`--i:${i}`}>
+                        <span class="journey-unit-face">
+                          <svg class="journey-unit-glyph" viewBox="0 0 100 100" fill="none" focusable="false">
+                            {point.key === 'position' && (
+                              <>
+                                <path class="journey-unit-faint" d="M8 32H92M8 58H92M8 82H92M30 8V92M56 8V92M80 8V92" />
+                                <path d="M16 86 30 58H56V32L78 20" />
+                                <circle class="journey-unit-fill" cx="78" cy="20" r="5.5" />
+                              </>
+                            )}
+                            {point.key === 'fuel' && (
+                              <>
+                                <rect x="20" y="16" width="44" height="70" rx="7" />
+                                <rect class="journey-unit-fill journey-unit-soft" x="25" y="48" width="34" height="33" rx="3" />
+                                <path d="M64 30h10a5 5 0 0 1 5 5v30a6 6 0 0 1-12 0V54" />
+                                <path class="journey-unit-faint" d="M26 32h10M26 40h6" />
+                              </>
+                            )}
+                            {point.key === 'driver' && (
+                              <>
+                                <path d="M16 70a34 34 0 1 1 68 0" />
+                                <path class="journey-unit-faint" d="M22 50l7 4M50 30v8M78 50l-7 4M34 36l4 7M66 36l-4 7" />
+                                <path d="M50 66 68 42" />
+                                <circle class="journey-unit-fill" cx="50" cy="66" r="5" />
+                                <path class="journey-unit-faint" d="M30 84h40" />
+                              </>
+                            )}
+                            {point.key === 'video' && (
+                              <>
+                                <rect x="12" y="18" width="34" height="27" rx="3" />
+                                <rect x="54" y="18" width="34" height="27" rx="3" />
+                                <rect x="12" y="55" width="34" height="27" rx="3" />
+                                <rect x="54" y="55" width="34" height="27" rx="3" />
+                                <circle class="journey-unit-fill" cx="84" cy="10" r="3.5" />
+                              </>
+                            )}
+                          </svg>
+                        </span>
+                      </span>
+                    ))
+                  }
+                </div>
+              </div>
+          </div>
+        </div>
+
         <div class="journey-stage enter enter-stage" style="--d:1">
           <!--
             One coordinate system for everything.
@@ -367,8 +429,8 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
           {
             waypoints.map((point, i) => (
               <span
-                class:list={['journey-label', `journey-label-${point.side}`]}
-                style={`--x:${(point.x / 360) * 100}%; --y:${(point.y / 1000) * 100}%; --at:${point.at / 100}; --i:${i}`}
+                class:list={['journey-label', `journey-label-${point.side}`, `journey-label-m${point.mside}`]}
+                style={`--x:${(point.x / 360) * 100}%; --xf:${(point.x / 360).toFixed(4)}; --y:${(point.y / 1000) * 100}%; --at:${point.at / 100}; --i:${i}`}
               >
                 {j.waypoints[point.key].label}
               </span>
@@ -419,10 +481,12 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
     from {
       opacity: 0;
       transform: translateY(22px);
+      filter: blur(8px);
     }
     to {
       opacity: 1;
       transform: none;
+      filter: none;
     }
   }
   /* The model does not rise, it settles: it is an object in space, and an
@@ -431,14 +495,18 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
     animation-name: hero-enter-stage;
     animation-duration: 1100ms;
   }
+  /* The route tilts up off the ground into the reader's view, like a map
+     being lifted to look at, and comes into focus as it does. */
   @keyframes hero-enter-stage {
     from {
       opacity: 0;
-      transform: scale(0.88) translateY(14px);
+      transform: perspective(1100px) rotateX(42deg) translateY(36px) scale(0.92);
+      filter: blur(6px);
     }
     to {
       opacity: 1;
       transform: none;
+      filter: none;
     }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -463,7 +531,9 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
        left, which are the two things actually worth looking at. They are gone.
        The depth in this section is now real depth: the reports are a drum
        turning in perspective, not a picture of a landscape. */
-    background-image: radial-gradient(44% 38% at 77% 44%, rgb(243 93 1 / 0.20), transparent 72%);
+    /* The warm glow now lives on the pinned ground (see THE GROUND), where
+       it stays on screen through the whole drive. */
+    background-image: none;
   }
 
   .hero-journey {
@@ -1398,6 +1468,17 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
      Pinned to the screen, like theirs, so it holds still while the stage
      plays over it. The box starts at the top of the screen (under the bar),
      as theirs does, so the rings fall in the same place. */
+  /* THE GROUND, pinned with the dashes. Not a flat black: a deep blue-black
+     base with a slate wash pouring down from the top of the screen, a warm
+     glow standing behind the route, a cooler lift low on the left, a fine
+     grain and a vignette at the corners. The same idea as PrimeTrack
+     Nigeria's hero (slate over blue-black, warmth where the visual is), in
+     this hero's own proportions. Pinned to the screen so the light holds
+     still while the drive plays over it, instead of scrolling away up a
+     section four screens tall. */
+  .hero-journey {
+    background-color: #070a10;
+  }
   .journey-dashes {
     position: sticky;
     top: 0;
@@ -1405,15 +1486,29 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
     margin-top: calc(-1 * var(--header-h));
     margin-bottom: calc(var(--header-h) - 100svh);
     pointer-events: none;
+    background-image:
+      radial-gradient(52% 46% at 74% 40%, rgb(255 112 0 / 0.15), rgb(255 112 0 / 0.05) 48%, transparent 74%),
+      radial-gradient(130% 72% at 50% -4%, rgb(31 37 50 / 0.95), rgb(20 24 34 / 0.55) 42%, transparent 70%),
+      radial-gradient(70% 55% at 6% 100%, rgb(26 33 48 / 0.6), transparent 70%),
+      radial-gradient(140% 100% at 50% 50%, transparent 58%, rgb(3 4 7 / 0.55) 100%);
+  }
+  /* Grain: a few percent of fractal noise, which is what stops a large dark
+     gradient banding into visible steps on a cheap screen. */
+  .journey-dashes::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>");
   }
 
   .journey-dashes span {
     position: absolute;
     inset: 0;
-    /* Quieter than Synovika's own, on request, by fading the layer rather than
-       touching the gradient: the pattern stays exactly theirs, it is just
-       about 5% white instead of 9%. */
-    opacity: 0.55;
+    /* The pattern stays exactly Synovika's; the layer is faded to about 7%
+       white, so it reads clearly on the lighter slate ground without
+       competing with the route. */
+    opacity: 0.8;
     background-image: repeating-radial-gradient(
       120vw 18.4vw at 78% 8%,
       rgb(255 255 255 / 0.09) 0px,
@@ -1624,45 +1719,98 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
     }
   }
 
-  /* ---------- narrow screens: route pinned above, copy pinned below ---------- */
+  /* ---------- the unit: only where it is driven on a narrow screen ---------- */
+  .journey-unit {
+    display: none;
+  }
+
+  /* ---------- narrow screens: route top right, copy top left, the unit below ----------
+     A phone's screen in three parts. The route stands in a band across the
+     top, on the right. The copy stands beside it, top left, in the room the
+     route leaves: never over the line, never under the car. And the space
+     underneath both, which used to hold the copy, holds the unit: the four
+     reports as four layers of one device, in 3D. */
   @media (prefers-reduced-motion: no-preference) and (width < 64rem) and (height >= 34rem) {
+    .hero-journey[data-journey-live] {
+      /* How tall the route's band is. Everything else is measured from it:
+         the route's width (the stage is 360:1000, so 0.36 of its height
+         inside the band's padding), how much room that leaves the copy
+         beside it, and where the unit's space begins. */
+      --band: 56svh;
+      --route-w: calc(0.36 * (var(--band) - 2.5rem));
+      /* The car, a size up on a phone: the route is narrower here than on
+         a wide screen, and at the desktop scale the car read as a dot. */
+      --car-scale: 1.85;
+    }
+
     .hero-journey[data-journey-live] .journey-column,
     .hero-journey[data-journey-live] .journey-rail {
       grid-area: 1 / 1;
     }
 
-    /* THE ROUTE STANDS BEHIND THE COPY, pinned, set to the right so the line
-       runs down the side the copy is lightest on, and under everything else
-       in the stack. Two-thirds of the screen tall rather than all of it, so
-       all four stops — and the name that comes up beside each — stand above
-       the one report the copy is showing at the time. */
     .hero-journey[data-journey-live] .journey-rail {
       position: sticky;
       top: var(--header-h);
       align-self: start;
-      height: 66svh;
+      height: var(--band);
       justify-content: flex-end;
       padding: 1.25rem 0.25rem 1.25rem 0;
       z-index: 0;
       pointer-events: none;
     }
 
-    /* THE STOPS' NAMES, on a phone too. All on the left of the line — the
-       open side, since the line stands to the right — with the tick turned to
-       point back at it. They come up one at a time with their reports, as on
-       a wide screen. */
+    /* THE STOPS' NAMES. The first two on the right of the line, because the
+       copy has the top left; the driver's and the video's on the left, low
+       in the band where the copy never reaches, and out of the way of the
+       car as it drives on past them. Smaller and allowed two lines, since the
+       room between a stop and the edge of a phone is a few words wide. */
     .hero-journey[data-journey-live] .journey-label {
+      font-size: 0.75rem;
+      line-height: 1.2;
       text-shadow: 0 1px 10px rgb(8 9 11 / 0.95);
     }
-    .hero-journey[data-journey-live] .journey-label-right {
-      transform: translate(calc(-100% - 1.6rem), -50%);
+    .hero-journey[data-journey-live] .journey-label-mright {
+      /* As wide as the room between its own stop and the edge of the
+         screen: the route's width right of the stop, plus the gutter, less
+         the tick. */
+      max-width: calc((1 - var(--xf)) * var(--route-w) + 1.25rem - 2.4rem);
+      transform: translate(2.1rem, -50%);
+      text-align: left;
+    }
+    .hero-journey[data-journey-live] .journey-label-mright::after {
+      left: auto;
+      right: 100%;
+      margin: 0 0.25rem 0 0;
+    }
+    .hero-journey[data-journey-live] .journey-label-mleft {
+      max-width: 6.5rem;
+      transform: translate(calc(-100% - 2.1rem), -50%);
       text-align: right;
     }
-    .hero-journey[data-journey-live] .journey-label-right::after {
+    .hero-journey[data-journey-live] .journey-label-mleft::after {
       right: auto;
       left: 100%;
-      margin-right: 0;
-      margin-left: 0.3rem;
+      margin: 0 0 0 0.25rem;
+    }
+    /* On the narrowest phones the copy runs down far enough to meet a name
+       on the left, so the driver's name joins the others on the right. */
+    @media (width < 22.5rem) {
+      .hero-journey[data-journey-live] .journey-label-mleft {
+        max-width: calc((1 - var(--xf)) * var(--route-w) + 1.25rem - 2.4rem);
+        transform: translate(2.1rem, -50%);
+        text-align: left;
+      }
+      .hero-journey[data-journey-live] .journey-label-mleft::after {
+        left: auto;
+        right: 100%;
+        margin: 0 0.25rem 0 0;
+      }
+    }
+    /* The car is a size up on a phone, and it is parked on the stop while
+       the name is up, so the name stands a car's half width out with a
+       longer tick back to the dot. */
+    .hero-journey[data-journey-live] .journey-label::after {
+      width: 1.1rem;
     }
 
     .hero-journey[data-journey-live] .journey-column {
@@ -1670,19 +1818,10 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
       z-index: 1;
     }
 
-    /* TEXT ON TOP, ROUTE VISIBLE THROUGH IT. Each pinned block carries a soft
-       ground that rises behind its copy only — dark enough under the words
-       that they always read, light enough that the route and the car are
-       still plainly there behind them — and the type gets a faint shadow of
-       the same ground for the moments the car passes right under a line. */
-    .hero-journey[data-journey-live] .journey-panel:not(.journey-report),
-    .hero-journey[data-journey-live] .journey-report-stage {
-      padding-block: 1.5rem;
-      text-shadow: 0 1px 14px rgb(8 9 11 / 0.95);
-    }
-
     .hero-journey[data-journey-live] .journey-panel:not(.journey-report) {
+      padding-block: 1.5rem;
       justify-content: center;
+      text-shadow: 0 1px 14px rgb(8 9 11 / 0.95);
     }
 
     /* The opening's copy sits in the middle of the screen, so its ground is
@@ -1697,81 +1836,109 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
       background: linear-gradient(
         to bottom,
         transparent 6%,
-        rgb(8 9 11 / 0.55) 20%,
-        rgb(8 9 11 / 0.78) 34%,
-        rgb(8 9 11 / 0.78) 74%,
-        rgb(8 9 11 / 0.55) 88%,
+        rgb(9 12 19 / 0.5) 20%,
+        rgb(9 12 19 / 0.72) 34%,
+        rgb(9 12 19 / 0.72) 74%,
+        rgb(9 12 19 / 0.5) 88%,
         transparent 100%
       );
     }
 
-    /* A single report is short, so its ground is too: only as high as the
-       report, which leaves the stops and their names above it in the clear. */
-    .hero-journey[data-journey-live] .journey-report-stage::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      z-index: -1;
-      pointer-events: none;
-      background: linear-gradient(
-        to top,
-        rgb(8 9 11 / 0.88) 0%,
-        rgb(8 9 11 / 0.74) 18%,
-        rgb(8 9 11 / 0.3) 26%,
-        transparent 32%
-      );
-    }
-
-    /* The heading before the reports is taller, and carries its own ground,
-       which fades out with it. */
-    .hero-journey[data-journey-live] .journey-report-head {
-      position: relative;
-    }
-    .hero-journey[data-journey-live] .journey-report-head::before {
-      content: '';
-      position: absolute;
-      inset: -2.5rem -1.25rem -1.5rem;
-      z-index: -1;
-      pointer-events: none;
-      background: linear-gradient(
-        to top,
-        rgb(8 9 11 / 0.82) 0%,
-        rgb(8 9 11 / 0.7) 65%,
-        transparent 100%
-      );
-    }
-
+    /* The report's screen: a band the height of the route's, then the unit
+       in whatever is left. */
     .hero-journey[data-journey-live] .journey-report-stage {
       display: grid;
-      align-content: end;
+      grid-template-rows: minmax(calc(var(--band) - 2.25rem), auto) minmax(0, 1fr);
+      /* The bottom padding keeps the unit clear of the floating bar the
+         site pins to the foot of a phone's screen. */
+      padding: 1.25rem 0 3.25rem;
+      text-shadow: 0 1px 14px rgb(8 9 11 / 0.95);
     }
 
-    /* On a phone the heading and the reports cannot share the space under
-       the route, so they take turns as well: the heading, then one report at
-       a time. Same rule as everywhere else here — each one is out before the
-       next is in. */
-    .hero-journey[data-journey-live] .journey-report-head,
-    .hero-journey[data-journey-live] .journey-window {
-      grid-area: 1 / 1;
-      align-self: end;
-    }
+    /* On a phone the heading and the reports cannot share the space beside
+       the route, so they take turns: the heading, then one report at a
+       time. Each one is out before the next is in.
 
+       THE HEADING comes first, while the car is still at the top of its
+       road and none of the road ahead is lit. So it only has to keep clear
+       of the car: it stands beside the car's corner at the top right, then
+       takes the full width below it. It is taken out of the grid, so its
+       length never decides how much room the unit gets, and the unit only
+       comes up once it has gone. */
     .hero-journey[data-journey-live] .journey-report-head {
+      position: absolute;
+      top: 1.25rem;
+      left: 0;
+      right: 0;
       opacity: calc(1 - clamp(0, (var(--p, 0) - 0.3) * 25, 1));
     }
-
-    .hero-journey[data-journey-live] .journey-window {
-      opacity: clamp(0, (var(--p, 0) - 0.345) * 25, 1);
+    /* The eyebrow and the heading stand beside the car's corner: from just
+       left of the first stop, less the car's half width and a gap, to the
+       edge. What follows them is already below the car and its beam. */
+    .hero-journey[data-journey-live] :is(.journey-report-meta, .journey-report-title) {
+      padding-right: calc(3.5rem + 0.58 * var(--route-w));
+    }
+    /* On a tablet the heading is one line, so the sentence under it starts
+       while the car is still alongside, and keeps the same clearance. */
+    @media (width >= 40rem) {
+      .hero-journey[data-journey-live] .journey-report-say {
+        padding-right: calc(3.5rem + 0.58 * var(--route-w));
+      }
     }
 
+    /* A SINGLE REPORT stays in the top half of the band, where the line
+       never comes further left than 40% of the route's width. */
+    .hero-journey[data-journey-live] .journey-window {
+      grid-area: 1 / 1;
+      align-self: start;
+    }
+    .hero-journey[data-journey-live] .journey-window {
+      /* The car passes beside a report while it is up, so a report keeps
+         a car's width clear of the line, not just a gap. */
+      padding-right: calc(2.25rem + 0.6 * var(--route-w));
+      opacity: clamp(0, (var(--p, 0) - 0.345) * 25, 1);
+    }
+    /* On a short screen a single report reaches down past the middle of
+       the band, where the line swings left, so it takes the heading's
+       narrower column, with the car's width kept clear. */
+    @media (height < 48rem) {
+      .hero-journey[data-journey-live] .journey-window {
+        padding-right: calc(2rem + 0.84 * var(--route-w));
+      }
+    }
+
+    /* The heading, a size down to fit its column. */
+    .hero-journey[data-journey-live] .journey-report-meta {
+      flex-wrap: wrap;
+      row-gap: 0.35rem;
+    }
+    .hero-journey[data-journey-live] .journey-report-title {
+      font-size: 1.375rem;
+      line-height: 1.15;
+    }
+    .hero-journey[data-journey-live] .journey-say {
+      font-size: 0.875rem;
+      line-height: 1.55;
+    }
+    .hero-journey[data-journey-live] .journey-specs {
+      gap: 0.75rem 1.25rem;
+    }
+
+    /* The report starts level with the top of the route, with no rule
+       over it: a hairline there ran straight into the first stop. */
+    .hero-journey[data-journey-live] .journey-window {
+      margin-top: 0;
+    }
     .hero-journey[data-journey-live] .journey-strip {
       display: grid;
       grid-template-columns: minmax(0, 1fr);
+      border-top: 0;
+      padding-top: 0.5rem;
     }
 
     .hero-journey[data-journey-live] .journey-row {
       grid-area: 1 / 1;
-      align-self: end;
+      align-self: start;
       --dist: max(calc(var(--i) - var(--adv, 0)), calc(var(--adv, 0) - var(--i)));
       --lit: clamp(0, (0.42 - var(--dist)) * 3.33, 1);
       opacity: var(--lit);
@@ -1779,16 +1946,320 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
     }
 
     .hero-journey[data-journey-live] .journey-row-refrain {
-      font-size: 1.375rem;
+      font-size: 1.5rem;
+      line-height: 1.18;
     }
 
     .hero-journey[data-journey-live] .journey-row-body {
       font-size: 0.9375rem;
+      line-height: 1.6;
     }
 
     /* The phone's labels: the stop names, one at a time, as above. */
     .hero-journey[data-journey-live] .journey-label {
       --open: clamp(0, (var(--p, 0) - 0.345) * 14, 1);
+    }
+
+    /* THE UNIT ON A PHONE stands in the space under the route's band, the
+       full width of the screen, clear of the floating bar the site pins to
+       the foot of a phone's screen. It hangs off the bottom of the band,
+       which is pinned, so it is pinned with it. */
+    .hero-journey[data-journey-live] .journey-unit {
+      display: block;
+      position: absolute;
+      /* A little below the band: at the very end of the road the car, a
+         size up on a phone, dips just past the band's foot. */
+      top: calc(100% + 1.25rem);
+      left: 0;
+      right: 0;
+      height: calc(100svh - var(--header-h) - var(--band) - 4.25rem);
+      --s: min(60cqw, 75cqh, 17rem);
+      /* Up once the heading is fully gone, opening into its layers as the
+         first report lands. */
+      --in-unit: clamp(0, (var(--p, 0) - 0.335) * 20, 1);
+      --spread: clamp(0, (var(--p, 0) - 0.34) * 11, 1);
+    }
+    /* On a tall enough screen the heading ends above the unit's space, so
+       the unit can come up with it, closed, under the words "what a
+       PrimeTrack unit reports", and open into its layers as they begin. */
+    @media (height >= 46rem) {
+      .hero-journey[data-journey-live] .journey-unit {
+        --in-unit: clamp(0, (var(--p, 0) - 0.16) * 12, 1);
+        --spread: clamp(0, (var(--p, 0) - 0.22) * 8.5, 1);
+      }
+    }
+  }
+
+  /* ---------- THE UNIT, wide screens: level with the hero's buttons ----------
+     In the route's column, on the right, its middle at the height of the
+     buttons (measured by the script as `--cta-y`, since the opening is
+     centred and how far down the buttons sit depends on the copy). It is
+     there from the first screen, closed, and plays the same sequence as on
+     a phone. Kept inside the screen however the buttons fall. */
+  @media (prefers-reduced-motion: no-preference) and (width >= 64rem) and (height >= 36rem) {
+    .hero-journey[data-journey-live] .journey-unit {
+      /* The route's stage is centred in this column and 0.36 of its inner
+         height wide. Down at the buttons' height and below, the road never
+         comes further right than 60% of that width, so the unit starts just
+         past it (plus the car's half width) and runs out into the page's
+         margin: wherever the car is, it passes to the left. */
+      --stage-w: calc(0.36 * (100svh - var(--header-h) - 4rem));
+      display: block;
+      position: absolute;
+      left: calc(50% + 0.1 * var(--stage-w) + 2rem);
+      right: -3.5rem;
+      height: 16rem;
+      /* The box's foot at the buttons' foot, then trued by the script so
+         the block's lowest edge, not its box, stands level with them. */
+      top: clamp(8rem, calc(var(--cta-b, 75%) - 16rem), calc(100% - 16rem));
+      translate: 0 var(--unit-nudge, 0px);
+      --s: min(62cqw, 74cqh, 14rem);
+      --in-unit: 1;
+      --spread: clamp(0, (var(--p, 0) - 0.22) * 8.5, 1);
+    }
+
+    /* EIGHT SKELETONS over the block: outlines of the layers a unit can
+       carry, stacked above it and fainter the higher they go. They stay for
+       the whole drive, riding on top of the stack as it opens, as its first
+       layer lifts away and as it turns, so the object is always the solid
+       layers under a scaffold of what else it could report. */
+    @keyframes journey-unit-drop {
+      from {
+        translate: 0 0 190px;
+      }
+      to {
+        translate: 0 0 0;
+      }
+    }
+    @keyframes journey-unit-show {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+    @keyframes journey-unit-scaffold {
+      from {
+        opacity: 0;
+        translate: 0 0 -36px;
+      }
+      to {
+        opacity: 1;
+        translate: 0 0 0;
+      }
+    }
+    .hero-journey[data-journey-live] .journey-unit-plate {
+      animation: journey-unit-drop 1000ms cubic-bezier(0.22, 1.2, 0.36, 1) both;
+      animation-delay: calc(260ms + (3 - var(--i)) * 140ms);
+    }
+    .hero-journey[data-journey-live] .journey-unit-face {
+      animation: journey-unit-show 520ms ease-out both;
+      animation-delay: calc(260ms + (3 - var(--i)) * 140ms);
+    }
+    .hero-journey[data-journey-live] .journey-unit-ghost {
+      animation: journey-unit-scaffold 900ms var(--ease-out) both;
+      animation-delay: calc(980ms + var(--g) * 80ms);
+    }
+
+    .hero-journey[data-journey-live] .journey-unit-ghost {
+      display: block;
+      position: absolute;
+      inset: 0;
+      border-radius: 0.6rem;
+      border: 1px solid rgb(255 190 140 / calc(0.32 - var(--g) * 0.033));
+      background: linear-gradient(
+        145deg,
+        rgb(255 255 255 / calc(0.03 - var(--g) * 0.003)),
+        transparent 70%
+      );
+      /* Above the top layer wherever it is: the open stack, plus the lift
+         the first layer takes once its report has gone by. */
+      transform: translateZ(
+        calc(3 * var(--gap) + var(--lift0) * var(--s) * 0.16 + (var(--g) + 1) * var(--s) * (0.11 - 0.055 * var(--spread)))
+      );
+    }
+  }
+  .journey-unit-ghost {
+    display: none;
+  }
+
+  /* ---------- THE UNIT ----------
+     Four plates at real depth inside one `preserve-3d` world under one
+     perspective, nothing else. Top to bottom they are the four reports in
+     the order the car meets them, so the lit layer travels down the stack
+     as the car travels down the road.
+
+     The numbers that drive it, all from the one clock:
+       --spread  closed block (0) to open layers (1), while the heading is
+                 up, so the unit opens into its reports as they begin;
+       --unit-turn  0 to 1 just after the first stop's name comes up: the
+                 unit, tilted in 3D throughout, stands square-on until then,
+                 turns to its diamond as the drive gets going, and from there
+                 keeps turning with the scroll to the end;
+       --lit     per plate, 1 for the report being delivered, from the same
+                 `--adv` relay as the copy and the stop names, so the plate,
+                 the report and the label always change together;
+       --past    per plate, 1 once its report has been delivered: those
+                 layers turn to clear glass and lift away, so the current one
+                 is always seen, never covered by the ones above it;
+       --shut    after the last report, the layers close back into one block
+                 and all of it glows.
+     Sized in container units (`--s`, set per layout), so it fits whatever
+     space it is given. Hidden until a layout above places it. */
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-journey[data-journey-live] .journey-unit {
+      container-type: size;
+      pointer-events: none;
+      --on: clamp(0, (var(--p, 0) - 0.345) * 14, 1);
+      /* Named for the unit: the site registers a bare `--turn` as an angle
+         for the brief's tower, and a number written to it is thrown away. */
+      --unit-turn-t: clamp(0, (var(--p, 0) - 0.37) * 12, 1);
+      --unit-turn: calc(var(--unit-turn-t) * var(--unit-turn-t) * (3 - 2 * var(--unit-turn-t)));
+      --shut: clamp(0, (var(--p, 0) - 0.875) * 16, 1);
+      /* How far the first layer has lifted (its --past), for the skeletons
+         that ride above it. */
+      --lift0: calc(clamp(0, (var(--adv, 0) - 0.15) * 2.5, 1) * var(--on) * (1 - var(--shut)));
+      opacity: var(--in-unit);
+    }
+    .hero-journey[data-journey-live] .journey-unit-in {
+      position: absolute;
+      inset: 0;
+      translate: 0 calc((1 - var(--in-unit)) * 1.5rem);
+    }
+
+    /* ITS ENTRANCE: IT ASSEMBLES. Each layer comes down onto the one below
+       it, bottom first, as the unit arrives, so the block is seen being put
+       together rather than fading up whole. On a phone the unit arrives with
+       the scroll, so the layers' fall rides the same number that brings it
+       in; on a wide screen it is on the first screen, so it plays on load
+       (see the wide-screen block). */
+    .hero-journey[data-journey-live] .journey-unit-plate {
+      translate: 0 0 calc((1 - var(--in-unit)) * (28px + (3 - var(--i)) * 18px));
+    }
+    /* The camera. Perspective on the world's direct parent, and nothing
+       here clips, masks or fades, any of which would flatten the stack. */
+    .hero-journey[data-journey-live] .journey-unit-cam {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      perspective: 900px;
+      perspective-origin: 50% 30%;
+    }
+
+    .hero-journey[data-journey-live] .journey-unit-world {
+      /* Never quite zero: closed, the layers still sit 2px apart, so the
+         block has its thickness and the first report's layer is on top. */
+      --gap: calc(var(--s) * 0.2 * var(--spread) * (1 - 0.85 * var(--shut)) + 2px);
+      position: relative;
+      /* A little wider than it is deep, so the object holds the width of
+         the space it is given without standing any taller. */
+      width: calc(var(--s) * 1.25);
+      height: var(--s);
+      transform-style: preserve-3d;
+      /* Pulled down by the height the open stack stands as it opens, so it
+         is the whole object that is centred, not its floor (closed, the
+         block itself is centred: level with the buttons on a wide screen). Square-on at first, a
+         quarter-diamond turn just past the first stop, then another 70deg
+         or so over the rest of the drive: it is always visibly turning as
+         the reader scrolls, which is what makes it read as an object in
+         space rather than a drawing of one. */
+      transform: translateY(calc(var(--s) * 0.22 * var(--spread))) rotateX(60deg)
+        rotateZ(calc(var(--unit-turn) * -45deg - max(0, var(--p, 0) - 0.45) * 160deg));
+    }
+
+    /* Light pooled on the ground under the stack. */
+    .hero-journey[data-journey-live] .journey-unit-pool {
+      position: absolute;
+      inset: -40%;
+      border-radius: 50%;
+      background: radial-gradient(
+        closest-side,
+        rgb(255 106 0 / 0.26),
+        rgb(255 106 0 / 0.08) 55%,
+        transparent 100%
+      );
+      transform: translateZ(-14px);
+      opacity: calc(0.35 + 0.35 * var(--on) + 0.3 * var(--shut));
+    }
+
+    .hero-journey[data-journey-live] .journey-unit-plate {
+      --dist: max(calc(var(--i) - var(--adv, 0)), calc(var(--adv, 0) - var(--i)));
+      --cur: calc(clamp(0, (0.5 - var(--dist)) * 2.4, 1) * var(--on) * (1 - var(--shut)));
+      --past: calc(clamp(0, (var(--adv, 0) - var(--i) - 0.15) * 2.5, 1) * var(--on) * (1 - var(--shut)));
+      --lit: max(var(--cur), calc(var(--shut) * 0.75));
+      position: absolute;
+      inset: 0;
+      transform-style: preserve-3d;
+      /* Layer 0 on top. The current one rises a little and slides a little
+         toward the reader; the delivered ones above it lift clear. */
+      transform: translateZ(
+          calc((3 - var(--i)) * var(--gap) + var(--cur) * var(--s) * 0.05 + var(--past) * var(--s) * 0.16)
+        )
+        translate(calc(var(--cur) * var(--s) * 0.07), calc(var(--cur) * var(--s) * 0.07));
+    }
+
+    /* Two outlines under each face give the plate an edge, so it reads as
+       a slab of glass rather than a sheet of paper. */
+    .hero-journey[data-journey-live] .journey-unit-plate::before,
+    .hero-journey[data-journey-live] .journey-unit-plate::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 0.6rem;
+      border: 1px solid rgb(255 150 70 / calc(0.1 + 0.35 * var(--lit)));
+    }
+    .hero-journey[data-journey-live] .journey-unit-plate::before {
+      transform: translateZ(-3px);
+    }
+    .hero-journey[data-journey-live] .journey-unit-plate::after {
+      transform: translateZ(-6px);
+      background: rgb(10 11 14 / calc(0.55 * (1 - var(--past))));
+    }
+
+    .hero-journey[data-journey-live] .journey-unit-face {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      border-radius: 0.6rem;
+      border: 1px solid
+        color-mix(in oklab, var(--color-prime-400) calc(var(--lit) * 100%), rgb(255 255 255 / 0.16));
+      /* Dark glass with a dot screen in it: the particle look, done with a
+         background rather than with particles. */
+      background:
+        radial-gradient(circle, rgb(255 170 100 / calc(0.1 + 0.22 * var(--lit))) 0.7px, transparent 1.2px) 0 0 / 7px 7px,
+        linear-gradient(
+          145deg,
+          rgb(255 255 255 / calc(0.07 + 0.05 * var(--lit))),
+          rgb(255 255 255 / 0.015) 60%
+        ),
+        rgb(12 14 18 / calc(0.72 * (1 - 0.9 * var(--past))));
+      box-shadow:
+        0 0 calc(4px + var(--lit) * 30px) rgb(255 106 0 / calc(var(--lit) * 0.5)),
+        inset 0 0 calc(var(--lit) * 22px) rgb(255 106 0 / calc(var(--lit) * 0.22));
+    }
+
+    .hero-journey[data-journey-live] .journey-unit-glyph {
+      width: 64%;
+      height: 64%;
+      stroke: currentColor;
+      stroke-width: 2.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      color: color-mix(in oklab, var(--color-prime-300) calc(var(--lit) * 100%), var(--color-ink-500));
+      opacity: calc((0.4 + 0.6 * var(--lit)) * (1 - 0.75 * var(--past)));
+    }
+    .hero-journey[data-journey-live] .journey-unit-faint {
+      opacity: 0.45;
+    }
+    .hero-journey[data-journey-live] .journey-unit-fill {
+      fill: currentColor;
+      stroke: none;
+    }
+    .hero-journey[data-journey-live] .journey-unit-soft {
+      opacity: 0.4;
     }
   }
 </style>
@@ -1816,6 +2287,51 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
     let frame = 0;
     let live = false;
     const opening = root.querySelector<HTMLElement>('.journey-panel:not(.journey-report)');
+    const ctas = root.querySelector<HTMLElement>('.journey-ctas');
+
+    /* Where the hero's buttons stand in the pinned opening, measured from its
+       top. On a wide screen the unit is set level with them in the right-hand
+       column, and the opening's copy is centred, so how far down they sit
+       depends on how long the copy runs at this width. Layout offsets, so the
+       opening's own fade and lift do not move the answer. */
+    const unit = root.querySelector<HTMLElement>('.journey-unit');
+    const measure = () => {
+      if (!ctas || !opening) return;
+      root.style.setProperty('--cta-y', `${Math.round(ctas.offsetTop + ctas.offsetHeight / 2)}px`);
+      root.style.setProperty('--cta-b', `${Math.round(ctas.offsetTop + ctas.offsetHeight)}px`);
+      requestAnimationFrame(alignUnit);
+    };
+
+    /* THE UNIT'S BASE, LEVEL WITH THE BUTTONS' BASE. Its box is placed by
+       CSS; where the block's lowest edge lands inside that box depends on
+       its perspective, tilt and size, so it is measured and the box nudged
+       by the difference. Only while the opening is up (that is the moment
+       the two stand side by side) and once the entrances have finished, so
+       nothing in motion is measured. */
+    const alignUnit = () => {
+      if (!unit || !ctas || getComputedStyle(unit).display === 'none') return;
+      if (!window.matchMedia('(width >= 64rem)').matches) return;
+      if ((parseFloat(root.style.getPropertyValue('--p')) || 0) > 0.02) return;
+      const moving = [...unit.getAnimations({ subtree: true }), ...ctas.getAnimations()].filter(
+        (a) => a.playState === 'running',
+      );
+      if (moving.length) {
+        Promise.all(moving.map((a) => a.finished.catch(() => undefined))).then(() => requestAnimationFrame(alignUnit));
+        return;
+      }
+      let base = -Infinity;
+      unit.querySelectorAll('.journey-unit-face').forEach((f) => {
+        base = Math.max(base, f.getBoundingClientRect().bottom);
+      });
+      const target = ctas.getBoundingClientRect().bottom;
+      const now = parseFloat(unit.style.getPropertyValue('--unit-nudge')) || 0;
+      const next = Math.round(now + target - base);
+      if (Number.isFinite(next) && Math.abs(next - now) > 0.5) unit.style.setProperty('--unit-nudge', `${next}px`);
+    };
+    const onResize = () => {
+      measure();
+      onScroll();
+    };
 
     const update = () => {
       frame = 0;
@@ -1850,11 +2366,13 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
 
       if (live) {
         window.addEventListener('scroll', onScroll, { passive: true });
-        window.addEventListener('resize', onScroll, { passive: true });
+        window.addEventListener('resize', onResize, { passive: true });
+        measure();
+        document.fonts?.ready.then(measure);
         update();
       } else {
         window.removeEventListener('scroll', onScroll);
-        window.removeEventListener('resize', onScroll);
+        window.removeEventListener('resize', onResize);
         root.style.removeProperty('--p');
         opening?.removeAttribute('data-gone');
       }

@@ -310,6 +310,12 @@ const CONTOURS = Array.from({ length: CONTOUR_LEVELS }, (_, i) => ({
 </div>
 
 <style>
+  @property --phs-in {
+    syntax: '<number>';
+    inherits: true;
+    initial-value: 1;
+  }
+
   /* ---------------------------------------------------------------------
      THE FRAME. Shared by every scene: one box, one camera, one pool of
      light on the floor. Only `--tilt`, `--spin` and the contents differ,
@@ -336,7 +342,25 @@ const CONTOURS = Array.from({ length: CONTOUR_LEVELS }, (_, i) => ({
     /* Arrives rather than appears. One animation on the whole scene, not
        forty on its parts: the parts are a composition, and a composition
        that assembles itself in front of you is a loading screen. */
-    animation: phs-arrive 760ms var(--ease-out) both;
+    animation:
+      phs-arrive 760ms var(--ease-out) both,
+      phs-in 1900ms cubic-bezier(0.3, 0.75, 0.25, 1) 80ms both;
+  }
+
+  /* EACH SCENE HAS ITS OWN ENTRANCE. One registered number, `--phs-in`,
+     runs 0 to 1 once on load, and every scene spends it differently on its
+     camera (below, per scene): the platform swings down from edge-on, the
+     operations rise out of the dark, the unit spins in blown apart, the
+     network tips back from flat, the land tilts up off the page. Registered
+     with an initial value of 1, so without the animation (reduced motion)
+     the scene is simply where it ends. */
+  @keyframes phs-in {
+    from {
+      --phs-in: 0;
+    }
+    to {
+      --phs-in: 1;
+    }
   }
   @keyframes phs-arrive {
     from {
@@ -360,7 +384,11 @@ const CONTOURS = Array.from({ length: CONTOUR_LEVELS }, (_, i) => ({
     position: absolute;
     inset: 0;
     transform-style: preserve-3d;
-    transform: rotateX(var(--tilt)) rotateZ(var(--spin));
+    --phs-out: calc(1 - var(--phs-in));
+    transform: translateZ(calc(var(--phs-out) * var(--in-z, 0px)))
+      rotateX(calc(var(--tilt) + var(--phs-out) * var(--in-tilt, 0deg)))
+      rotateZ(calc(var(--spin) + var(--phs-out) * var(--in-spin, 0deg)))
+      scale(calc(1 - var(--phs-out) * var(--in-shrink, 0)));
   }
 
   /* The scene floats, so it needs something to float above or it reads as
@@ -417,6 +445,10 @@ const CONTOURS = Array.from({ length: CONTOUR_LEVELS }, (_, i) => ({
   [data-scene='layers'] {
     --tilt: 60deg;
     --spin: -28deg;
+    /* Swings down from nearly edge-on, turning a quarter as it settles. */
+    --in-tilt: 24deg;
+    --in-spin: -80deg;
+    --in-shrink: 0.12;
   }
   .plate {
     position: absolute;
@@ -464,6 +496,10 @@ const CONTOURS = Array.from({ length: CONTOUR_LEVELS }, (_, i) => ({
      exactly what the page is for.
   --------------------------------------------------------------------- */
   [data-scene='field'] {
+    /* Rises out of the dark from far below, growing as it comes. */
+    --in-z: -320px;
+    --in-tilt: 10deg;
+    --in-shrink: 0.3;
     --tilt: 66deg;
     --spin: -20deg;
   }
@@ -515,6 +551,9 @@ const CONTOURS = Array.from({ length: CONTOUR_LEVELS }, (_, i) => ({
      the object is a fair picture of where that starts.
   --------------------------------------------------------------------- */
   [data-scene='blueprint'] {
+    /* Spins in, blown apart, and pulls itself together as it lands. */
+    --in-spin: 150deg;
+    --in-shrink: 0.35;
     --tilt: 56deg;
     --spin: -30deg;
   }
@@ -580,6 +619,10 @@ const CONTOURS = Array.from({ length: CONTOUR_LEVELS }, (_, i) => ({
      straight spokes is a compass rose and eight curves is traffic.
   --------------------------------------------------------------------- */
   [data-scene='converge'] {
+    /* Starts flat to the reader, a map on the page, and tips back into
+       perspective. */
+    --in-tilt: -58deg;
+    --in-spin: 18deg;
     --tilt: 64deg;
     --spin: -12deg;
   }
@@ -630,6 +673,9 @@ const CONTOURS = Array.from({ length: CONTOUR_LEVELS }, (_, i) => ({
      one visible through all the others.
   --------------------------------------------------------------------- */
   [data-scene='contours'] {
+    /* The land lies flat, then tilts up into view and lifts apart. */
+    --in-tilt: -62deg;
+    --in-z: 80px;
     --tilt: 58deg;
     --spin: -24deg;
   }
@@ -687,7 +733,7 @@ const CONTOURS = Array.from({ length: CONTOUR_LEVELS }, (_, i) => ({
     --spin: calc(-36deg + var(--s, 0) * 48deg);
   }
   [data-live][data-scene='layers'] .plate {
-    transform: translateZ(calc(var(--i) * (10px + var(--t) * 34px) * var(--depth)));
+    transform: translateZ(calc(var(--i) * (10px + var(--t) * 34px) * var(--depth) * (0.2 + 0.8 * var(--phs-in))));
   }
   [data-live][data-scene='layers'] .post::before {
     height: calc((2.2rem + 6.6rem * var(--t)) * var(--depth));
@@ -701,7 +747,7 @@ const CONTOURS = Array.from({ length: CONTOUR_LEVELS }, (_, i) => ({
     /* Floored at half height. The event is the skyline BUILDING, and a
        skyline that starts at nothing is an empty scene for whoever lands
        on the page and does not scroll. */
-    --rise: calc(0.5 + var(--t) * 0.5);
+    --rise: calc((0.5 + var(--t) * 0.5) * (0.08 + 0.92 * var(--phs-in)));
   }
   [data-live][data-scene='field'] .column-shaft {
     height: calc(var(--h) * var(--col-h, 7rem) * var(--depth) * var(--rise));
@@ -717,7 +763,7 @@ const CONTOURS = Array.from({ length: CONTOUR_LEVELS }, (_, i) => ({
   [data-live][data-scene='blueprint'] {
     --tilt: calc(60deg - var(--s, 0) * 24deg);
     --spin: calc(-38deg + var(--s, 0) * 46deg);
-    --sep: calc(1.15 - var(--t) * 1);
+    --sep: calc(1.15 - var(--t) * 1 + (1 - var(--phs-in)) * 1.6);
   }
   [data-live][data-scene='blueprint'] .part {
     transform: translateZ(calc((26px + var(--i) * 54px * var(--sep)) * var(--depth)));
@@ -749,7 +795,7 @@ const CONTOURS = Array.from({ length: CONTOUR_LEVELS }, (_, i) => ({
     --spin: calc(-32deg + var(--s, 0) * 46deg);
   }
   [data-live][data-scene='contours'] .contour {
-    transform: translateZ(calc(var(--i) * (5px + var(--t) * 26px) * var(--depth)));
+    transform: translateZ(calc(var(--i) * (5px + var(--t) * 26px) * var(--depth) * var(--phs-in)));
   }
 
   /* The composition is finished at rest, so this only ever removes the

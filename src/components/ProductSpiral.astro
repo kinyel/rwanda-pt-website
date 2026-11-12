@@ -696,6 +696,16 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
     background: linear-gradient(to bottom, transparent 0, transparent 100svh, #050608 100svh);
   }
 
+  /* ITS ENTRANCE: THE STAIRCASE WINDS UP. While it fades in over the end of
+     the hero, the helix turns into place round its own axis and the cards
+     swing out from the axis to their full radius, so it arrives as a
+     mechanism coming to rest rather than a picture fading up. One eased
+     number, from the same hand-over the fade reads. Only here, where the
+     hand-over exists; anywhere else `--wind` is absent and reads as 1. */
+  :global(.hero-journey[data-journey-live]) ~ .spiral[data-on] {
+    --wind: calc(var(--enter, 0) * var(--enter, 0) * (3 - 2 * var(--enter, 0)));
+  }
+
   :global(.hero-journey[data-journey-live]) ~ .spiral[data-on] .spiral-viewport {
     opacity: var(--enter, 0);
     background-color: #050608;
@@ -848,8 +858,8 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
     position: absolute;
     inset: 0;
     transform-style: preserve-3d;
-    transform: translateY(calc(var(--k) * var(--step-rise)))
-               rotateY(calc(var(--k) * var(--step-angle) * -1));
+    transform: translateY(calc(var(--k) * var(--step-rise) + (1 - var(--wind, 1)) * 70px))
+               rotateY(calc(var(--k) * var(--step-angle) * -1 + (1 - var(--wind, 1)) * -150deg));
   }
 
   .spiral[data-on] .spiral-item {
@@ -859,7 +869,7 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
     width: var(--card-w);
     transform-origin: 0 0;
     transform: rotateY(calc(var(--i) * var(--step-angle)))
-               translateZ(var(--radius))
+               translateZ(calc(var(--radius) * (0.3 + 0.7 * var(--wind, 1))))
                translateY(calc(var(--i) * var(--step-rise) * -1))
                translate(-50%, -50%);
     backface-visibility: hidden;

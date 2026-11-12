@@ -103,7 +103,7 @@ const RINGS = [0, 1, 2, 3].map((level) => {
 <div class:list={['iw', map && 'iw-has-map']}>
   {
     map && (
-      <div class="iw-visual" aria-hidden="true">
+      <div class="iw-visual reveal-3d" aria-hidden="true">
         <div class="iw-cam">
           <div class="iw-world">
             <span class="iw-plate">
@@ -310,7 +310,12 @@ const RINGS = [0, 1, 2, 3].map((level) => {
        counter-rotation on every pin can read the current value and stay
        facing the reader. A keyframe on `rotateZ` here would leave the heads
        spinning with the plate within a second. */
-    transform: rotateX(var(--tilt)) rotateZ(calc(var(--spin) + var(--turn, 0deg)));
+    /* Its entrance (`--in3d`, see THREE-DIMENSIONAL ENTRANCES in
+       global.css): the map starts nearly face-on, like a page held up to be
+       read, and tips back onto the ground as it turns into place, while its
+       rings resolve and its pins rise one after another. */
+    transform: rotateX(calc(var(--tilt) - (1 - var(--in3d)) * 50deg))
+      rotateZ(calc(var(--spin) + var(--turn, 0deg) + (1 - var(--in3d)) * 70deg));
     --tilt: 62deg;
     --spin: -18deg;
     animation: iw-drift 54s linear infinite;
@@ -347,9 +352,12 @@ const RINGS = [0, 1, 2, 3].map((level) => {
     stroke: color-mix(in oklab, var(--color-prime-600) calc(40% + var(--t) * 55%), transparent);
     stroke-width: calc(2px + var(--t) * 1.6px);
     vector-effect: non-scaling-stroke;
+    opacity: clamp(0, var(--in3d) * 2.2 - var(--t) * 0.9, 1);
   }
 
   .iw-pin {
+    /* How far this pin has risen on the entrance, one after another. */
+    --grow: clamp(0, var(--in3d) * 2.4 - 0.5 - var(--i) * 0.12, 1);
     position: absolute;
     left: var(--x);
     top: var(--y);
@@ -391,6 +399,8 @@ const RINGS = [0, 1, 2, 3].map((level) => {
     /* Rises when its row is pointed at. The height is the animation, which
        is why it is a transform on a fixed box rather than a height. */
     height: calc(var(--h) * (0.72 + var(--on) * 0.5));
+    transform-origin: 50% 100%;
+    scale: 1 var(--grow);
     background-image: linear-gradient(
       to top,
       color-mix(in oklab, var(--tone) 18%, transparent),
@@ -404,6 +414,9 @@ const RINGS = [0, 1, 2, 3].map((level) => {
   .iw-pin-head {
     position: absolute;
     bottom: calc(var(--h) * (0.72 + var(--on) * 0.5));
+    /* Rides down with its mast while that is still growing. */
+    translate: 0 calc((1 - var(--grow)) * var(--h) * 0.72);
+    opacity: var(--grow);
     left: 50%;
     width: calc(0.52rem + var(--on) * 0.28rem);
     height: calc(0.52rem + var(--on) * 0.28rem);

@@ -371,6 +371,20 @@
 /* --- Components ----------------------------------------------------------
    Only patterns repeated across many pages live here. Anything used once
    stays in its own component file.                                          */
+/* The 3D entrances' progress (see THREE-DIMENSIONAL ENTRANCES). */
+@property --in3d {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 1;
+}
+
+/* The angle the buttons' signal runs round on; registered so it animates. */
+@property --btn-sweep {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
 @layer components {
   /* --- Buttons -----------------------------------------------------------
      One button system, defined here rather than in Button.astro, because the
@@ -472,6 +486,50 @@
     .btn::after { display: none; }
   }
 
+  /* THE SIGNAL. What makes these PrimeTrack's buttons rather than anyone's:
+     under the pointer (or keyboard focus) a point of light runs round the
+     button's edge, the way a tracked vehicle runs its route on the map. A
+     conic gradient on a 1.5px ring, masked to the border so it can never
+     touch the label, turned by one registered angle. It runs only while the
+     button is being pointed at — nothing here moves at rest — and not at all
+     under reduced motion. Each variant sets the colour of its own signal. */
+  .btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.5px;
+    background: conic-gradient(
+      from var(--btn-sweep),
+      transparent 0deg,
+      transparent 230deg,
+      color-mix(in oklab, var(--btn-signal, #ff9d5c) 40%, transparent) 300deg,
+      var(--btn-signal, #ff9d5c) 345deg,
+      #fff 356deg,
+      transparent 360deg
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--duration-base) var(--ease-prime);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .btn:hover::before,
+    .btn:focus-visible::before {
+      opacity: 1;
+      animation: btn-signal 2.4s linear infinite;
+    }
+  }
+  @keyframes btn-signal {
+    to {
+      --btn-sweep: 360deg;
+    }
+  }
+
   /* Long labels in Kinyarwanda must wrap rather than blow the layout open. */
 
   .btn:disabled,
@@ -507,7 +565,7 @@
     .btn-secondaryOnDark:hover {
       transform: translateY(-1px);
     }
-    .btn:active { transform: translateY(0); }
+    .btn:active { transform: translateY(0) scale(0.975); }
   }
 
   /* --- primary: the brand plate --- */
@@ -520,20 +578,26 @@
        plate and took the label from 3.29:1 down to 2.79:1 across its upper
        half, which is a real regression traded for a highlight nobody asked
        for. Depth comes from the darker foot and the inset lip instead. */
+    --btn-signal: #ffe1c4;
     background-image: linear-gradient(180deg, var(--color-prime-500) 0%, #e65601 62%, #d94f00 100%);
+    /* An ember under the plate: a tight warm shadow for contact and a wide
+       soft one for the glow the orange throws on the ground. */
     box-shadow:
-      inset 0 1px 0 rgb(255 255 255 / 0.26),
+      inset 0 1px 0 rgb(255 255 255 / 0.28),
       inset 0 0 0 1px rgb(255 255 255 / 0.08),
-      inset 0 -1px 0 rgb(80 24 0 / 0.28),
-      0 1px 2px rgb(107 38 0 / 0.26),
-      0 10px 22px -10px rgb(243 93 1 / 0.6);
+      inset 0 -2px 0 rgb(80 24 0 / 0.22),
+      0 1px 2px rgb(107 38 0 / 0.3),
+      0 8px 18px -8px rgb(243 93 1 / 0.55),
+      0 18px 40px -18px rgb(255 112 0 / 0.55);
   }
   .btn-primary:hover {
     background-image: linear-gradient(180deg, var(--color-prime-500) 0%, #ee5901 62%, #e05301 100%);
     box-shadow:
-      inset 0 1px 0 rgb(255 255 255 / 0.3),
-      0 2px 4px rgb(107 38 0 / 0.2),
-      0 14px 28px -10px rgb(243 93 1 / 0.55);
+      inset 0 1px 0 rgb(255 255 255 / 0.32),
+      inset 0 -2px 0 rgb(80 24 0 / 0.18),
+      0 2px 4px rgb(107 38 0 / 0.22),
+      0 12px 26px -10px rgb(243 93 1 / 0.6),
+      0 22px 48px -18px rgb(255 112 0 / 0.65);
   }
   .btn-primary:active {
     background-image: linear-gradient(180deg, var(--color-prime-600) 0%, var(--color-prime-600) 100%);
@@ -552,6 +616,7 @@
      before the buttons were unified; making it a named variant is what stops
      it drifting back into two hand-written copies. */
   .btn-primaryInk {
+    --btn-signal: #fff3e6;
     color: var(--color-ink-950);
     background-image: linear-gradient(180deg, #ff7a20 0%, var(--color-prime-500) 52%, #e75802 100%);
     box-shadow:
@@ -575,6 +640,7 @@
 
   /* --- secondary: the real alternative on a light ground --- */
   .btn-secondary {
+    --btn-signal: var(--color-prime-500);
     color: var(--color-ink-900);
     /* A gradient border: the fill on the padding box, the edge on the border
        box behind it. Lighter at the top and firmer at the foot, so the edge
@@ -614,6 +680,26 @@
   .btn-ghost {
     color: var(--color-prime-700);
   }
+  /* The ghost has no edge for a signal to run round, so its signal is a
+     line drawing itself in under the label, from the left. */
+  .btn-ghost::before {
+    inset: auto 1.1rem 0.45rem;
+    height: 2px;
+    padding: 0;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--color-prime-500), #ffb27a);
+    -webkit-mask: none;
+    mask: none;
+    opacity: 1;
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform var(--duration-base) var(--ease-out);
+  }
+  .btn-ghost:hover::before,
+  .btn-ghost:focus-visible::before {
+    transform: scaleX(1);
+    animation: none;
+  }
   .btn-ghost:hover {
     background-color: var(--color-prime-50);
     color: var(--color-prime-800);
@@ -622,6 +708,7 @@
 
   /* --- onDark: the primary equivalent on ink --- */
   .btn-onDark {
+    --btn-signal: var(--color-prime-500);
     color: var(--color-ink-950);
     background-image: linear-gradient(180deg, #fff 0%, #f2f4f7 100%);
     box-shadow:
@@ -645,29 +732,37 @@
          White at 30% is 3.4:1 on ink-950, so the boundary itself clears
          WCAG 1.4.11, with the label at 19:1. --- */
   .btn-secondaryOnDark {
+    --btn-signal: #ff9d5c;
     color: #fff;
     border: 1px solid transparent;
+    /* A dark slate plate with a lit rim. The fill is opaque on purpose: a
+       translucent fill over a gradient border lets the border's colour show
+       through the whole face, which is what turned this button copper under
+       the pointer. Opaque, the rim stays a rim. */
     background:
-      linear-gradient(180deg, rgb(255 255 255 / 0.1) 0%, rgb(255 255 255 / 0.03) 100%) padding-box,
-      linear-gradient(180deg, rgb(255 255 255 / 0.42) 0%, rgb(255 255 255 / 0.14) 100%) border-box;
+      linear-gradient(180deg, #343a47 0%, #1f242d 100%) padding-box,
+      linear-gradient(180deg, rgb(255 255 255 / 0.5) 0%, rgb(255 255 255 / 0.1) 100%) border-box;
     box-shadow:
       inset 0 1px 0 rgb(255 255 255 / 0.14),
-      0 8px 20px -14px rgb(0 0 0 / 0.8);
+      inset 0 -1px 0 rgb(0 0 0 / 0.25),
+      0 1px 2px rgb(0 0 0 / 0.4),
+      0 12px 26px -14px rgb(0 0 0 / 0.85);
   }
   .btn-secondaryOnDark:hover {
     background:
-      linear-gradient(180deg, rgb(255 255 255 / 0.16) 0%, rgb(255 255 255 / 0.07) 100%) padding-box,
-      linear-gradient(180deg, rgb(255 178 122 / 0.9) 0%, rgb(255 125 41 / 0.5) 100%) border-box;
+      linear-gradient(180deg, #3d4452 0%, #262b35 100%) padding-box,
+      linear-gradient(180deg, rgb(255 190 140 / 0.95) 0%, rgb(255 125 41 / 0.55) 100%) border-box;
     box-shadow:
-      inset 0 1px 0 rgb(255 255 255 / 0.2),
+      inset 0 1px 0 rgb(255 255 255 / 0.18),
       0 0 0 4px rgb(243 93 1 / 0.1),
-      0 12px 26px -12px rgb(0 0 0 / 0.75);
+      0 2px 4px rgb(0 0 0 / 0.35),
+      0 16px 32px -14px rgb(0 0 0 / 0.85);
   }
   .btn-secondaryOnDark:active {
     background:
-      linear-gradient(180deg, rgb(255 255 255 / 0.07) 0%, rgb(255 255 255 / 0.07) 100%) padding-box,
+      linear-gradient(180deg, #262b34 0%, #262b34 100%) padding-box,
       linear-gradient(180deg, rgb(255 125 41 / 0.7), rgb(255 125 41 / 0.7)) border-box;
-    box-shadow: none;
+    box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.35);
   }
 
   /* --- Focus ------------------------------------------------------------
@@ -2209,16 +2304,18 @@
     position: absolute;
     inset: 0;
     background-image: linear-gradient(to right, var(--color-amber-500), var(--color-prime-500));
-    translate: calc(var(--sp, 0) * (100cqw - 3.5rem) + 1.75rem - 100cqw) 0;
+    translate: calc(var(--sp, 0) * (100cqw - 2.5rem) + 1.25rem - 100cqw) 0;
   }
 
+  /* 2.5rem long: big enough to read as a car with depth, small enough to
+     stay an accent on a 3px line rather than a vehicle parked on the bar. */
   .site-progress-car {
     position: absolute;
     top: 1px;
     left: 0;
-    width: 3.5rem;
-    height: 2rem;
-    translate: calc(var(--sp, 0) * (100cqw - 3.5rem)) 0;
+    width: 2.5rem;
+    height: 1.4286rem;
+    translate: calc(var(--sp, 0) * (100cqw - 2.5rem)) 0;
     /* Not parked over the logo at the top of the page: it arrives with the
        first bit of progress, which is also when the bar starts to leave. */
     opacity: clamp(0, var(--sp, 0) * 60, 1);
@@ -2435,7 +2532,7 @@
   :root.reveal-ready .reveal,
   :root.reveal-ready .reveal-soft {
     transition-property: opacity, transform, filter;
-    transition-duration: var(--duration-enter);
+    transition-duration: calc(var(--duration-enter) * 1.25);
     transition-timing-function: var(--ease-out);
   }
 
@@ -2446,7 +2543,10 @@
   }
   /* A short rise. Not a slide from off-screen: the element is telling you it
      just arrived, not travelling across the page to get here. */
-  .reveal[data-reveal] { transform: translateY(30px); }
+  /* Every entrance also comes into focus: a few pixels of blur resolving
+     as it settles, which is what makes an arrival read as smooth rather
+     than as a box sliding. */
+  .reveal[data-reveal] { transform: translateY(30px); filter: blur(6px); }
   .reveal-soft[data-reveal] { transform: translateY(40px); filter: blur(10px); }
 
   /* Fade with no movement, for anything inside a clipped panel where a rise
@@ -2479,7 +2579,7 @@
   :root.reveal-ready .reveal-scale,
   :root.reveal-ready .reveal-rise {
     transition-property: opacity, transform, filter;
-    transition-duration: var(--duration-enter);
+    transition-duration: calc(var(--duration-enter) * 1.25);
     transition-timing-function: var(--ease-out);
   }
   .reveal-left[data-reveal],
@@ -2489,10 +2589,10 @@
     opacity: 0;
     will-change: opacity, transform;
   }
-  .reveal-left[data-reveal] { transform: translateX(-64px); }
-  .reveal-right[data-reveal] { transform: translateX(64px); }
-  .reveal-scale[data-reveal] { transform: scale(0.88) translateY(18px); }
-  .reveal-rise[data-reveal] { transform: translateY(64px); }
+  .reveal-left[data-reveal] { transform: translateX(-64px); filter: blur(6px); }
+  .reveal-right[data-reveal] { transform: translateX(64px); filter: blur(6px); }
+  .reveal-scale[data-reveal] { transform: scale(0.88) translateY(18px); filter: blur(8px); }
+  .reveal-rise[data-reveal] { transform: translateY(64px); filter: blur(6px); }
 
   /* HEADINGS ARRIVE A WORD AT A TIME.
 
@@ -2508,20 +2608,64 @@
   .words > span {
     display: inline-block;
     transition:
-      opacity var(--duration-enter) var(--ease-out),
-      transform var(--duration-enter) var(--ease-out),
-      filter var(--duration-enter) var(--ease-out);
-    transition-delay: calc(var(--w, 0) * 62ms);
+      opacity calc(var(--duration-enter) * 1.2) var(--ease-out),
+      transform calc(var(--duration-enter) * 1.2) var(--ease-out),
+      filter calc(var(--duration-enter) * 1.2) var(--ease-out);
+    transition-delay: calc(var(--w, 0) * 55ms);
   }
   .words[data-reveal] > span {
     opacity: 0;
-    transform: translateY(0.9em) rotate(2deg);
-    filter: blur(5px);
+    transform: translateY(0.75em) rotate(3deg) scale(0.96);
+    transform-origin: 0 100%;
+    filter: blur(6px);
   }
   /* The heading itself must not also fade, or the words fade twice. */
   .words[data-reveal] {
     opacity: 1;
     transform: none;
+  }
+
+  /* THREE-DIMENSIONAL ENTRANCES. Same one-shot contract as every reveal
+     above, carrying one registered number, `--in3d`, from 0 to 1 when the
+     element arrives. Each 3D object spends that number on its own camera
+     and parts (the brief's tower spins up off its turntable, the industry
+     map tips up from flat, and so on), which is what makes every entrance
+     its own. Registered with an initial value of 1, so with the script off,
+     under reduced motion, or for anything already on screen at load, the
+     object is simply where it ends. */
+  .reveal-3d[data-reveal] {
+    --in3d: 0;
+  }
+  :root.reveal-ready .reveal-3d {
+    transition: --in3d 1900ms cubic-bezier(0.3, 0.75, 0.25, 1);
+  }
+
+  /* ARRIVALS ON LOAD, for the copy at the top of an inner page, which is
+     on screen from the first frame and so never reaches the scroll
+     reveals above. Each piece rises a little and comes into focus, in
+     reading order (`--d`). The delays are short on purpose: Largest
+     Contentful Paint waits while the heading is invisible, and 90ms steps
+     keep it inside the noise. */
+  @keyframes arrive {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+      filter: blur(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+      filter: none;
+    }
+  }
+  .arrive {
+    animation: arrive 900ms var(--ease-out) both;
+    animation-delay: calc(var(--d, 0) * 90ms);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .arrive {
+      animation: none;
+    }
   }
 
   /* A section arriving as a unit: the header leads, its content follows. */
@@ -2728,7 +2872,13 @@
     transform-style: preserve-3d;
     /* Pushed down before it is tilted, so a full stack has headroom to grow
        into rather than climbing out of the top of the frame. */
-    transform: translateY(12%) rotateX(var(--tilt)) rotateZ(var(--spin));
+    /* Its entrance (`--in3d`, see THREE-DIMENSIONAL ENTRANCES): the ground
+       spins up like a turntable starting, tipping back from upright as it
+       goes, while the rings ripple out and the mast grows. */
+    transform: translateY(12%)
+      rotateX(calc(var(--tilt) - (1 - var(--in3d)) * 34deg))
+      rotateZ(calc(var(--spin) + (1 - var(--in3d)) * 200deg))
+      scale(calc(0.7 + 0.3 * var(--in3d)));
   }
   /* AN AMBIENT LOOP, AND A DELIBERATE ONE. The house rule is that nothing
      loops forever, because a loop competes for attention with whatever the
@@ -2770,6 +2920,8 @@
     stroke: rgb(120 196 220 / 0.26);
     stroke-width: 1.4;
     vector-effect: non-scaling-stroke;
+    /* Ripples outward on the entrance, inner ring first. */
+    opacity: clamp(0, var(--in3d) * 2.6 - var(--r, 0) * 0.32, 1);
   }
   /* The axis the brief is built on. Upright, so it is the one thing telling
      you the floor is lying down. */
@@ -2791,6 +2943,9 @@
     width: 1.5px;
     height: calc(12rem * var(--lift));
     background-image: linear-gradient(to top, rgb(120 196 220 / 0.5), transparent 86%);
+    /* Grows out of the ground on the entrance, just behind the rings. */
+    transform-origin: 50% 100%;
+    scale: 1 clamp(0, var(--in3d) * 1.6 - 0.35, 1);
   }
 
   /* The pool the tower stands in. Grows and warms with the brief, so the
@@ -3019,17 +3174,16 @@
   }
 
   /* ---- The options ---------------------------------------------------- */
+  /* Two across from the smallest phone up: one column made the eight a
+     long scroll of near-identical cards on a phone. "Something else" spans
+     the row, as it always has. */
   .brief-options {
     display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.5rem;
   }
-  @media (width >= 40rem) {
-    .brief-options {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .brief-option-other {
-      grid-column: 1 / -1;
-    }
+  .brief-option-other {
+    grid-column: 1 / -1;
   }
   /* Three across once the band is wide enough to give a card a readable
      column. Not before: each one carries a line of body as well as a
@@ -3124,6 +3278,61 @@
     line-height: 1.45;
     /* ink-400 is 5.8:1 on this ground. Nothing darker is used for text. */
     color: var(--color-ink-400);
+  }
+
+  /* A HALF-WIDTH CARD ON A PHONE. Box and label share the top line (with
+     room kept for the arrow), and the description runs the full width of
+     the card underneath, which at half a phone is the difference between
+     four lines and eight. Cards in a row match heights, so the grid reads
+     as a grid. */
+  @media (width < 40rem) {
+    .brief-option {
+      display: flex;
+    }
+    .brief-choice {
+      align-content: start;
+      column-gap: 0.55rem;
+      row-gap: 0;
+      padding: 0.75rem 0.7rem 0.8rem;
+    }
+    .brief-choice-text {
+      display: contents;
+    }
+    .brief-choice-label {
+      align-self: center;
+      padding-right: 1.6rem;
+      font-size: 0.875rem;
+      line-height: 1.25;
+    }
+    .brief-choice-body {
+      grid-column: 1 / -1;
+      margin-top: 0.45rem;
+      font-size: 0.8125rem;
+      line-height: 1.42;
+    }
+    .brief-box {
+      margin-top: 0;
+      align-self: center;
+    }
+    .brief-option .brief-jump {
+      top: 0.45rem;
+      right: 0.3rem;
+    }
+  }
+  /* At 320px a half card leaves about 60px for the label, and "documents"
+     is wider than that at full size. */
+  @media (width < 22.5rem) {
+    .brief-choice {
+      column-gap: 0.45rem;
+      padding-inline: 0.6rem;
+    }
+    .brief-choice-label {
+      padding-right: 1.5rem;
+      font-size: 0.8125rem;
+    }
+    .brief-option .brief-jump {
+      right: 0.1rem;
+    }
   }
 
   /* The link the block has always carried, with no text of its own. */
