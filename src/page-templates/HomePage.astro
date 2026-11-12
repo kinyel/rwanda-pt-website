@@ -133,9 +133,9 @@ const whyKeys = ['regulator', 'support', 'hardware'] as const;
     <div class="container-wide">
       <ul class="flex flex-wrap items-center gap-x-6 gap-y-2 py-4 text-[0.8125rem] font-semibold text-ink-500">
         {
-          t.home.hero.descriptors.map((item, i) => (
+          t.home.hero.descriptors.map((item) => (
             <li class="flex items-center gap-6">
-              {i > 0 && <span class="h-1 w-1 rounded-full bg-prime-500" aria-hidden="true" />}
+              <span class="h-1 w-1 rounded-full bg-prime-500" aria-hidden="true" />
               {item}
             </li>
           ))

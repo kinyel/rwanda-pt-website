@@ -1849,8 +1849,8 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
     .hero-journey[data-journey-live] .journey-report-stage {
       display: grid;
       grid-template-rows: minmax(calc(var(--band) - 2.25rem), auto) minmax(0, 1fr);
-      /* The bottom padding keeps the unit clear of the floating bar the
-         site pins to the foot of a phone's screen. */
+      /* The bottom padding keeps clear of the foot of a phone's screen,
+         where its browser's toolbar and home indicator sit. */
       padding: 1.25rem 0 3.25rem;
       text-shadow: 0 1px 14px rgb(8 9 11 / 0.95);
     }
@@ -1961,8 +1961,8 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
     }
 
     /* THE UNIT ON A PHONE stands in the space under the route's band, the
-       full width of the screen, clear of the floating bar the site pins to
-       the foot of a phone's screen. It hangs off the bottom of the band,
+       full width of the screen, clear of the foot of the screen where a
+       phone browser's toolbar sits. It hangs off the bottom of the band,
        which is pinned, so it is pinned with it. */
     .hero-journey[data-journey-live] .journey-unit {
       display: block;

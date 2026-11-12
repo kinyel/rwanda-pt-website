@@ -200,14 +200,27 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
        radius so the neighbouring cards stay on screen, a shorter rise so the
        staircase fits a 500px stage, and a cheaper scroll cost so the section
        does not eat three screens of a phone's page. */
-    --radius: 9rem;
-    --step-rise: 5.25rem;
-    --card-w: 12.5rem;
+    /* Smaller again, on review: at 12.5rem a card plus its perspective was
+       two-thirds of a phone's width, and the neighbours either side were
+       pressed up against it and half off the screen.
+
+       AND THE RATIO MATTERS MORE THAN THE SIZE. A neighbour sits 60deg
+       round the helix, and its inner edge only stays BEHIND the card being
+       read while the card is narrower than about 1.15 x the radius; any
+       wider and that edge physically stands in front of the front card and
+       is drawn over its words. 9.5rem on an 8.75rem radius keeps it behind,
+       with the front card's scale-up allowed for, and the whole staircase
+       inside a 360px screen. */
+    --radius: 8.75rem;
+    --step-rise: 4rem;
+    --card-w: 9.5rem;
     /* Scroll cost per card. Six cards means the section costs
        100svh + 5 x this, so it is the main lever on how much of the page the
        helix consumes. */
     --scroll-per-item: 30vh;
-    --perspective: 720px;
+    /* Flatter than before, so the card being read is not magnified to
+       two-thirds of the screen by its own nearness. */
+    --perspective: 900px;
     --camera: 50% 42%;
 
     /* The single value the script writes. It lives on the section rather than
@@ -248,6 +261,14 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
         #0e0b09 450px,
         #120d0a 100%
       );
+  }
+
+  /* A short phone: the stage is barely taller than a card, so the steps
+     rise less and the next card up stays clear of the counter above it. */
+  @media (width < 48rem) and (height < 40rem) {
+    .spiral {
+      --step-rise: 2.75rem;
+    }
   }
 
   @media (width >= 48rem) {
@@ -625,6 +646,34 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
     font-weight: 700;
     color: var(--color-prime-300);
   }
+  /* ON A PHONE, ONLY THE CARD BEING READ AND ITS TWO NEIGHBOURS. Six cards
+     go once round the circle, so the card five steps up the staircase is
+     only 60deg round from the one in front — it counts as facing the reader
+     — while standing five steps higher, which put it just under the
+     counter, poking out below the heading. Here a card also fades with its
+     distance ALONG the staircase (`--near`): full within a step and a bit
+     of the card being read, gone by two steps, smoothly in between, so the
+     neighbours stay in view through a turn and nothing further away ever
+     shows. Wider screens show the whole staircase beside its index. */
+  @media (width < 64rem) {
+    .spiral[data-on] .spiral-item {
+      --step-d: max(calc(var(--i) - var(--k)), calc(var(--k) - var(--i)));
+      --near: clamp(0, (1.9 - var(--step-d)) / 0.6, 1);
+    }
+    .spiral[data-on] .spiral-item .spiral-card {
+      opacity: calc(min(1, 0.32 + 1.1 * var(--facing)) * var(--near));
+    }
+  }
+
+  /* On a phone's narrower card the link stays on one line: a step smaller,
+     and never broken. */
+  @media (width < 64rem) {
+    .spiral[data-on] .spiral-card-cta {
+      gap: 0.3rem;
+      font-size: 0.78rem;
+      white-space: nowrap;
+    }
+  }
 
   .spiral-item:hover .spiral-card {
     border-color: var(--color-prime-400);
@@ -652,8 +701,12 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
      wide enough viewport with motion allowed. */
   .spiral[data-on] .spiral-track {
     padding-block: 0;
-    /* One viewport to pin against, plus travel for each additional card. */
-    min-height: calc(100svh + (var(--count) - 1) * var(--scroll-per-item));
+    /* One viewport to pin against, plus travel for each additional card,
+       plus the lead-in (`--lead`, written by the script): the stretch at the
+       start, while the section fades in over the hero and then holds, in
+       which the first card stands square to the reader before anything
+       turns. */
+    min-height: calc(100svh + var(--lead, 0px) + (var(--count) - 1) * var(--scroll-per-item));
   }
 
   .spiral[data-on] .spiral-viewport {
@@ -696,12 +749,15 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
     background: linear-gradient(to bottom, transparent 0, transparent 100svh, #050608 100svh);
   }
 
-  /* ITS ENTRANCE: THE STAIRCASE WINDS UP. While it fades in over the end of
-     the hero, the helix turns into place round its own axis and the cards
-     swing out from the axis to their full radius, so it arrives as a
-     mechanism coming to rest rather than a picture fading up. One eased
-     number, from the same hand-over the fade reads. Only here, where the
-     hand-over exists; anywhere else `--wind` is absent and reads as 1. */
+  /* ITS ENTRANCE: THE STAIRCASE FANS OUT FROM ITS FIRST CARD. While it
+     fades in over the end of the hero, the first card stands where it will
+     be read, square on, from the very first frame; the other five start
+     folded in behind it, close to the axis, and swing out round the helix
+     to their places. It used to spin the whole staircase into place, which
+     meant the first card was turned away for the whole of its own
+     entrance. One eased number, from the same hand-over the fade reads.
+     Only here, where the hand-over exists; anywhere else `--wind` is absent
+     and reads as 1. */
   :global(.hero-journey[data-journey-live]) ~ .spiral[data-on] {
     --wind: calc(var(--enter, 0) * var(--enter, 0) * (3 - 2 * var(--enter, 0)));
   }
@@ -858,8 +914,8 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
     position: absolute;
     inset: 0;
     transform-style: preserve-3d;
-    transform: translateY(calc(var(--k) * var(--step-rise) + (1 - var(--wind, 1)) * 70px))
-               rotateY(calc(var(--k) * var(--step-angle) * -1 + (1 - var(--wind, 1)) * -150deg));
+    transform: translateY(calc(var(--k) * var(--step-rise)))
+               rotateY(calc(var(--k) * var(--step-angle) * -1));
   }
 
   .spiral[data-on] .spiral-item {
@@ -868,8 +924,11 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
     left: 50%;
     width: var(--card-w);
     transform-origin: 0 0;
-    transform: rotateY(calc(var(--i) * var(--step-angle)))
-               translateZ(calc(var(--radius) * (0.3 + 0.7 * var(--wind, 1))))
+    /* `--fold` is 0 for the first card and 1 for the rest: the first never
+       moves on the entrance, the rest fan out from behind it. */
+    --fold: calc(min(var(--i), 1) * (1 - var(--wind, 1)));
+    transform: rotateY(calc(var(--i) * var(--step-angle) * (1 - 0.8 * var(--fold))))
+               translateZ(calc(var(--radius) * (1 - 0.6 * var(--fold))))
                translateY(calc(var(--i) * var(--step-rise) * -1))
                translate(-50%, -50%);
     backface-visibility: hidden;
@@ -900,7 +959,7 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
   .spiral[data-on] .spiral-card {
     height: auto;
     gap: 0.5rem;
-    padding: 1.15rem;
+    padding: 0.95rem;
     /* Fade cards as they turn away from the camera. cos() of the angle between
        this card and the one being looked at, squared so the falloff is gentle
        near the front and quick around the back.
@@ -1120,6 +1179,16 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
     let frame = 0;
     let enabled = false;
     let current = -1;
+    let leadPx = -1;
+    const holdQuery = window.matchMedia('(width < 64rem)');
+    /* The homepage hero this section fades in over, if there is one (see
+       `.spiral[data-on]` after `.hero-journey[data-journey-live]`). Its
+       state is read on every update rather than once, because which of the
+       two scripts runs first is not guaranteed. */
+    let hero: Element | null = null;
+    for (let prev = root.previousElementSibling; prev; prev = prev.previousElementSibling) {
+      if (prev.matches('.hero-journey')) hero = prev;
+    }
 
     const setCurrent = (index: number) => {
       if (index === current) return;
@@ -1141,7 +1210,19 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
       /* Nowhere near the viewport: nothing to draw, and no reason to write. */
       if (rect.bottom < -200 || rect.top > window.innerHeight * 2 + 200) return;
 
-      const p = Math.min(1, Math.max(0, -rect.top / travel));
+      /* THE LEAD-IN. Where the section fades in over the hero, the turn does
+         not start until the fade has finished and the first card has been
+         held square on for a moment: otherwise the staircase is already a
+         step round by the time it is fully visible, and the first card is
+         never seen. The track is made longer by the same distance (see
+         `--lead`), so every card keeps its full share of the scroll. */
+      const handover = !!hero && hero.hasAttribute('data-journey-live');
+      const lead = handover ? window.innerHeight * 0.55 : 0;
+      if (lead !== leadPx) {
+        leadPx = lead;
+        root.style.setProperty('--lead', `${Math.round(lead)}px`);
+      }
+      const p = Math.min(1, Math.max(0, (-rect.top - lead) / (travel - lead)));
       /* How far the section has risen into the screen, for its entrance: 0
          with its top at the foot of the viewport, 1 once it is two-thirds of
          the way up. The hero above fades to black over its last stretch, and
@@ -1160,7 +1241,22 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
          progress readout fills by it, and one number feeding both is what
          stops them drifting apart. */
       root.style.setProperty('--p', p.toFixed(4));
-      setCurrent(Math.round(p * (links.length - 1)));
+      /* ON A PHONE EACH CARD HOLDS. The camera's position along the
+         staircase, `--k`, normally turns continuously with the scroll, so a
+         card is square on for a single instant on its way past. A phone has
+         no index list beside the staircase to read instead, so there each
+         card is held square on for the middle part of its own stretch of
+         scroll and the turn to the next happens in between, eased at both
+         ends. Wider screens keep the continuous turn. */
+      const steps = links.length - 1;
+      let k = p * steps;
+      if (holdQuery.matches && steps > 0) {
+        const base = Math.min(Math.floor(k), steps - 1);
+        const t = Math.min(1, Math.max(0, (k - base - 0.28) / 0.44));
+        k = base + t * t * (3 - 2 * t);
+      }
+      root.style.setProperty('--k', k.toFixed(4));
+      setCurrent(Math.round(k));
     };
 
     const onScroll = () => {
@@ -1181,6 +1277,9 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
         window.removeEventListener('scroll', onScroll);
         window.removeEventListener('resize', onScroll);
         root.style.removeProperty('--p');
+        root.style.removeProperty('--k');
+        root.style.removeProperty('--lead');
+        leadPx = -1;
         root.style.removeProperty('--enter');
         root.removeAttribute('data-entered');
         for (const link of links) link.removeAttribute('data-current');
