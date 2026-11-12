@@ -13,9 +13,12 @@ interface Props {
   id?: string;
   as?: 'section' | 'div' | 'aside';
   class?: string;
+  /** Which top-level nav item this section belongs to, so the header can
+   *  light it while the section is being read. See Header.astro. */
+  navSection?: string;
 }
 
-const { tone = 'light', space = 'md', wide = false, id, as: Tag = 'section', class: className = '' } = Astro.props as Props;
+const { tone = 'light', space = 'md', wide = false, id, as: Tag = 'section', class: className = '', navSection } = Astro.props as Props;
 
 const tones = {
   light: 'bg-white text-ink-800',
@@ -41,7 +44,7 @@ const spaces = {
 };
 ---
 
-<Tag id={id} data-nav={navTones[tone]} class={`relative ${tones[tone]} ${spaces[space]} ${className}`}>
+<Tag id={id} data-nav={navTones[tone]} data-nav-section={navSection} class={`relative ${tones[tone]} ${spaces[space]} ${className}`}>
   <div class={wide ? 'container-wide' : 'container-prime'}>
     <slot />
   </div>

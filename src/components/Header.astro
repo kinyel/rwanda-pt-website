@@ -13,9 +13,21 @@
  *   - The CTA is the only filled element in the bar, so the eye lands on it and
  *     everything else recedes.
  *
- * On mobile the language switcher stays in the collapsed bar, outside the
- * drawer, exactly as required. The region switcher and phone number move into
- * the utility row above it to keep the main bar uncluttered.
+ * ONE BAR. There used to be a utility strip above the bar for the phone number
+ * and the region. Both now live in the bar itself, as one bordered group
+ * between the menu and the call to action — "where we are and how to reach
+ * us" — so the header is a single row on every page. On a laptop the number
+ * collapses to its icon (it stays in the page as the link's text, so screen
+ * readers and search still read it) and the full number shows from 1280px. On
+ * a phone the call button stays in the bar, one tap from anywhere, and the
+ * region sits in the drawer beside the number.
+ *
+ * SMART. It hides as you scroll down the page and comes back the moment you
+ * scroll up; it never hides while a menu is open, while focus is inside it,
+ * or near the top of the page. Over a hero that asks for it, it is clear at
+ * rest and takes its solid ground once you scroll. And it lights the menu item
+ * for whatever part of the page you are reading, from `data-nav-section` on
+ * the sections themselves.
  *
  * CONTRAST AWARENESS. The bar reads light-on-dark over the dark hero and
  * dark-on-light over the pale sections below it. It works out which by
@@ -84,6 +96,7 @@ const regions = countries.map((country) => ({
 
 const entries: NavEntry[] = primaryNav.map((group) => ({
   label: resolveKey(t, group.titleKey),
+  navKey: group.titleKey.split('.').pop(),
   href: group.href ? localizePath(group.href, locale) : undefined,
   active: group.href ? group.href === path : group.items?.some((i) => i.href === path),
   intro: group.introKey ? resolveKey(t, group.introKey) : undefined,
@@ -103,21 +116,6 @@ const entries: NavEntry[] = primaryNav.map((group) => ({
   <!-- Background, blur and hairline, on their own layer. See global.css for
        why this is not on the header element itself. -->
   <div class="site-header-surface" aria-hidden="true"></div>
-
-  <!-- Utility row: region, phone. Secondary information, so it reads quieter. -->
-  <div class="site-header-utility hidden sm:block">
-    <div class="container-prime flex h-10 items-center justify-end gap-4">
-      <a
-        href={`tel:${company.phone.e164}`}
-        class="text-[0.8125rem] font-medium text-[color:var(--nav-fg-muted)] transition-colors
-               duration-[--duration-theme] ease-[--ease-prime] hover:text-[color:var(--nav-fg-strong)]"
-      >
-        {company.phone.display}
-      </a>
-      <span class="h-3.5 w-px bg-[color:var(--nav-rule)]" aria-hidden="true"></span>
-      <CountrySwitcher locale={locale} tone="auto" />
-    </div>
-  </div>
 
   <!-- Main bar. Fixed height in both themes: nothing here may resize. -->
   <div class="container-prime flex h-[var(--header-bar-h)] items-center justify-between gap-3">
@@ -150,6 +148,23 @@ const entries: NavEntry[] = primaryNav.map((group) => ({
         regionCurrentLabel={t.common.country.current}
       />
 
+      <!-- Where we are and how to reach us: region and phone, as one group.
+           The number is the link's own text at every width — only its
+           visibility changes — so the phone number is in the page exactly as
+           it always was. -->
+      <div class="site-header-reach">
+        <span class="site-header-region">
+          <CountrySwitcher locale={locale} tone="auto" />
+        </span>
+        <a href={`tel:${company.phone.e164}`} class="site-header-phone">
+          <svg class="site-header-phone-icon" viewBox="0 0 24 24" width="17" height="17" fill="none"
+               stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" />
+          </svg>
+          <span class="site-header-phone-number">{company.phone.display}</span>
+        </a>
+      </div>
+
       <!-- Always visible, every breakpoint, never inside the drawer. -->
       <LanguageSwitcher locale={locale} path={path} fallbackPath={switcherFallback} tone="auto" />
 
@@ -173,7 +188,78 @@ const entries: NavEntry[] = primaryNav.map((group) => ({
       </a>
     </div>
   </div>
+
 </header>
+
+<!-- READING PROGRESS, along the top edge of the screen, above the bar. It is a
+   sibling of the header rather than part of it, so it stays put when the bar
+   slides away and the car at its leading edge keeps driving while you read.
+   The car turns round when you scroll back, and brakes when you stop.
+   Decorative: the scrollbar already says all of this. -->
+<div class="site-progress" aria-hidden="true">
+  <span class="site-progress-road"></span>
+  <span class="site-progress-fill"></span>
+  <span class="site-progress-car">
+    <svg viewBox="-30 -20 60 34" width="44" height="25" focusable="false">
+      <defs>
+        <linearGradient id="sp-beam" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#ffe9c8" stop-opacity="0.55" />
+          <stop offset="1" stop-color="#ffe9c8" stop-opacity="0" />
+        </linearGradient>
+        <filter id="sp-soft" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="1.6" />
+        </filter>
+      </defs>
+      <g class="sp-turn">
+        <!-- On the road: shadow and headlight beam. -->
+        <ellipse class="sp-shadow" cx="1.5" cy="3" rx="19" ry="5.5" filter="url(#sp-soft)" />
+        <path class="sp-beam" d="M18 -3 L46 -9 L46 9 L18 3 Z" fill="url(#sp-beam)" />
+        <!-- The body, as planes stacked up the screen. -->
+        <g class="sp-l sp-chassis" style="--k:0">
+          <rect x="-14" y="-9.6" width="6" height="2.4" rx="1" />
+          <rect x="8" y="-9.6" width="6" height="2.4" rx="1" />
+          <rect x="-14" y="7.2" width="6" height="2.4" rx="1" />
+          <rect x="8" y="7.2" width="6" height="2.4" rx="1" />
+          <path d="M-19 -8 C-21 -8 -21 8 -19 8 L16 8.6 C21 8.6 21.5 -8.6 16 -8.6 Z" />
+        </g>
+        <g class="sp-l sp-side" style="--k:2.4">
+          <path d="M-19 -8 C-21 -8 -21 8 -19 8 L16 8.6 C21 8.6 21.5 -8.6 16 -8.6 Z" />
+        </g>
+        <g class="sp-l sp-body" style="--k:4.8">
+          <path d="M-19 -8 C-21 -8 -21 8 -19 8 L16 8.6 C21 8.6 21.5 -8.6 16 -8.6 Z" />
+          <circle class="sp-head" cx="19.4" cy="-4.6" r="1.6" />
+          <circle class="sp-head" cx="19.4" cy="4.6" r="1.6" />
+          <rect class="sp-brake" x="-20.6" y="-7" width="1.8" height="4.4" rx="0.7" />
+          <rect class="sp-brake" x="-20.6" y="2.6" width="1.8" height="4.4" rx="0.7" />
+        </g>
+        <g class="sp-l sp-glass" style="--k:7">
+          <path d="M-11.6 -7 L9.6 -7.4 C11.2 -3 11.2 3 9.6 7.4 L-11.6 7 C-13.6 2.6 -13.6 -2.6 -11.6 -7 Z" />
+        </g>
+        <g class="sp-l sp-roof" style="--k:8.8">
+          <path d="M-6.2 -5.6 L6.6 -5.8 L6.6 5.8 L-6.2 5.6 Z" />
+        </g>
+      </g>
+    </svg>
+  </span>
+</div>
+
+<!-- Where the bar went. Once the bar has slid away on the way down, this tab
+     drops from the top edge to say it is one scroll up — and it is a button
+     too, so a tap brings the bar straight back. Its label is the site's own
+     "Menu" string, drawn by the stylesheet from `data-label`, so it adds no
+     words to the page. -->
+<button
+  type="button"
+  class="site-nav-hint"
+  data-nav-hint
+  aria-label={t.common.nav.menu}
+  data-label={t.common.nav.menu}
+>
+  <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"
+       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M3.5 10 8 5.5 12.5 10" />
+  </svg>
+</button>
 
 <script>
   /**
@@ -256,6 +342,78 @@ const entries: NavEntry[] = primaryNav.map((group) => ({
         },
         { threshold: 0 },
       ).observe(sentinel);
+    }
+
+    /* ---- Smart: away on the way down, back on the way up --------------
+       A bar that follows you down a long page is a strip of screen you never
+       get back; a bar that is gone when you reach for it is worse. So it
+       leaves as you read on and returns the moment you scroll back up, which
+       is what a reader who wants the menu does without thinking. It never
+       leaves near the top, while a menu or the drawer is open, or while focus
+       is inside it — a keyboard user tabbing into a hidden bar would be lost.
+       Translate only, so it can never shift the page. */
+    const settle = () => header.offsetHeight * 2;
+    let lastY = window.scrollY;
+    let dirFrame = 0;
+    const onDirection = () => {
+      dirFrame = 0;
+      const y = window.scrollY;
+      const dy = y - lastY;
+      if (Math.abs(dy) < 6) return;
+      const busy = header.hasAttribute('data-solid') || header.matches(':focus-within');
+      if (dy > 0 && y > settle() && !busy) header.setAttribute('data-hidden', '');
+      else header.removeAttribute('data-hidden');
+      lastY = y;
+    };
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (!dirFrame) dirFrame = requestAnimationFrame(onDirection);
+      },
+      { passive: true },
+    );
+    header.addEventListener('focusin', () => header.removeAttribute('data-hidden'));
+
+    /* The tab that stands in for the bar while it is away: a tap brings it
+       back. The direction tracker is re-zeroed so the very next scroll pixel
+       does not send it straight away again. */
+    document.querySelector<HTMLButtonElement>('[data-nav-hint]')?.addEventListener('click', () => {
+      header.removeAttribute('data-hidden');
+      lastY = window.scrollY;
+    });
+
+    /* ---- Clear over a hero that asks for it, solid once past it ------- */
+    const first = sections[0];
+    if (first?.hasAttribute('data-nav-overlay')) header.setAttribute('data-overlay', '');
+    if (first) {
+      new IntersectionObserver(
+        ([entry]) => header.toggleAttribute('data-past', !entry.isIntersecting),
+        { rootMargin: `-${header.offsetHeight}px 0px 0px 0px`, threshold: 0 },
+      ).observe(first);
+    }
+
+    /* ---- The part of the page being read lights its menu item ---------
+       Sections say which item they belong to with `data-nav-section`. A thin
+       band across the middle of the screen decides which one is being read;
+       the header carries the answer as `data-section`, and the stylesheet
+       lights the matching `data-nav-key`. The menu island is never touched. */
+    const parts = Array.from(document.querySelectorAll<HTMLElement>('[data-nav-section]'));
+    if (parts.length) {
+      const inBand = new Set<HTMLElement>();
+      const reading = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            const el = entry.target as HTMLElement;
+            if (entry.isIntersecting) inBand.add(el);
+            else inBand.delete(el);
+          }
+          const current = inBand.values().next().value;
+          if (current?.dataset.navSection) header.dataset.section = current.dataset.navSection;
+          else delete header.dataset.section;
+        },
+        { rootMargin: '-46% 0px -50% 0px', threshold: 0 },
+      );
+      for (const part of parts) reading.observe(part);
     }
 
     observeSections();

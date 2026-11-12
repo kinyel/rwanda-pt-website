@@ -105,10 +105,10 @@ export default function ContactForm({ formId, labels, email, whatsappUrl, whatsa
 
   if (!formId) {
     return (
-      <div className="rounded-[--radius-panel] border border-prime-200 bg-prime-50 p-6 sm:p-8">
+      <div className="card card-accent p-6 sm:p-8">
         <p className="text-label uppercase text-prime-700">{labels.unconfiguredTitle}</p>
         <p className="mt-3 measure text-ink-700">{labels.unconfiguredBody}</p>
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
+        <div className="mt-6 flex flex-wrap gap-3">
           <a href={`mailto:${email}`} className="btn btn-md btn-primary">{email}</a>
           <a href={whatsappUrl} rel="noopener noreferrer" target="_blank" className="btn btn-md btn-secondary">
             {whatsappLabel}
@@ -145,7 +145,7 @@ export default function ContactForm({ formId, labels, email, whatsappUrl, whatsa
 
   if (state.succeeded) {
     return (
-      <div role="status" className="rounded-[--radius-panel] border border-ink-100 bg-white p-7 shadow-[--shadow-card] sm:p-9">
+      <div role="status" className="card p-7 sm:p-9">
         <svg className="sent-tick" width="52" height="52" viewBox="0 0 60 60" fill="none" aria-hidden="true">
           <circle cx="30" cy="30" r="27" stroke="var(--color-prime-500)" strokeWidth="2.5" strokeLinecap="round" transform="rotate(-90 30 30)" />
           <path d="M19 30.5 26.5 38 41 23" stroke="var(--color-prime-500)" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
@@ -169,7 +169,7 @@ export default function ContactForm({ formId, labels, email, whatsappUrl, whatsa
           ))}
         </ol>
 
-        <div className="mt-8 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
+        <div className="mt-8 flex flex-wrap gap-3">
           <a href={whatsappUrl} rel="noopener noreferrer" target="_blank" className="btn btn-md btn-primary">
             {whatsappLabel}
           </a>

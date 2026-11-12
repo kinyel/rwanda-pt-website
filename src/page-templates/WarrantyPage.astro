@@ -47,8 +47,8 @@ const url = new URL(localizePath(routes.warranty, locale), site).href;
   <Section tone="light">
     <p class="measure-wide text-lead text-ink-700">{w.intro}</p>
 
-    <div class="mt-12 grid gap-px overflow-hidden rounded-[--radius-panel] border border-ink-100 bg-ink-100 lg:grid-cols-2">
-      <div class="bg-white p-7 sm:p-9">
+    <div class="mt-12 tile-grid lg:grid-cols-2">
+      <div class="card p-7 sm:p-9">
         <h2 class="flex items-center gap-2.5 text-h3">
           <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-prime-50 text-prime-700" aria-hidden="true">
             <svg class="h-4 w-4" viewBox="0 0 16 16" fill="none">
@@ -62,7 +62,7 @@ const url = new URL(localizePath(routes.warranty, locale), site).href;
         </ul>
       </div>
 
-      <div class="bg-ink-50 p-7 sm:p-9">
+      <div class="card card-muted p-7 sm:p-9">
         <h2 class="flex items-center gap-2.5 text-h3">
           <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-ink-200 text-ink-600" aria-hidden="true">
             <svg class="h-4 w-4" viewBox="0 0 16 16" fill="none">

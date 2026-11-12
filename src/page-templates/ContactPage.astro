@@ -74,7 +74,7 @@ const c = t.companyPages.contact;
 
       <!-- Direct routes + office -->
       <div class="flex flex-col gap-8">
-        <div class="rounded-[--radius-panel] border border-ink-100 bg-ink-50 p-6 sm:p-8">
+        <div class="card card-muted p-6 sm:p-8">
           <h2 class="text-label uppercase text-ink-400">{c.directTitle}</h2>
           <ul class="mt-5 flex flex-col divide-y divide-ink-200">
             <li class="py-3.5 first:pt-0">
@@ -121,12 +121,12 @@ const c = t.companyPages.contact;
           <!-- <Picture
             imageKey="companyOffice"
             locale={locale}
-            wrapperClass="mt-6 rounded-[--radius-panel] border border-ink-100"
+            wrapperClass="mt-6 media-frame"
             sizes="(min-width: 1024px) 40vw, 100vw"
           /> -->
         </div>
 
-        <div class="rounded-[--radius-panel] border border-ink-100 p-6">
+        <div class="card p-6">
           <h2 class="text-h4">{c.nigeriaTitle}</h2>
           <p class="mt-2 text-[0.9375rem] text-ink-600">{c.nigeriaBody}</p>
           <a

@@ -145,7 +145,7 @@ const whyKeys = ['regulator', 'support', 'hardware'] as const;
   </div>
 
   <!-- 4 · Industries. The eight verticals. -->
-  <Section tone="tint">
+  <Section navSection="industries" tone="tint" space="sm">
     <div class="flex flex-wrap items-end justify-between gap-6">
       <SectionHeader
         eyebrow={t.industries.index.eyebrow}
@@ -156,7 +156,7 @@ const whyKeys = ['regulator', 'support', 'hardware'] as const;
         {t.industries.index.cta}
       </Button>
     </div>
-    <div class="mt-14">
+    <div class="mt-8 lg:mt-10">
       <IndustryIndex locale={locale} />
     </div>
   </Section>
@@ -168,7 +168,7 @@ const whyKeys = ['regulator', 'support', 'hardware'] as const;
        of the labels and bodies — but they are tickable now, and what you tick
        assembles into a stack beside them and then into an email. The question
        at the top of the block stopped being rhetorical. -->
-  <Section tone="ink" space="lg" class="brief-band">
+  <Section navSection="solutions" tone="ink" space="lg" class="brief-band">
     <div class="reveal">
       <FleetBrief
         client:visible
@@ -205,7 +205,7 @@ const whyKeys = ['regulator', 'support', 'hardware'] as const;
   </Section>
 
   <!-- 7 · Video telematics, the flagship -->
-  <Section tone="ink" wide space="lg" class="bg-contour-prime">
+  <Section navSection="products" tone="ink" wide space="lg" class="bg-contour-prime">
     <div class="grid items-center gap-12 lg:grid-cols-2">
       <div>
         <p class="eyebrow mb-4">{t.home.videoFeature.eyebrow}</p>
@@ -226,7 +226,7 @@ const whyKeys = ['regulator', 'support', 'hardware'] as const;
           }
         </ul>
 
-        <div class="mt-9 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
+        <div class="mt-9 flex flex-wrap gap-3">
           <Button href={localizePath(routes.contact, locale)} variant="primary">{t.home.videoFeature.primaryCta}</Button>
           <Button href={localizePath(routes.videoTracking, locale)} variant="onDark">{t.home.videoFeature.secondaryCta}</Button>
         </div>
@@ -235,26 +235,26 @@ const whyKeys = ['regulator', 'support', 'hardware'] as const;
       <Picture
         imageKey="homeVideoTelematics"
         locale={locale}
-        wrapperClass="rounded-[--radius-panel] border border-white/10 reveal-right"
+        wrapperClass="media-frame media-frame-dark reveal-right"
         sizes="(min-width: 1024px) 46vw, 100vw"
       />
     </div>
   </Section>
 
   <!-- 8 · Fuel monitoring -->
-  <Section tone="light" space="lg">
+  <Section navSection="products" tone="light" space="lg">
     <div class="grid items-center gap-12 lg:grid-cols-2">
       <Picture
         imageKey="homeFuelMonitoring"
         locale={locale}
-        wrapperClass="rounded-[--radius-panel] border border-ink-100 reveal-left lg:order-1"
+        wrapperClass="media-frame reveal-left lg:order-1"
         sizes="(min-width: 1024px) 46vw, 100vw"
       />
       <div>
         <p class="eyebrow mb-4">{t.home.fuelFeature.eyebrow}</p>
         <h2 class="text-h2">{t.home.fuelFeature.title}</h2>
         <p class="mt-5 measure text-lead text-ink-600">{t.home.fuelFeature.body}</p>
-        <div class="mt-9 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
+        <div class="mt-9 flex flex-wrap gap-3">
           <Button href={localizePath(routes.contact, locale)} variant="primary">{t.home.fuelFeature.primaryCta}</Button>
           <Button href={localizePath(routes.fuelmanagement, locale)} variant="secondary">{t.home.fuelFeature.secondaryCta}</Button>
         </div>
@@ -263,7 +263,7 @@ const whyKeys = ['regulator', 'support', 'hardware'] as const;
   </Section>
 
   <!-- 9 · Services -->
-  <Section tone="tint">
+  <Section navSection="services" tone="tint">
     <SectionHeader eyebrow={t.home.services.eyebrow} title={t.home.services.title} lead={t.home.services.lead} />
     <div class="mt-12 grid gap-10 md:grid-cols-3">
       {
@@ -284,7 +284,7 @@ const whyKeys = ['regulator', 'support', 'hardware'] as const;
   </Section>
 
   <!-- 10 · Platform capabilities -->
-  <Section tone="dark">
+  <Section navSection="services" tone="dark">
     <div class="grid gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
       <div>
         <p class="eyebrow mb-4">{t.home.capabilities.eyebrow}</p>
@@ -293,16 +293,16 @@ const whyKeys = ['regulator', 'support', 'hardware'] as const;
           <!-- <Picture
             imageKey="homeMobileApps"
             locale={locale}
-            wrapperClass="rounded-[--radius-panel] border border-white/10 bg-white"
+            wrapperClass="media-frame media-frame-dark bg-white"
             sizes="(min-width: 1024px) 34vw, 100vw"
           /> -->
         </div>
       </div>
 
-      <ul class="grid gap-px overflow-hidden rounded-[--radius-panel] border border-white/10 bg-white/10 sm:grid-cols-2">
+      <ul class="tile-grid sm:grid-cols-2">
         {
           capabilityKeys.map((key, i) => (
-            <li class="reveal-scale bg-ink-900 p-6 sm:p-7" style={`--n:${i}`}>
+            <li class="reveal-scale card card-dark p-6 sm:p-7" style={`--n:${i}`}>
               <h3 class="text-h4 text-white">{t.home.capabilities.items[key].title}</h3>
               <p class="mt-2.5 text-[0.9375rem] leading-relaxed text-ink-400">{t.home.capabilities.items[key].body}</p>
             </li>
@@ -333,7 +333,7 @@ const whyKeys = ['regulator', 'support', 'hardware'] as const;
       }
     </ul>
 
-    <div class="mt-16 overflow-hidden rounded-[--radius-panel] bg-ink-950">
+    <div class="mt-16 card card-dark overflow-hidden">
       <StatBand locale={locale} tone="dark" />
     </div>
   </Section>

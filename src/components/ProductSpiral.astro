@@ -94,7 +94,7 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
 });
 ---
 
-<section class="spiral on-dark" data-nav="dark" data-spiral style={`--count:${count}`}>
+<section class="spiral on-dark" data-nav="dark" data-nav-section="products" data-spiral style={`--count:${count}`}>
   <div class="spiral-track" data-spiral-track>
     <div class="spiral-viewport">
       <div class="container-prime spiral-layout">
@@ -240,7 +240,7 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
        moved down far enough that its upper falloff cannot reach the seam. */
     background-color: var(--color-ink-950);
     background-image:
-      radial-gradient(52% 42% at 62% 50%, rgb(243 93 1 / 0.17), transparent 70%),
+      radial-gradient(52% 42% at 62% 50%, rgb(243 93 1 / 0.05), transparent 70%),
       linear-gradient(
         to bottom,
         #08090b 0,
@@ -330,16 +330,17 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
       transparent
     );
   }
-  /* THE RULES DESCEND TOO.
+  /* THE RULES BUILD.
 
      A list of six evenly ruled rows beside a staircase is two different
-     rhythms in one column. Each rule is shorter than the one above it, so
-     the index steps down to the right exactly as the helix steps down past
-     the camera, and the whole left column reads as part of the same
-     mechanism rather than as a menu that happens to be next to it.
+     rhythms in one column. The rules step instead: the first is the
+     shortest and each one below it is longer, the last running the full
+     width of the list, so the index builds as you read down it rather than
+     tailing away.
 
-     Width comes from the row's own index, so adding a seventh product is
-     still one line of markup. */
+     Width comes from the row's own index and the section's `--count`, so
+     adding a seventh product is still one line of markup and the last rule
+     is still the full width. */
   .spiral-list > li {
     position: relative;
   }
@@ -349,7 +350,7 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
     top: 0;
     left: 0;
     height: 1px;
-    width: calc(100% - (var(--i) - 1) * 15%);
+    width: calc(100% - (var(--count) - 1 - var(--i)) * 15%);
     background-image: linear-gradient(
       to right,
       rgb(255 255 255 / 0.14),
@@ -523,8 +524,8 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
          same card with a brighter border. */
       linear-gradient(
         152deg,
-        rgb(255 138 46 / calc(var(--lit) * 0.3)) 0%,
-        rgb(243 93 1 / calc(var(--lit) * 0.1)) 34%,
+        rgb(255 138 46 / calc(var(--lit) * 0.12)) 0%,
+        rgb(243 93 1 / calc(var(--lit) * 0.04)) 34%,
         transparent 68%
       ),
       /* And the base, with the stops bunched toward the lit corner rather
@@ -532,17 +533,16 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
          fast near the light and then holds is a surface catching it. */
       linear-gradient(
         152deg,
-        #3b4552 0%,
-        #2a323d 22%,
-        #161d26 58%,
-        #0a0f15 100%
+        #1f252d 0%,
+        #151a21 22%,
+        #0b0f14 58%,
+        #050709 100%
       );
     box-shadow:
-      /* Contact, then cast, then spill. A white card on near-black needs a
-         real shadow or it looks pasted on rather than standing in the
-         room. */
-      0 1px 2px rgb(0 0 0 / 0.55),
-      0 30px 70px -26px rgb(0 0 0 / 0.95),
+      /* NO CAST SHADOW. On a room this dark a black shadow does not read as
+         a shadow, it reads as a dark patch standing behind the card, and with
+         the slab's edges beside it the two together looked like a second
+         shape. The card's depth is its edges and its bevel. */
       /* NO ORANGE SPILL. It was there to make a near-black card readable
          against a near-black room, and a grey card does that on its own.
          Kept, it put a halo round every object in the scene and the
@@ -678,6 +678,38 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
     overflow: clip;
   }
 
+  /* FADES IN WHERE IT STANDS. When it is live the section begins one screen
+     early, lying under the last screen of the hero, with a transparent ground
+     of its own: its pinned stage carries the ground instead, and the stage is
+     invisible until the hero has dissolved. So at the hero's last frame this
+     stage is already in place, and it simply fades up — the page changes
+     section without anything scrolling past. Opacity sits on the sticky frame,
+     which is only a frame: the helix's 3D lives further down, inside the
+     stage, so this cannot flatten it. Hidden outright before it starts, so
+     its links cannot be tabbed into while they cannot be seen. */
+  :global(.hero-journey[data-journey-live]) ~ .spiral[data-on] {
+    margin-top: -100svh;
+    /* See-through only for the first screen — the stretch lying under the
+       end of the hero — and the room's own black from there down. Fully
+       transparent, the page's white ground showed through the bottom of the
+       screen for as long as the stage was still fading up over it. */
+    background: linear-gradient(to bottom, transparent 0, transparent 100svh, #050608 100svh);
+  }
+
+  :global(.hero-journey[data-journey-live]) ~ .spiral[data-on] .spiral-viewport {
+    opacity: var(--enter, 0);
+    background-color: #050608;
+    background-image: radial-gradient(52% 42% at 62% 50%, rgb(243 93 1 / 0.05), transparent 70%);
+  }
+
+  :global(.hero-journey[data-journey-live]) ~ .spiral[data-on]:not([data-entered]) .spiral-viewport {
+    visibility: hidden;
+  }
+
+  :global(.hero-journey[data-journey-live]) ~ .spiral[data-on] .spiral-menu {
+    translate: 0 calc((1 - var(--enter, 0)) * 24px);
+  }
+
   .spiral[data-on] .spiral-stage {
     position: relative;
     flex: auto;
@@ -723,7 +755,7 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
     max-width: 90vw;
     max-height: 90vw;
     border-radius: 999px;
-    background-image: radial-gradient(circle, rgb(255 140 0 / 0.20), transparent 64%);
+    background-image: radial-gradient(circle, rgb(255 140 0 / 0.07), transparent 64%);
     filter: blur(10px);
   }
 
@@ -849,30 +881,11 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
      six. Depth on these comes from the bevel and the gradient below
      instead, which cost nothing and cannot be mistaken for another card.
 
-     A WHITE CARD IN A DARK ROOM THROWS LIGHT DOWN.
 
-     Not a shadow: a shadow is black on black here and does nothing. This
-     is the warm bounce off a sheet of paper onto the floor under it, laid
-     flat with `rotateX` so it belongs to the ground rather than hanging in
-     the card's plane, and tied to `--lit` so only the card actually in the
-     light casts one. It is the cue that stops six cards reading as
-     stickers on a backdrop. */
-  .spiral[data-on] .spiral-item::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    bottom: -1.1rem;
-    width: 108%;
-    height: 7rem;
-    translate: -50% 0;
-    transform: rotateX(82deg);
-    transform-origin: 50% 0;
-    border-radius: 999px;
-    background-image: radial-gradient(closest-side, rgb(255 150 70 / 0.3), transparent 70%);
-    filter: blur(10px);
-    opacity: var(--lit);
-    pointer-events: none;
-  }
+     NO SLAB. The cards had edge walls for a while, folded back from the
+     outline to give them thickness. Against this room they read as a grey
+     shadow standing behind every card, so they are gone: each card is one
+     lit panel turning in real 3D, with its bevel for an edge. */
 
   .spiral[data-on] .spiral-card {
     height: auto;
@@ -1116,9 +1129,23 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
       if (travel <= 0) return;
 
       /* Nowhere near the viewport: nothing to draw, and no reason to write. */
-      if (rect.bottom < -200 || rect.top > window.innerHeight + 200) return;
+      if (rect.bottom < -200 || rect.top > window.innerHeight * 2 + 200) return;
 
       const p = Math.min(1, Math.max(0, -rect.top / travel));
+      /* How far the section has risen into the screen, for its entrance: 0
+         with its top at the foot of the viewport, 1 once it is two-thirds of
+         the way up. The hero above fades to black over its last stretch, and
+         this picks up from the same black, so the two read as one dissolve
+         rather than a fade-out followed by a section scrolling in. */
+      /* The section starts one screen early, under the end of the hero (see
+         `.spiral[data-on]` in the styles), so its stage is already pinned in
+         place when the hero has finished dissolving. It fades in from that
+         moment — its top reaching the top of the screen — over the next
+         third of a screen, and not a pixel before, so the two never share
+         the screen. */
+      const enter = Math.min(1, Math.max(0, -rect.top / (window.innerHeight * 0.3)));
+      root.style.setProperty('--enter', enter.toFixed(3));
+      root.toggleAttribute('data-entered', enter > 0.01);
       /* Written on the section, not on the ring: the ring turns by it and the
          progress readout fills by it, and one number feeding both is what
          stops them drifting apart. */
@@ -1144,6 +1171,8 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
         window.removeEventListener('scroll', onScroll);
         window.removeEventListener('resize', onScroll);
         root.style.removeProperty('--p');
+        root.style.removeProperty('--enter');
+        root.removeAttribute('data-entered');
         for (const link of links) link.removeAttribute('data-current');
         current = -1;
       }

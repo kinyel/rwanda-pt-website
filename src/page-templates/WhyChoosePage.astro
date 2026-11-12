@@ -67,7 +67,7 @@ const numbered = ['regulator', 'support', 'hardware', 'ai', 'warranty', 'scale']
         <!-- <Picture
           imageKey="companyInstall"
           locale={locale}
-          wrapperClass="rounded-[--radius-panel] border border-ink-100"
+          wrapperClass="media-frame"
           sizes="(min-width: 1024px) 34vw, 100vw"
         /> -->
       </div>
@@ -84,10 +84,10 @@ const numbered = ['regulator', 'support', 'hardware', 'ai', 'warranty', 'scale']
       </div>
     </div>
 
-    <ul class="mt-12 grid gap-px overflow-hidden rounded-[--radius-panel] border border-white/10 bg-white/10 sm:grid-cols-2 lg:grid-cols-5">
+    <ul class="mt-12 tile-grid sm:grid-cols-2 lg:grid-cols-5">
       {
         primeValues.map((value) => (
-          <li class="bg-ink-950 p-6">
+          <li class="card card-dark p-6">
             <p class="text-stat leading-none text-prime-500">{t.home.values.items[value].letter}</p>
             <h3 class="mt-4 text-h4 text-white">{t.home.values.items[value].title}</h3>
             <p class="mt-2 text-[0.875rem] leading-relaxed text-ink-400">{t.home.values.items[value].body}</p>
@@ -98,7 +98,7 @@ const numbered = ['regulator', 'support', 'hardware', 'ai', 'warranty', 'scale']
   </Section>
 
   <Section tone="light" space="sm">
-    <div class="overflow-hidden rounded-[--radius-panel] bg-ink-950">
+    <div class="card card-dark overflow-hidden">
       <StatBand locale={locale} tone="dark" />
     </div>
   </Section>

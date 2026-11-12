@@ -101,6 +101,12 @@ const RAMP = [
 ];
 const OTHER_TONE = '#ffe3b0';
 
+/** The read-out's fade-out is 160ms in the CSS. The wait is longer because the
+ * fade only starts once React has committed the change, a frame or two after
+ * the clock here starts: the old text must be fully gone before the new one is
+ * swapped in. */
+const PEEK_OUT_MS = 240;
+
 export default function FleetBrief({
   items,
   labels,
@@ -115,6 +121,72 @@ export default function FleetBrief({
   const [touched, setTouched] = useState(false);
   const [state, submitToFormspree] = useForm(formId || 'disabled');
   const stageRef = useRef<HTMLDivElement>(null);
+
+  /* ------------------------------------------------------------------
+     THE READ-OUT BESIDE THE FORM.
+
+     Each card's description is small on purpose (the grid has to stay
+     scannable), which makes it hard work for some readers. Pointing at a
+     card, or tabbing to it, puts its description up beside the form at a
+     size that is comfortable to read, just above the tower.
+
+     It is a copy, so it is hidden from assistive tech (the card already
+     says it) and it is empty until someone points at something, so the
+     page's server-rendered text is exactly what it was.
+
+     ONE AT A TIME, ALWAYS. `want` is what the reader is on; `shown` is
+     what the panel holds; `lit` is whether it is faded in. Moving to a
+     different card fades the old text fully out before the new text is
+     swapped in and faded up, so two descriptions never share the space.
+  ------------------------------------------------------------------ */
+  const [hoverKey, setHoverKey] = useState<string | null>(null);
+  const [focusKey, setFocusKey] = useState<string | null>(null);
+  const [shown, setShown] = useState<string | null>(null);
+  const [lit, setLit] = useState(false);
+  const darkSince = useRef(0);
+  const leaveTimer = useRef(0);
+  const want = hoverKey ?? focusKey;
+
+  useEffect(() => {
+    if (want === null) {
+      if (lit) {
+        setLit(false);
+        darkSince.current = performance.now();
+      }
+      return;
+    }
+    if (want === shown) {
+      if (lit) return;
+      /* A frame first, so the new text is committed at zero before the
+         fade starts and the transition has something to run from. */
+      const frame = requestAnimationFrame(() => setLit(true));
+      return () => cancelAnimationFrame(frame);
+    }
+    if (lit) {
+      setLit(false);
+      darkSince.current = performance.now();
+      return;
+    }
+    const wait = Math.max(0, PEEK_OUT_MS - (performance.now() - darkSince.current));
+    const timer = window.setTimeout(() => setShown(want), wait);
+    return () => window.clearTimeout(timer);
+  }, [want, shown, lit]);
+
+  /* Crossing the gap between two cards is a leave and an enter a few
+     milliseconds apart; the short grace stops that reading as "nothing"
+     and dropping the panel for a frame. */
+  const pointTo = useCallback((key: string, event: React.PointerEvent) => {
+    if (event.pointerType === 'touch') return;
+    window.clearTimeout(leaveTimer.current);
+    setHoverKey(key);
+  }, []);
+  const pointAway = useCallback(() => {
+    window.clearTimeout(leaveTimer.current);
+    leaveTimer.current = window.setTimeout(() => setHoverKey(null), 90);
+  }, []);
+  useEffect(() => () => window.clearTimeout(leaveTimer.current), []);
+
+  const peekItem = shown ? items.find((item) => item.key === shown) : undefined;
 
   const tone = useCallback(
     (key: string) => {
@@ -265,6 +337,15 @@ export default function FleetBrief({
                   key={item.key}
                   className="brief-option"
                   style={{ '--tone': tone(item.key) } as React.CSSProperties}
+                  onPointerEnter={(event) => pointTo(item.key, event)}
+                  onPointerLeave={pointAway}
+                  onFocus={(event) => {
+                    /* Keyboard focus only: a mouse click also focuses the
+                       button, and the read-out should not stick to a card
+                       the pointer has already left. */
+                    if ((event.target as Element).matches(':focus-visible')) setFocusKey(item.key);
+                  }}
+                  onBlur={() => setFocusKey(null)}
                 >
                   <button
                     type="button"
@@ -399,7 +480,20 @@ export default function FleetBrief({
         </form>
 
         {/* ---------------- The tower ---------------- */}
-        <div className="brief-visual">
+        <div className="brief-visual" style={{ '--count': count } as React.CSSProperties}>
+          <div className="brief-peek" data-lit={lit ? '' : undefined} aria-hidden="true">
+            {peekItem && (
+              <>
+                <p
+                  className="brief-peek-label"
+                  style={{ '--tone': tone(peekItem.key) } as React.CSSProperties}
+                >
+                  {peekItem.label}
+                </p>
+                <p className="brief-peek-body">{peekItem.body}</p>
+              </>
+            )}
+          </div>
           <div
             className="brief-stage"
             ref={stageRef}

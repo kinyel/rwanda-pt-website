@@ -24,12 +24,12 @@ const t = useTranslations(locale);
   items.length > 0 && (
     <Section tone="light" space="sm" as="aside">
       <h2 class="text-label uppercase text-ink-400">{t.common.common.relatedTitle}</h2>
-      <ul class="mt-6 grid gap-px overflow-hidden rounded-[--radius-panel] border border-ink-100 bg-ink-100 sm:grid-cols-2 lg:grid-cols-3">
+      <ul class="mt-6 tile-grid sm:grid-cols-2 lg:grid-cols-3">
         {items.map((item) => (
-          <li class="bg-white">
+          <li class="card card-interactive">
             <a
               href={localizePath(item.href, locale)}
-              class="group flex h-full flex-col p-6 transition-colors duration-[--duration-base] ease-[--ease-prime] hover:bg-ink-50"
+              class="group flex h-full flex-col rounded-[inherit] p-6"
             >
               <span class="flex items-center gap-1.5 text-h4 text-ink-950 group-hover:text-prime-700">
                 {resolveKey(t, item.titleKey)}

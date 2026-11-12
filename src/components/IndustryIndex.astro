@@ -221,9 +221,18 @@ const RINGS = [0, 1, 2, 3].map((level) => {
       grid-template-areas:
         'map list'
         'strip strip';
-      gap: 3.5rem 4.5rem;
+      gap: 2.25rem 4rem;
       align-items: center;
     }
+
+    /* The map no taller than the list it stands beside: at its old 34rem it
+       towered over the four rows, and the list was centred against it with a
+       band of nothing above and below. */
+    .iw-has-map .iw-visual {
+      max-width: 26rem;
+    }
+
+
     .iw-visual { grid-area: map; }
     .iw-list { grid-area: list; }
     .iw-strip { grid-area: strip; }
@@ -246,7 +255,7 @@ const RINGS = [0, 1, 2, 3].map((level) => {
       grid-template-columns: auto minmax(0, 1fr);
       align-items: start;
       column-gap: 0.85rem;
-      padding-block: 1.5rem 0.5rem;
+      padding-block: 1.1rem 0.25rem;
     }
     /* The arrow has nowhere sensible to sit in a narrow column, and the
        row stepping in says the same thing. */
@@ -560,6 +569,27 @@ const RINGS = [0, 1, 2, 3].map((level) => {
   @media (width < 64rem) {
     .iw-visual {
       max-width: 19rem;
+    }
+    /* On a phone the map, the list and the strip stack; closer together,
+       and the map a little smaller, so the section is not three screens of
+       mostly air. */
+    .iw-has-map {
+      gap: 1.75rem;
+    }
+    .iw-has-map .iw-visual {
+      max-width: 16rem;
+    }
+  }
+
+  /* Rows a step tighter wherever the index carries its map, at every width:
+     the map version is the homepage's, where the section was mostly air. */
+  .iw-has-map .iw-list .iw-link {
+    padding-block: 0.85rem;
+  }
+
+  @media (width < 64rem) {
+    .iw-has-map .iw-strip .iw-link {
+      padding-block: 0.85rem;
     }
     .iw-sum {
       font-size: 0.875rem;

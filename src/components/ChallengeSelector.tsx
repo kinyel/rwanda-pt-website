@@ -55,14 +55,9 @@ export default function ChallengeSelector({ items, selectedTitle, emptyState, ct
                 type="button"
                 aria-pressed={isSelected}
                 onClick={() => toggle(item.key)}
-                className={`flex h-full w-full flex-col rounded-[--radius-card] border p-5 text-left
-                            transition-[border-color,background-color,box-shadow,transform]
-                            duration-[--duration-base] ease-[--ease-prime] motion-safe:hover:-translate-y-0.5
-                            ${
-                              isSelected
-                                ? 'border-prime-500 bg-prime-50 shadow-[--shadow-card]'
-                                : 'border-ink-100 bg-white hover:border-ink-200 hover:shadow-[--shadow-card]'
-                            }`}
+                className={`card card-interactive flex h-full w-full flex-col p-5 text-left ${
+                  isSelected ? 'card-accent' : ''
+                }`}
               >
                 <span
                   className={`mb-3 inline-flex h-6 w-6 items-center justify-center rounded-md border transition-colors
@@ -82,7 +77,7 @@ export default function ChallengeSelector({ items, selectedTitle, emptyState, ct
         })}
       </ul>
 
-      <div className="mt-10 rounded-[--radius-panel] border border-ink-100 bg-ink-50 p-6 sm:p-8">
+      <div className="mt-10 card card-muted p-6 sm:p-8">
         <h2 className="text-h3">{selectedTitle}</h2>
 
         {chosen.length === 0 ? (

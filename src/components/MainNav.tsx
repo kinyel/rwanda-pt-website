@@ -63,6 +63,13 @@ export interface NavEntry {
   indexLabel?: string;
   rail?: string[];
   active?: boolean;
+  /**
+   * A stable name for the group ('products', 'industries', ...). The header
+   * lights the item whose key matches the section being read, by matching
+   * this against its own `data-section`, so nothing here has to re-render or
+   * be touched from outside the island when the reader scrolls.
+   */
+  navKey?: string;
 }
 
 export interface RegionLink {
@@ -415,7 +422,12 @@ export default function MainNav({
               if (!entry.items) {
                 return (
                   <li key={entry.label}>
-                    <a href={entry.href} aria-current={entry.active ? 'page' : undefined} className="nav-item">
+                    <a
+                      href={entry.href}
+                      aria-current={entry.active ? 'page' : undefined}
+                      data-nav-key={entry.navKey}
+                      className="nav-item"
+                    >
                       {entry.label}
                     </a>
                   </li>
@@ -443,6 +455,7 @@ export default function MainNav({
                     aria-controls={panelId}
                     data-open={isOpen}
                     data-active={entry.active}
+                    data-nav-key={entry.navKey}
                     onClick={() => {
                       setOpenIndex(isOpen ? null : index);
                       /* A mouse click must not pull focus into the panel; only

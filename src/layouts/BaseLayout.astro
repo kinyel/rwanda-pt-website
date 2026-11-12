@@ -441,18 +441,27 @@ const jsonLd = [organizationSchema(logoUrl), ...schemas];
     <script is:inline>
       (() => {
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-        const bar = document.createElement('div');
-        bar.className = 'scroll-progress';
-        bar.setAttribute('aria-hidden', 'true');
-        document.body.prepend(bar);
-
         const root = document.documentElement;
         let frame = 0;
+        let lastY = window.scrollY;
+        let idle = 0;
         const update = () => {
           frame = 0;
           const travel = root.scrollHeight - window.innerHeight;
           const p = travel > 0 ? Math.min(1, Math.max(0, window.scrollY / travel)) : 0;
           root.style.setProperty('--sp', p.toFixed(4));
+          /* Which way the reader is going, so the car on the progress line
+             faces the way it is driving. A dead band stops it spinning on the
+             spot over a pixel of jitter. */
+          const dy = window.scrollY - lastY;
+          if (Math.abs(dy) > 4) {
+            root.dataset.scrollDir = dy < 0 ? 'up' : 'down';
+            lastY = window.scrollY;
+          }
+          /* Moving, then stopped: the car brakes a beat after the page does. */
+          root.removeAttribute('data-scroll-idle');
+          window.clearTimeout(idle);
+          idle = window.setTimeout(() => root.setAttribute('data-scroll-idle', ''), 180);
         };
         const onScroll = () => {
           if (!frame) frame = requestAnimationFrame(update);

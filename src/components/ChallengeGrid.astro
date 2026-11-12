@@ -30,9 +30,7 @@ const items = t.home.challenges.items as Record<string, { label: string; body: s
         <li class="reveal-soft" style={`--n:${i % 4}`}>
           <a
             href={localizePath(challenge.href, locale)}
-            class="group relative flex h-full flex-col rounded-[--radius-card] border border-ink-100 bg-white p-5
-                   transition-[border-color,box-shadow,transform] duration-[--duration-base] ease-[--ease-prime]
-                   hover:border-prime-300 hover:shadow-[--shadow-card] motion-safe:hover:-translate-y-0.5"
+            class="group card card-interactive flex h-full flex-col p-5"
           >
             <span
               class="mb-3 inline-flex h-8 w-8 items-center justify-center rounded-full bg-prime-50 text-prime-700

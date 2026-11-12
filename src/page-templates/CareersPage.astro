@@ -54,7 +54,7 @@ const url = new URL(localizePath(routes.careers, locale), site).href;
         </ol>
       </div>
 
-      <div class="rounded-[--radius-panel] border border-ink-100 bg-ink-50 p-7 sm:p-9 lg:self-start">
+      <div class="card card-muted p-7 sm:p-9 lg:self-start">
         <p class="measure text-ink-700">{c.closing}</p>
         <Button href={`mailto:${company.careersEmail}`} variant="primary" size="lg" class="mt-7">
           {c.applyCta}

@@ -20,10 +20,10 @@ const { locale } = Astro.props;
 const t = useTranslations(locale);
 ---
 
-<ul class="grid grid-cols-2 gap-px overflow-hidden rounded-[--radius-panel] border border-ink-100 bg-ink-100 sm:grid-cols-3 lg:grid-cols-5">
+<ul class="tile-grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
   {
     clientLogos.map((client) => (
-      <li class="flex items-center justify-center bg-white p-6 sm:p-8">
+      <li class="card flex items-center justify-center p-6 sm:p-8">
         <Image
           src={client.src}
           alt={interpolate(t.images.clientLogo, { name: client.name })}

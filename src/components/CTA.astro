@@ -19,7 +19,7 @@ const { locale, eyebrow, title, body } = Astro.props;
 const t = useTranslations(locale);
 ---
 
-<section data-nav="dark" class="on-dark relative overflow-hidden bg-ink-950 bg-contour-prime">
+<section data-nav="dark" data-nav-section="contact" class="on-dark relative overflow-hidden bg-ink-950 bg-contour-prime">
   <div class="absolute inset-0 bg-prime-glow" aria-hidden="true"></div>
   <div class="container-prime relative py-16 sm:py-20 lg:py-24">
     <div class="reveal-rise grid gap-10 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:items-end">
@@ -29,7 +29,7 @@ const t = useTranslations(locale);
         {body && <p class="mt-5 measure text-lead text-ink-300">{body}</p>}
       </div>
 
-      <div class="grid grid-cols-2 gap-3 sm:flex sm:flex-row lg:flex lg:flex-col lg:items-stretch">
+      <div class="flex flex-wrap gap-3 lg:flex-col lg:items-stretch">
         <Button href={localizePath(routes.contact, locale)} variant="primary" size="lg">
           {t.home.finalCta.primary}
         </Button>
