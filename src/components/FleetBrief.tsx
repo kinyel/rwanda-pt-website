@@ -496,6 +496,7 @@ export default function FleetBrief({
           </div>
           <div
             className="brief-stage reveal-3d"
+            data-ambient=""
             ref={stageRef}
             data-filled={ready ? '' : undefined}
             aria-hidden="true"

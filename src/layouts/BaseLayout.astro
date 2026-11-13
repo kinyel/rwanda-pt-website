@@ -394,8 +394,15 @@ const jsonLd = [organizationSchema(logoUrl), ...schemas];
                  cap every remaining sibling shares the last slot and the group
                  lands together. */
               const n = Math.min(parseFloat(el.style.getPropertyValue('--n')) || 0, cap);
-              if (n > 0) setTimeout(() => el.removeAttribute('data-reveal'), n * step);
-              else el.removeAttribute('data-reveal');
+              /* Still tap-through for the first moments of its fade, while it
+                 is barely visible (see NOTHING INVISIBLE CAN BE TAPPED). */
+              const arrive = () => {
+                el.setAttribute('data-arriving', '');
+                el.removeAttribute('data-reveal');
+                setTimeout(() => el.removeAttribute('data-arriving'), 350);
+              };
+              if (n > 0) setTimeout(arrive, n * step);
+              else arrive();
             }
           },
           /* A tenth of a screen of overlap before it counts as arrived, so an
@@ -426,6 +433,23 @@ const jsonLd = [organizationSchema(logoUrl), ...schemas];
         const ready = () => document.documentElement.classList.add('reveal-ready');
         requestAnimationFrame(ready);
         setTimeout(ready, 120);
+      })();
+
+      /* Ambient motion stops off screen (see AMBIENT MOTION STOPS OFF SCREEN
+         in global.css): anything marked `data-ambient` is paused while it is
+         out of view, with a little margin so it is already moving again by
+         the time it comes back. */
+      (() => {
+        if (!('IntersectionObserver' in window)) return;
+        const ambient = document.querySelectorAll('[data-ambient]');
+        if (!ambient.length) return;
+        const watch = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) entry.target.toggleAttribute('data-ambient-off', !entry.isIntersecting);
+          },
+          { rootMargin: '200px 0px' },
+        );
+        ambient.forEach((el) => watch.observe(el));
       })();
     </script>
 

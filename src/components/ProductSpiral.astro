@@ -95,6 +95,7 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
 ---
 
 <section class="spiral on-dark" data-nav="dark" data-nav-section="products" data-spiral style={`--count:${count}`}>
+  <span class="spiral-lead-probe" aria-hidden="true" data-spiral-lead></span>
   <div class="spiral-track" data-spiral-track>
     <div class="spiral-viewport">
       <div class="container-prime spiral-layout">
@@ -660,8 +661,28 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
       --step-d: max(calc(var(--i) - var(--k)), calc(var(--k) - var(--i)));
       --near: clamp(0, (1.9 - var(--step-d)) / 0.6, 1);
     }
+    /* LIGHTER ON A PHONE. A card turned away used to go into shadow
+       through `filter: brightness() blur()`, and a filtered card in 3D is
+       redrawn offscreen on every frame it turns; with six of them, plus
+       twenty-six stars and a masked floor all standing in 3D, a phone's
+       graphics memory ran out mid-scroll and the tab crashed and reloaded.
+       Here a card goes into shadow by fading instead, the stars and floor
+       are left out, and a card two steps away is not just invisible but
+       gone (`data-far`, from the script), so it cannot be tapped by
+       accident while scrolling past and costs nothing to draw. */
     .spiral[data-on] .spiral-item .spiral-card {
-      opacity: calc(min(1, 0.32 + 1.1 * var(--facing)) * var(--near));
+      opacity: calc((0.3 + 0.7 * var(--lit)) * var(--near));
+      filter: none;
+    }
+    .spiral[data-on] .spiral-item[data-far] {
+      visibility: hidden;
+    }
+    .spiral[data-on] .spiral-stars,
+    .spiral[data-on] .spiral-ground {
+      display: none;
+    }
+    .spiral[data-on] .spiral-glow {
+      filter: none;
     }
   }
 
@@ -702,7 +723,7 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
   .spiral[data-on] .spiral-track {
     padding-block: 0;
     /* One viewport to pin against, plus travel for each additional card,
-       plus the lead-in (`--lead`, written by the script): the stretch at the
+       plus the lead-in (`--lead`, on the hand-over below): the stretch at the
        start, while the section fades in over the hero and then holds, in
        which the first card stands square to the reader before anything
        turns. */
@@ -760,6 +781,21 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
      and reads as 1. */
   :global(.hero-journey[data-journey-live]) ~ .spiral[data-on] {
     --wind: calc(var(--enter, 0) * var(--enter, 0) * (3 - 2 * var(--enter, 0)));
+    /* The lead-in (see `.spiral-track`). In `svh`, which a phone's toolbar
+       collapsing and coming back does not change: measured off the window's
+       height instead, the track grew and shrank by the height of the
+       toolbar mid-scroll, and everything below it jumped. */
+    --lead: 55svh;
+  }
+
+  /* The script reads the lead-in's height in pixels off this, so CSS stays
+     the one place it is defined. */
+  .spiral-lead-probe {
+    position: absolute;
+    width: 0;
+    height: var(--lead, 0px);
+    visibility: hidden;
+    pointer-events: none;
   }
 
   :global(.hero-journey[data-journey-live]) ~ .spiral[data-on] .spiral-viewport {
@@ -1179,16 +1215,13 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
     let frame = 0;
     let enabled = false;
     let current = -1;
-    let leadPx = -1;
     const holdQuery = window.matchMedia('(width < 64rem)');
-    /* The homepage hero this section fades in over, if there is one (see
-       `.spiral[data-on]` after `.hero-journey[data-journey-live]`). Its
-       state is read on every update rather than once, because which of the
-       two scripts runs first is not guaranteed. */
-    let hero: Element | null = null;
-    for (let prev = root.previousElementSibling; prev; prev = prev.previousElementSibling) {
-      if (prev.matches('.hero-journey')) hero = prev;
-    }
+    const items = [...root.querySelectorAll<HTMLElement>('[data-spiral-item]')];
+    /* The lead-in's height, defined in CSS (`--lead`) and read off a probe,
+       so it is whatever the stylesheet says: nothing where there is no
+       hand-over from the hero, and a fixed share of the screen where there
+       is. */
+    const probe = root.querySelector<HTMLElement>('[data-spiral-lead]');
 
     const setCurrent = (index: number) => {
       if (index === current) return;
@@ -1216,12 +1249,7 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
          step round by the time it is fully visible, and the first card is
          never seen. The track is made longer by the same distance (see
          `--lead`), so every card keeps its full share of the scroll. */
-      const handover = !!hero && hero.hasAttribute('data-journey-live');
-      const lead = handover ? window.innerHeight * 0.55 : 0;
-      if (lead !== leadPx) {
-        leadPx = lead;
-        root.style.setProperty('--lead', `${Math.round(lead)}px`);
-      }
+      const lead = probe ? probe.offsetHeight : 0;
       const p = Math.min(1, Math.max(0, (-rect.top - lead) / (travel - lead)));
       /* How far the section has risen into the screen, for its entrance: 0
          with its top at the foot of the viewport, 1 once it is two-thirds of
@@ -1257,6 +1285,12 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
       }
       root.style.setProperty('--k', k.toFixed(4));
       setCurrent(Math.round(k));
+      /* On a phone only the card being read and its neighbours are drawn;
+         one two steps or more along is taken out entirely (see LIGHTER ON A
+         PHONE), so it cannot catch a tap meant for the page. */
+      for (let i = 0; i < items.length; i++) {
+        items[i].toggleAttribute('data-far', holdQuery.matches && Math.abs(i - k) >= 1.9);
+      }
     };
 
     const onScroll = () => {
@@ -1278,8 +1312,7 @@ const STARS = Array.from({ length: 26 }, (_, i) => {
         window.removeEventListener('resize', onScroll);
         root.style.removeProperty('--p');
         root.style.removeProperty('--k');
-        root.style.removeProperty('--lead');
-        leadPx = -1;
+        for (const item of items) item.removeAttribute('data-far');
         root.style.removeProperty('--enter');
         root.removeAttribute('data-entered');
         for (const link of links) link.removeAttribute('data-current');

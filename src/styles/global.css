@@ -2387,8 +2387,10 @@
     opacity: 0.35;
   }
 
+  /* On its springs only while the page is moving: an animation running
+     forever on every page, for a car that is parked, was work for nothing. */
   @media (prefers-reduced-motion: no-preference) {
-    .site-progress-car {
+    :root[data-scroll-dir]:not([data-scroll-idle]) .site-progress-car {
       animation: sp-bob 0.9s ease-in-out infinite alternate;
     }
   }
@@ -2515,8 +2517,8 @@
      The attribute and the observer are written in the same synchronous pass,
      so there is no window in which an element is hidden but unobserved.
 
-     `will-change` rides the same attribute, so it is present exactly while an
-     element is waiting to animate and gone the moment it has. No bookkeeping.
+     No `will-change` on the waiting state: see the note on the hidden state
+     below for why it was taken off.
 
      `--n` staggers an element within its group, capped by --stagger-cap: past
      that every remaining sibling shares the last delay, so a long list arrives
@@ -2536,18 +2538,48 @@
     transition-timing-function: var(--ease-out);
   }
 
+  /* NO `will-change` HERE, deliberately. It used to ride the hidden state,
+     which promoted every element still waiting below the fold — dozens of
+     them on a long page, each to its own graphics surface — from the moment
+     the page loaded. A phone's browser has very little graphics memory, and
+     that alone can run it out mid-scroll (the tab crashes and reloads). The
+     browser promotes an element for the length of its own transition anyway,
+     which is the only time it needs it. */
   .reveal[data-reveal],
   .reveal-soft[data-reveal] {
     opacity: 0;
-    will-change: opacity, transform;
+  }
+
+  /* NOTHING INVISIBLE CAN BE TAPPED. Anything still waiting to arrive is at
+     opacity 0 — but it was still there to be tapped, links and all. A card
+     that is a link from edge to edge, sitting unseen in the bottom tenth of a
+     phone's screen (the band an element has to clear before it counts as
+     arrived), would open its page from a tap meant to stop the scroll: a
+     hidden link, in effect. Taps pass straight through it until it has
+     arrived. */
+  [data-reveal],
+  [data-arriving] {
+    pointer-events: none;
   }
   /* A short rise. Not a slide from off-screen: the element is telling you it
      just arrived, not travelling across the page to get here. */
   /* Every entrance also comes into focus: a few pixels of blur resolving
      as it settles, which is what makes an arrival read as smooth rather
      than as a box sliding. */
-  .reveal[data-reveal] { transform: translateY(30px); filter: blur(6px); }
-  .reveal-soft[data-reveal] { transform: translateY(40px); filter: blur(10px); }
+  .reveal[data-reveal] { transform: translateY(30px); }
+  .reveal-soft[data-reveal] { transform: translateY(40px); }
+  /* THE FOCUS-PULL IS FOR WIDE SCREENS ONLY. A blur is a filter, and every
+     filtered element is its own offscreen surface; on a phone, a page of
+     them waiting to arrive is exactly the memory a phone does not have. */
+  @media (width >= 64rem) {
+    .reveal[data-reveal] { filter: blur(6px); }
+    .reveal-soft[data-reveal] { filter: blur(10px); }
+    .reveal-left[data-reveal],
+    .reveal-right[data-reveal],
+    .reveal-rise[data-reveal] { filter: blur(6px); }
+    .reveal-scale[data-reveal] { filter: blur(8px); }
+    .words[data-reveal] > span { filter: blur(6px); }
+  }
 
   /* Fade with no movement, for anything inside a clipped panel where a rise
      would show the panel's own background under the moving edge. A component
@@ -2560,7 +2592,6 @@
   }
   .reveal-fade[data-reveal] {
     opacity: 0;
-    will-change: opacity;
   }
 
   /* FOUR MORE ENTRANCES, on the same one-shot machinery.
@@ -2587,12 +2618,11 @@
   .reveal-scale[data-reveal],
   .reveal-rise[data-reveal] {
     opacity: 0;
-    will-change: opacity, transform;
   }
-  .reveal-left[data-reveal] { transform: translateX(-64px); filter: blur(6px); }
-  .reveal-right[data-reveal] { transform: translateX(64px); filter: blur(6px); }
-  .reveal-scale[data-reveal] { transform: scale(0.88) translateY(18px); filter: blur(8px); }
-  .reveal-rise[data-reveal] { transform: translateY(64px); filter: blur(6px); }
+  .reveal-left[data-reveal] { transform: translateX(-64px); }
+  .reveal-right[data-reveal] { transform: translateX(64px); }
+  .reveal-scale[data-reveal] { transform: scale(0.88) translateY(18px); }
+  .reveal-rise[data-reveal] { transform: translateY(64px); }
 
   /* HEADINGS ARRIVE A WORD AT A TIME.
 
@@ -2617,7 +2647,6 @@
     opacity: 0;
     transform: translateY(0.75em) rotate(3deg) scale(0.96);
     transform-origin: 0 100%;
-    filter: blur(6px);
   }
   /* The heading itself must not also fade, or the words fade twice. */
   .words[data-reveal] {
@@ -2658,14 +2687,42 @@
       filter: none;
     }
   }
+  @keyframes arrive-plain {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
   .arrive {
     animation: arrive 900ms var(--ease-out) both;
     animation-delay: calc(var(--d, 0) * 90ms);
+  }
+  /* No blur on a phone (see THE FOCUS-PULL IS FOR WIDE SCREENS ONLY). */
+  @media (width < 64rem) {
+    .arrive {
+      animation-name: arrive-plain;
+    }
   }
   @media (prefers-reduced-motion: reduce) {
     .arrive {
       animation: none;
     }
+  }
+
+  /* AMBIENT MOTION STOPS OFF SCREEN. A few things here move on their own
+     forever (the brief's tower turning, the industry map drifting, the
+     hero's car on its springs). An animation keeps running when you have
+     scrolled past it, and the ones on registered custom properties run on
+     the main thread every frame, so a page was busy redrawing things nobody
+     could see. Anything marked `data-ambient` is paused by the layout
+     script whenever it is out of view. */
+  [data-ambient-off],
+  [data-ambient-off] * {
+    animation-play-state: paused !important;
   }
 
   /* A section arriving as a unit: the header leads, its content follows. */
@@ -3033,6 +3090,16 @@
     white-space: nowrap;
   }
 
+  /* Lighter on a phone: no drifting motes, and the floor's light pool
+     without its blur (its gradient is already soft). */
+  @media (width < 64rem) {
+    .brief-mote {
+      display: none;
+    }
+    .brief-stage .brief-pool {
+      filter: none;
+    }
+  }
   .brief-mote {
     position: absolute;
     left: calc(26% + mod(var(--m) * 37, 48) * 1%);

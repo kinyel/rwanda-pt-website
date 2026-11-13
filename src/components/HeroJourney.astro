@@ -122,7 +122,7 @@ const CAR_ROOF = 'M-5.6 -6.2 L5.6 -6.2 L5.8 6.6 L-5.8 6.6 Z';
 const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
 ---
 
-<section class="hero-journey on-dark relative bg-ink-950" data-nav="dark" data-nav-overlay>
+<section class="hero-journey on-dark relative bg-ink-950" data-nav="dark" data-nav-overlay data-ambient>
   <div class="journey-wash pointer-events-none absolute inset-0" aria-hidden="true"></div>
   <!-- Rows of short dashes across the ground, pinned with the stage. -->
   <div class="journey-dashes" aria-hidden="true"><span></span></div>
@@ -507,6 +507,25 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
       opacity: 1;
       transform: none;
       filter: none;
+    }
+  }
+  /* No blur in the entrances on a phone (see LIGHTER ON A PHONE). */
+  @keyframes hero-enter-plain {
+    from {
+      opacity: 0;
+      transform: translateY(22px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @media (width < 64rem) {
+    .enter:not(.enter-stage) {
+      animation-name: hero-enter-plain;
+    }
+    .enter-stage {
+      animation-name: hero-enter-plain;
     }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -1698,6 +1717,9 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
     .hero-journey[data-journey-live] .journey-panel[data-gone] {
       visibility: hidden;
     }
+    .hero-journey[data-journey-live] .journey-panel[data-passing] {
+      pointer-events: none;
+    }
 
     /* The report: in from 15%, two points after the opening has gone. It has
        nothing to click, and it sits on top of the opening in the stack. */
@@ -1768,6 +1790,25 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
       font-size: 0.75rem;
       line-height: 1.2;
       text-shadow: 0 1px 10px rgb(8 9 11 / 0.95);
+      /* A fade, not a blur, on a phone: see LIGHTER ON A PHONE below. */
+      filter: none;
+    }
+
+    /* LIGHTER ON A PHONE. A phone browser has little graphics memory and
+       this section is pinned for four screens, so anything here that needs
+       its own offscreen surface, or is redrawn through a filter on every
+       scroll frame, is left out: the route's glow (a blur re-run on every
+       frame as the route draws), the grain on the ground, and the second
+       outline under each of the unit's layers. */
+    .hero-journey[data-journey-live] .journey-trace,
+    .hero-journey[data-journey-live] .journey-marker {
+      filter: none;
+    }
+    .journey-dashes::after {
+      display: none;
+    }
+    .hero-journey[data-journey-live] .journey-unit-plate::before {
+      display: none;
     }
     .hero-journey[data-journey-live] .journey-label-mright {
       /* As wide as the room between its own stop and the edge of the
@@ -2354,6 +2395,9 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
       /* The opening has faded out by 0.13: its two links leave the tab order
          and stop taking clicks once it is gone. */
       opening?.toggleAttribute('data-gone', p > 0.135);
+      /* And stops taking taps well before it has gone: past 0.1 it is under
+         40% and fading fast, which is a button nobody meant to press. */
+      opening?.toggleAttribute('data-passing', p > 0.1);
     };
 
     const onScroll = () => {
@@ -2375,6 +2419,7 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
         window.removeEventListener('resize', onResize);
         root.style.removeProperty('--p');
         opening?.removeAttribute('data-gone');
+        opening?.removeAttribute('data-passing');
       }
     };
 
