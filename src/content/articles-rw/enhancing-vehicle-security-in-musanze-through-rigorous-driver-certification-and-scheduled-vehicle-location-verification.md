@@ -1,0 +1,8 @@
+---
+title: "Kongera umutekano w’ibinyabiziga i Musanze hifashishijwe kwemeza abashoferi mu buryo bukomeye no kugenzura aho ibinyabiziga biri ku gihe cyagenwe"
+description: "Iyo nta gukurikirana hakoreshejwe GPS, umutekano w’ibinyabiziga i Musanze ushingira ku kwizerwa n’ubunyangamugayo bw’abashoferi. Kwemeza abashoferi mu buryo bukomeye"
+date: 2025-03-03
+author: "primeTEAM"
+---
+
+Iyo nta gukurikirana hakoreshejwe GPS, umutekano w’ibinyabiziga i Musanze ushingira ku kwizerwa n’ubunyangamugayo bw’abashoferi. Gahunda zo kwemeza abashoferi mu buryo bukomeye ni wo murongo wa mbere wo kwirinda. Izi gahunda zikwiye kuba zirimo gusuzuma amateka y’umuntu neza, ibizamini birambuye byo gutwara, n’amahugurwa ku mabwiriza y’umutekano. Abashoferi si abatwara gusa; ni bo barinzi b’ibinyabiziga n’ibiri muri byo. Kugenzura aho ibinyabiziga biri ku gihe cyagenwe ni uburyo bwo kubikurikirana bukorwa n’intoki. Mu bihe byagenwe, abashoferi basabwa gutanga amakuru y’aho bari, uko bimeze n’ibyo babonye. Ubu buryo, nubwo atari ubw’ako kanya, butanga inyandiko ihoraho y’ingendo z’ibinyabiziga kandi bukumira kubikoresha utabyemerewe. Inama z’umutekano zikorwa buri gihe zishimangira akamaro ko kuba maso kandi zigatuma abashoferi biteguye guhangana n’ibyago bishobora kubaho ku mutekano. Byongeye kandi, gushyiraho urwego rusobanutse rw’ubuyobozi n’uburyo bwo kuvugana bituma impungenge zose z’umutekano zimenyeshwa kandi zigakemurwa vuba. Guhuza kwemeza abashoferi mu buryo bukomeye no kugenzura aho ibinyabiziga biri ku gihe cyagenwe bifasha Musanze kugumana umutekano wo hejuru w’ibinyabiziga hatishingikirijwe ku ikoranabuhanga rya GPS.

@@ -40,6 +40,23 @@ export type DeepPartial<T> = T extends string
         ? { [K in keyof T]?: DeepPartial<T[K]> }
         : T;
 
+/**
+ * A COMPLETE mirror of `Dictionary`, with every literal widened to `string`.
+ * This is what the Kinyarwanda dictionary is typed as: every key the English
+ * site has must exist in Kinyarwanda too, so a string added to the site in
+ * English and forgotten in Kinyarwanda is a type error at build time rather
+ * than an English sentence quietly appearing on a Kinyarwanda page.
+ */
+export type Translation<T = Dictionary> = T extends string
+  ? string
+  : T extends number
+    ? number
+    : T extends readonly (infer U)[]
+      ? readonly Translation<U>[]
+      : T extends object
+        ? { [K in keyof T]: Translation<T[K]> }
+        : T;
+
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

@@ -13,6 +13,13 @@ export const common = {
     tagline: 'GPS vehicle tracking and fleet management in Rwanda',
   },
 
+  /** The two parts of the office address that are words rather than names.
+   *  The building, the city and the structured data use src/data/company.ts. */
+  address: {
+    line1: '6th Floor, Tower A',
+    country: 'Republic of Rwanda',
+  },
+
   nav: {
     /** Accessible name for the primary <nav> landmark. */
     primaryLabel: 'Primary',
@@ -54,7 +61,8 @@ export const common = {
     current: 'Current language',
     /** Template for the inactive option's accessible name. */
     switchTo: 'Switch to {language}',
-    pendingNotice: 'Kinyarwanda translation in progress. Pages not yet translated are shown in English.',
+    /** Shown above the footer's language switcher. */
+    availability: 'The whole site is available in English and Kinyarwanda.',
   },
 
   cta: {

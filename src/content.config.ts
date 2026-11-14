@@ -9,20 +9,32 @@ import { glob } from 'astro/loaders';
  * Each entry's id is its original WordPress slug, and articles render at that
  * exact root-level path, so every ranking URL is preserved without a redirect.
  *
- * The articles exist in English only. The Kinyarwanda site links to the English
- * article rather than showing an empty index, which is honest and avoids
- * publishing untranslated pages under a Kinyarwanda URL.
+ * Each article also has a Kinyarwanda version in `articlesRw`, at /rw/<slug>/.
  */
-const articles = defineCollection({
-  loader: glob({ pattern: '**/*.md', base: './src/content/articles' }),
-  schema: z.object({
-    title: z.string(),
-    description: z.string(),
-    date: z.coerce.date().optional(),
-    author: z.string().default('primeTEAM'),
-    /** Commercial pages this article should link back to. */
-    related: z.array(z.string()).optional(),
-  }),
+const articleSchema = z.object({
+  title: z.string(),
+  description: z.string(),
+  date: z.coerce.date().optional(),
+  author: z.string().default('primeTEAM'),
+  /** Commercial pages this article should link back to. */
+  related: z.array(z.string()).optional(),
 });
 
-export const collections = { articles };
+const articles = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/articles' }),
+  schema: articleSchema,
+});
+
+/**
+ * The Kinyarwanda versions of the articles: one file per English article, with
+ * the SAME file name, so an article's id (its slug) is identical in both
+ * languages and /slug/ and /rw/slug/ are the same article. The English slugs
+ * are kept for the Kinyarwanda URLs too: they are the URLs that already rank,
+ * and hreflang ties the pair together.
+ */
+const articlesRw = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/articles-rw' }),
+  schema: articleSchema,
+});
+
+export const collections = { articles, articlesRw };

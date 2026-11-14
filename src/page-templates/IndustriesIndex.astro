@@ -27,8 +27,8 @@ const url = new URL(localizePath(routes.industries, locale), site).href;
 <BaseLayout
   locale={locale}
   path={routes.industries}
-  title="Fleet Tracking by Industry in Rwanda | PrimeTrack"
-  description="GPS fleet tracking, video telematics and fuel monitoring for construction, logistics, transport, pharmaceutical, emergency and fuel distribution fleets across Rwanda."
+  title={t.seo.industriesIndex.title}
+  description={t.seo.industriesIndex.description}
   schemas={[
     breadcrumbSchema([
       { name: t.common.common.home, url: new URL(localizePath(routes.home, locale), site).href },

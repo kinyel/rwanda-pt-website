@@ -1,0 +1,25 @@
+---
+/**
+ * The Kinyarwanda version of each article, at /rw/<slug>/ — the same slug as
+ * the English original, so the pair is easy to see and hreflang ties them
+ * together. Generated only for articles that have a Kinyarwanda file in
+ * src/content/articles-rw/ with a matching English original; nothing is
+ * published under /rw/ that is not actually in Kinyarwanda.
+ */
+import ArticlePage from '../../page-templates/ArticlePage.astro';
+import { getCollection } from 'astro:content';
+import { relatedForArticle } from '../../data/article-related';
+
+export async function getStaticPaths() {
+  const english = new Set((await getCollection('articles')).map((a) => a.id));
+  const articles = (await getCollection('articlesRw')).filter((a) => english.has(a.id));
+  return articles.map((article) => ({
+    params: { article: article.id },
+    props: { article },
+  }));
+}
+
+const { article } = Astro.props;
+---
+
+<ArticlePage locale="rw" article={article} related={relatedForArticle(article.id)} translated />

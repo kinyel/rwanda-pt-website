@@ -27,11 +27,24 @@ const b = t.companyPages.blog;
 const site = Astro.site ?? new URL('https://primetrack.rw');
 const url = new URL(localizePath(routes.blog, locale), site).href;
 
-const articles = (await getCollection('articles')).sort((a, c) => {
-  const da = a.data.date?.getTime() ?? 0;
-  const dc = c.data.date?.getTime() ?? 0;
-  return dc - da;
-});
+/* On the Kinyarwanda index each article is its Kinyarwanda version where one
+   exists; one that has not been translated yet is listed in English, linking
+   to the English URL and marked lang="en", rather than left out. */
+const translations = new Map(
+  locale === 'rw' ? (await getCollection('articlesRw')).map((a) => [a.id, a] as const) : [],
+);
+const articles = (await getCollection('articles'))
+  .map((english) => {
+    const own = translations.get(english.id);
+    return own
+      ? { id: own.id, data: own.data, href: localizePath(`/${own.id}/`, locale), lang: undefined }
+      : { id: english.id, data: english.data, href: `/${english.id}/`, lang: locale === 'en' ? undefined : 'en' };
+  })
+  .sort((a, c) => {
+    const da = a.data.date?.getTime() ?? 0;
+    const dc = c.data.date?.getTime() ?? 0;
+    return dc - da;
+  });
 
 const dateFormat = new Intl.DateTimeFormat(locale === 'rw' ? 'rw-RW' : 'en-GB', {
   year: 'numeric',
@@ -58,16 +71,14 @@ const dateFormat = new Intl.DateTimeFormat(locale === 'rw' ? 'rw-RW' : 'en-GB', 
     <ul class="grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
       {
         articles.map((article) => (
-          <li class="reveal group relative flex flex-col border-t border-ink-200 pt-5">
+          <li class="reveal group relative flex flex-col border-t border-ink-200 pt-5" lang={article.lang}>
             {article.data.date && (
               <time datetime={article.data.date.toISOString().slice(0, 10)} class="text-[0.8125rem] font-semibold uppercase tracking-wider text-ink-400">
                 {dateFormat.format(article.data.date)}
               </time>
             )}
             <h2 class="mt-2 text-h4 leading-snug">
-              {/* Articles exist in English only, so they always link to the
-                  unprefixed URL regardless of the visitor's language. */}
-              <a href={`/${article.id}/`} class="after:absolute after:inset-0 after:content-[''] group-hover:text-prime-700">
+              <a href={article.href} class="after:absolute after:inset-0 after:content-[''] group-hover:text-prime-700">
                 {article.data.title}
               </a>
             </h2>

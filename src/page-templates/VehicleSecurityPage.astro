@@ -35,17 +35,16 @@ const icons: Record<string, string> = {
   tamper: 'shield', independent: 'package', geofence: 'truck', seals: 'lock', evidence: 'video',
 };
 
-const description =
-  'Vehicle and asset security in Rwanda: tamper alerts, geofence breaches, independent cargo tracking and electronic seals, with an alert the moment something moves that should not.';
+const description = t.seo.vehicleSecurity.description;
 ---
 
 <BaseLayout
   locale={locale}
   path={routes.vehicleSecurity}
-  title="Vehicle & Asset Security in Rwanda | PrimeTrack"
+  title={t.seo.vehicleSecurity.title}
   description={description}
   schemas={[
-    serviceSchema({ name: 'Vehicle and asset security', description, url }),
+    serviceSchema({ name: t.seo.vehicleSecurity.schemaName, description, url }),
     breadcrumbSchema([
       { name: t.common.common.home, url: new URL(localizePath(routes.home, locale), site).href },
       { name: t.solutions.index.eyebrow, url: new URL(localizePath(routes.solutions, locale), site).href },

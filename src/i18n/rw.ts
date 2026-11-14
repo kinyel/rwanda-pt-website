@@ -1,109 +1,49 @@
-import type { DeepPartial } from './index';
-import type { en } from './index';
+import type { Translation } from './index';
+import { common } from './rw/common';
+import { home } from './rw/home';
+import { products } from './rw/products';
+import { services } from './rw/services';
+import { companyPages } from './rw/company';
+import { industries } from './rw/industries';
+import { solutions } from './rw/solutions';
+import { seo } from './rw/seo';
+import { images } from './rw/images';
 
 /**
  * KINYARWANDA (rw)
  * ============================================================================
- * STATUS: interface chrome only. All business copy is pending human translation.
+ * The complete Kinyarwanda dictionary, one file per English dictionary in
+ * src/i18n/rw/, each mirroring its English counterpart in src/i18n/en/ key for
+ * key.
  *
- * WHAT IS IN THIS FILE
- * Only short, unambiguous interface words whose standard Kinyarwanda form is
- * well established: navigation labels, button verbs, form field names. Every
- * one of them is still listed in docs/translation-checklist.md and MUST be
- * confirmed by a native speaker before launch. They are provided so the
- * language switcher demonstrably works end to end, not because they are
- * signed off.
+ * WHY IT IS COMPLETE AND TYPED AS COMPLETE. This file used to carry only the
+ * navigation and button words, and every other key fell back to English
+ * through the overlay in ./index. That is why switching to Kinyarwanda
+ * translated the menu and nothing else: the pages were already rendered in
+ * Kinyarwanda, from a dictionary that was 94% English.
  *
- * WHAT IS DELIBERATELY NOT IN THIS FILE
- * Marketing copy, product descriptions, technical explanations, warranty
- * terms, legal text and meta descriptions. Machine-translating any of that
- * would put unverified claims about a real company in front of customers in a
- * language nobody on this build can check. Those keys are absent, so they fall
- * back to English automatically and are reported as pending.
+ * It is now typed as `Translation`, the full shape of the English dictionary
+ * with every key REQUIRED. A string added to the English site and not to
+ * Kinyarwanda is a type error at build time, so the menu-only situation cannot
+ * come back quietly. The overlay in ./index stays as a last line of defence.
  *
- * HOW TO ADD A TRANSLATION
- * Mirror the key path from the English file and add the string. Anything you
- * add wins over English immediately; anything you leave out keeps falling back.
- * Run `npm run i18n:status` to see what is still outstanding.
+ * WHAT STAYS IN ENGLISH, deliberately: brand and product names (PrimeTrack,
+ * PrimeCARE, PrimeSOLAR, STAR Trackers, Video Trackers, eCT Systems...), and
+ * technical terms used as-is in Rwanda (GPS, API, ADAS, OBD, IoT, SIM, ERP).
  *
- * Kinyarwanda runs roughly 15 to 30 percent longer than English for the same
- * meaning. Layouts are built for that, but check navigation and buttons at the
- * 360px breakpoint after adding copy.
+ * REVIEW. These translations should be confirmed by a native speaker before
+ * they are relied on, the legal pages above all; until then the English
+ * version of a legal page is the authoritative one. `npm run i18n:status`
+ * writes the full list to docs/translation-checklist.md.
  */
-export const rw: DeepPartial<typeof en> = {
-  common: {
-    nav: {
-      // @review — standard site navigation terms, native confirmation needed.
-      home: 'Ahabanza',
-      products: 'Ibicuruzwa',
-      services: 'Serivisi',
-      contact: 'Twandikire',
-      menu: 'Ibikubiyemo',
-      openMenu: 'Fungura menu',
-      closeMenu: 'Funga menu',
-      skipToContent: 'Simbukira ku bikubiyemo',
-    },
-    country: {
-      // @review
-      label: 'Igihugu',
-      srLabel: 'Hitamo igihugu',
-      current: 'Igihugu ugezemo',
-      names: {
-        NGR: 'Nigeriya',
-        RWA: 'U Rwanda',
-        EGY: 'Misiri',
-      },
-    },
-    language: {
-      // @review
-      label: 'Ururimi',
-      srLabel: 'Hitamo ururimi',
-      current: 'Ururimi rukoreshwa',
-      switchTo: 'Hindura ujye ku {language}',
-    },
-    cta: {
-      // @review
-      contactUs: 'Twandikire',
-      callUs: 'Duhamagare',
-      whatsapp: 'WhatsApp',
-      emailUs: 'Twoherereze imeyili',
-      learnMore: 'Menya byinshi',
-      backHome: 'Subira ku rupapuro rw\'ibanze',
-    },
-    form: {
-      // @review
-      name: 'Amazina',
-      message: 'Ubutumwa',
-      send: 'Ohereza ubutumwa',
-      sending: 'Kohereza',
-      required: 'Birakenewe',
-      optional: 'Si ngombwa',
-    },
-    common: {
-      // @review
-      home: 'Ahabanza',
-      loading: 'Birimo gupakirwa',
-    },
-    footer: {
-      // @review
-      cookiePreferences: 'Uko cookies zikoreshwa',
-    },
-    /* Only the ACTIONS are translated here, following this file's own rule:
-       short, unambiguous interface words whose Kinyarwanda form is settled.
-       The explanatory paragraphs, the panel intro and the storage description
-       are deliberately absent and fall back to English, because consent copy
-       is the last place to put a translation nobody on this build can check.
-       All of it is listed in docs/translation-checklist.md. */
-    cookies: {
-      // @review — every one of these needs native confirmation before launch.
-      accept: 'Emera',
-      decline: 'Anga',
-      manage: 'Uko cookies zikoreshwa',
-      panelTitle: 'Uko cookies zikoreshwa',
-      save: 'Bika',
-      close: 'Funga',
-      on: 'Birakora',
-      off: 'Ntibikora',
-    },
-  },
+export const rw: Translation = {
+  common,
+  home,
+  products,
+  services,
+  companyPages,
+  industries,
+  solutions,
+  seo,
+  images,
 };

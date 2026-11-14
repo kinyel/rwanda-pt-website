@@ -157,9 +157,9 @@ const socialPaths: Record<string, string> = {
       <div>
         <h2 class="text-h4 text-white">{t.common.footer.officeTitle}</h2>
         <address class="mt-3 not-italic text-[0.9375rem] leading-relaxed text-ink-400">
-          {company.address.line1}<br />
+          {t.common.address.line1}<br />
           {company.address.line2}<br />
-          {company.address.city}, {company.address.country}
+          {company.address.city}, {t.common.address.country}
         </address>
         <!-- <p class="mt-4 text-[0.9375rem] text-ink-400">
           {t.common.footer.nigeriaOfficeTitle}:{' '}
@@ -217,7 +217,7 @@ const socialPaths: Record<string, string> = {
 
       <div>
         <h2 class="text-h4 text-white">{t.common.language.label}</h2>
-        <p class="mt-3 text-[0.9375rem] text-ink-400">{t.common.language.pendingNotice}</p>
+        <p class="mt-3 text-[0.9375rem] text-ink-400">{t.common.language.availability}</p>
         <LanguageSwitcher locale={locale} path={path} fallbackPath={switcherFallback} tone="dark" size="full" class="mt-4" />
       </div>
     </div>

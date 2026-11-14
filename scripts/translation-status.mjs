@@ -1,18 +1,25 @@
 /**
  * Kinyarwanda translation status.
  *
- * Walks the English dictionary, compares it against src/i18n/rw.ts, and reports
- * every string still waiting on a human translation. Writes the full list to
- * docs/translation-checklist.md so it can be handed to a translator as-is.
+ * Walks the English dictionary and the Kinyarwanda one (src/i18n/rw.ts, which
+ * assembles src/i18n/rw/*.ts), plus the article collections, and reports:
+ *
+ *   - MISSING   keys with no Kinyarwanda value. The type check already makes
+ *               these a build error; this is the human-readable list.
+ *   - SAME      Kinyarwanda values identical to the English. Most are
+ *               deliberate (brand and product names, figures, e-mail
+ *               addresses), but each one is listed so a reviewer can confirm.
+ *   - ARTICLES  English articles with no Kinyarwanda version.
+ *
+ * It also writes docs/translation-checklist.md: every string with its English
+ * and Kinyarwanda side by side, which is what a native-speaker review works
+ * from.
  *
  *   npm run i18n:status
- *
- * Nothing here fails the build: shipping with English fallback is the intended
- * launch state, not an error.
  */
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readdirSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
 
 const root = resolve(fileURLToPath(new URL('../', import.meta.url)));
@@ -31,101 +38,127 @@ async function loadModule(entry, contents) {
   return import(`data:text/javascript;base64,${Buffer.from(code).toString('base64')}`);
 }
 
-/* rw.ts imports types from ./index, which pulls in Astro-specific modules.
-   Strip the type-only imports so the data can be loaded on its own. */
-const rwSource = readFileSync(join(root, 'src/i18n/rw.ts'), 'utf8')
-  .replace(/^import type .*$/gm, '')
-  .replace(/:\s*DeepPartial<typeof en>/, '');
+const NAMESPACES = ['common', 'home', 'products', 'services', 'companyPages', 'industries', 'solutions', 'seo', 'images'];
 
-const enEntry = `
+const en = await loadModule(
+  'en.ts',
+  `
   export { common } from './en/common';
   export { home } from './en/home';
   export { products } from './en/products';
   export { services } from './en/services';
   export { companyPages } from './en/company';
+  export { industries } from './en/industries';
+  export { solutions } from './en/solutions';
   export { seo } from './en/seo';
   export { images } from './en/images';
-`;
+`,
+);
+const { rw } = await loadModule('rw-entry.ts', `export { rw } from './rw';`);
 
-const en = await loadModule('en.ts', enEntry);
-const { rw } = await loadModule('rw.ts', rwSource);
-
-/** Every leaf string path in an object tree. Arrays count as a single leaf. */
+/** Every leaf string path in an object tree. */
 function leaves(node, prefix = '') {
   if (typeof node === 'string') return [[prefix, node]];
-  if (Array.isArray(node)) return node.every((v) => typeof v === 'string') ? [[prefix, node.join(' | ')]] : node.flatMap((v, i) => leaves(v, `${prefix}[${i}]`));
+  if (Array.isArray(node)) return node.flatMap((v, i) => leaves(v, `${prefix}[${i}]`));
   if (node && typeof node === 'object') return Object.entries(node).flatMap(([k, v]) => leaves(v, prefix ? `${prefix}.${k}` : k));
   return [];
 }
 
-const enLeaves = leaves({
-  common: en.common, home: en.home, products: en.products,
-  services: en.services, companyPages: en.companyPages, seo: en.seo, images: en.images,
-});
-const rwPaths = new Set(leaves(rw).map(([path]) => path));
+const enMap = new Map(leaves(Object.fromEntries(NAMESPACES.map((n) => [n, en[n]]))));
+const rwMap = new Map(leaves(rw));
 
-const pending = enLeaves.filter(([path]) => !rwPaths.has(path));
-const done = enLeaves.length - pending.length;
+const missing = [...enMap.keys()].filter((path) => !rwMap.has(path));
+const same = [...enMap.entries()].filter(([path, value]) => rwMap.get(path) === value && value.trim() !== '');
 
-/* Group by top-level namespace for a readable handoff. */
-const groups = new Map();
-for (const [path, value] of pending) {
-  const group = path.split('.')[0];
-  if (!groups.has(group)) groups.set(group, []);
-  groups.get(group).push([path, value]);
-}
+/* Articles: one Kinyarwanda file per English file, same slug. */
+const enArticles = readdirSync(join(root, 'src/content/articles')).filter((f) => f.endsWith('.md'));
+const rwDir = join(root, 'src/content/articles-rw');
+const rwArticles = new Set(existsSync(rwDir) ? readdirSync(rwDir).filter((f) => f.endsWith('.md')) : []);
+const missingArticles = enArticles.filter((f) => !rwArticles.has(f));
+
+const cell = (text) => {
+  const t = String(text).replace(/\|/g, '\\|').replace(/\n/g, ' ');
+  return t.length > 220 ? `${t.slice(0, 220)}...` : t;
+};
 
 const GROUP_TITLES = {
   common: 'Site chrome (navigation, footer, buttons, forms)',
   home: 'Homepage',
   products: 'Product pages',
   services: 'Service pages',
-  companyPages: 'Company, legal and article pages',
-  seo: 'Page titles and meta descriptions',
-  images: 'Image alt text',
+  companyPages: 'Company, legal and blog pages',
+  industries: 'Industry pages',
+  solutions: 'Solution pages',
+  seo: 'Page titles and meta descriptions (Kinyarwanda pages only)',
+  images: 'Image alt text (Kinyarwanda pages only)',
 };
 
 const lines = [
   '# Kinyarwanda translation checklist',
   '',
-  `Generated by \`npm run i18n:status\`. Do not edit by hand.`,
+  'Generated by `npm run i18n:status`. Do not edit by hand.',
   '',
-  `**${done} of ${enLeaves.length} strings translated. ${pending.length} pending.**`,
+  `**Interface: ${enMap.size - missing.length} of ${enMap.size} strings have a Kinyarwanda value. ${missing.length} missing.**`,
+  `**Articles: ${enArticles.length - missingArticles.length} of ${enArticles.length} have a Kinyarwanda version.**`,
   '',
-  'Every pending string currently falls back to English on the live site, so',
-  '`/rw/` pages are complete and readable; they are simply not yet in Kinyarwanda.',
+  '## Status',
   '',
-  '## How to supply a translation',
+  'Every string on the site has a Kinyarwanda translation, enforced by the type',
+  'checker: `src/i18n/rw.ts` is typed as the complete shape of the English',
+  'dictionary, so a string added in English and not in Kinyarwanda fails the build.',
   '',
-  'Add the key path and its Kinyarwanda text to `src/i18n/rw.ts`, mirroring the',
-  'structure of the English files. Anything added there wins over English at once;',
-  'anything omitted keeps falling back. Re-run `npm run i18n:status` to update this list.',
+  'The translations have NOT yet been confirmed by a native speaker. Until they are,',
+  'the English version of each legal page (terms of service, privacy policy,',
+  'warranty) is the authoritative one. The table below is the review sheet.',
   '',
-  '## Already in the file, still needing native review',
+  '## How to correct a translation',
   '',
-  'The strings already present in `src/i18n/rw.ts` are interface chrome only, each',
-  'marked `@review`. They were added so the language switcher could be tested end to',
-  'end, and a native speaker should confirm every one of them before launch.',
-  '',
-  '## Pending strings',
+  'Edit the value in the matching file under `src/i18n/rw/` (same file name and key',
+  'path as the English in `src/i18n/en/`). Articles live in `src/content/articles-rw/`,',
+  'one file per English article, same file name. Re-run `npm run i18n:status`.',
   '',
 ];
 
+if (missing.length) {
+  lines.push('## Missing', '', '| Key | English |', '| --- | --- |');
+  for (const path of missing) lines.push(`| \`${path}\` | ${cell(enMap.get(path))} |`);
+  lines.push('');
+}
+
+lines.push(
+  '## Identical to the English',
+  '',
+  'Usually deliberate: brand and product names, figures, addresses. Confirm each.',
+  '',
+  '| Key | Value |',
+  '| --- | --- |',
+);
+for (const [path, value] of same) lines.push(`| \`${path}\` | ${cell(value)} |`);
+lines.push('');
+
+if (missingArticles.length) {
+  lines.push('## Articles without a Kinyarwanda version', '');
+  for (const f of missingArticles) lines.push(`- \`${f}\``);
+  lines.push('');
+}
+
+lines.push('## Review sheet', '');
+const groups = new Map();
+for (const [path, value] of enMap) {
+  const group = path.split('.')[0];
+  if (!groups.has(group)) groups.set(group, []);
+  groups.get(group).push([path, value, rwMap.get(path)]);
+}
 for (const [group, entries] of groups) {
   lines.push(`### ${GROUP_TITLES[group] ?? group}  (${entries.length})`, '');
-  lines.push('| Key | English |', '| --- | --- |');
-  for (const [path, value] of entries) {
-    const text = String(value).replace(/\|/g, '\\|').replace(/\n/g, ' ');
-    lines.push(`| \`${path}\` | ${text.length > 180 ? `${text.slice(0, 180)}...` : text} |`);
-  }
+  lines.push('| Key | English | Kinyarwanda |', '| --- | --- | --- |');
+  for (const [path, value, translated] of entries) lines.push(`| \`${path}\` | ${cell(value)} | ${cell(translated ?? '—')} |`);
   lines.push('');
 }
 
 mkdirSync(join(root, 'docs'), { recursive: true });
 writeFileSync(join(root, 'docs/translation-checklist.md'), lines.join('\n'));
 
-console.log(`Kinyarwanda: ${done}/${enLeaves.length} translated, ${pending.length} pending.`);
-for (const [group, entries] of groups) {
-  console.log(`  ${String(entries.length).padStart(4)}  ${GROUP_TITLES[group] ?? group}`);
-}
+console.log(`Kinyarwanda interface: ${enMap.size - missing.length}/${enMap.size} strings, ${missing.length} missing, ${same.length} identical to English (see checklist).`);
+console.log(`Kinyarwanda articles:  ${enArticles.length - missingArticles.length}/${enArticles.length}.`);
 console.log('\nWritten: docs/translation-checklist.md');

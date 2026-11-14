@@ -12,8 +12,8 @@ record of the judgement calls made along the way.
 | 1 | **Formspree form ID** | The contact form | Set `PUBLIC_FORMSPREE_ID` in `.env`. Until then the form renders a clearly-labelled "not yet connected" panel with WhatsApp and email instead of silently dropping submissions. Nothing else needs changing. |
 | 2 | **VRAS copy** | `/vras/` | The live page returns a database error (`Could not connect to the database primetra_autoboss`) with no recoverable content. Per your instruction the menu entry resolves to the 404 page. See §4 for the tradeoff and the one-line fix once you have copy. |
 | 3 | **14 photographs** | Visual finish | Full checklist in `src/assets/images/README.md`. Each placeholder is a labelled grey plate at the exact filename and dimensions the real image will use, so replacing one is a straight overwrite. |
-| 4 | **Kinyarwanda translation** | The `/rw/` site reading in Kinyarwanda | 606 strings, listed in `docs/translation-checklist.md`. The site is fully functional today: untranslated strings fall back to English automatically. |
-| 5 | **Native review of the Kinyarwanda already in place** | Launch | 32 interface strings (navigation, buttons, form labels) are in `src/i18n/rw.ts`, each marked `@review`. They were added so the switcher could be tested end to end. A native speaker should confirm them. |
+| 4 | **Kinyarwanda translation** | — | Done: every interface string (924, enforced by the type checker) and all 48 articles (`/rw/<slug>/`). See `docs/translation-checklist.md`. |
+| 5 | **Native review of the Kinyarwanda** | Launch | The whole Kinyarwanda site (`src/i18n/rw/*.ts`, `src/i18n/rw/countries.ts`, `src/content/articles-rw/`) should be confirmed by a native speaker, the legal pages first; until then the English legal pages are the authoritative ones. `docs/translation-checklist.md` is the review sheet: every string, English beside Kinyarwanda. |
 | 6 | **Hosting decision** | Deploy | Redirect files ship for both: `public/_redirects` (Cloudflare Pages / Netlify) and `public/.htaccess` (Apache / Hostinger). Keep the two in step if you edit either. |
 | 7 | **Google Maps embed** | Contact page | Not embedded. The address is published as text and the office photo is a placeholder. Send me the exact coordinates or a Place ID if you want a map, and confirm you are happy with the third-party cookie implications. |
 | 8 | **Confirm the two corrections in §3** | Launch | Both are cases where the live site contradicts itself. I picked the Rwanda-correct option; you should confirm. |
@@ -276,7 +276,7 @@ on the Rwanda site.
   (Mailchimp, Brevo), that is a one-line change to the form's `action`.
 - **No search.** The live site had none either. With 48 articles it may become worth
   adding.
-- **Kinyarwanda is 5% translated** (32 of 640 strings), all of it interface chrome.
+- **Kinyarwanda is complete but not yet natively reviewed.** Every string and every article has a Kinyarwanda version; a native speaker should confirm them before launch (see item 5 above).
 - **Scroll-driven motion is Chromium-only today.** The hero card and the staggered
   blur-resolve below it use native CSS scroll-driven animations
   (`animation-timeline: view()`), which Safari and Firefox do not yet support.

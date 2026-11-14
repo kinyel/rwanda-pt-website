@@ -126,6 +126,32 @@ export const seo = {
     description:
       'Articles on vehicle tracking, fleet management and vehicle security in Rwanda, written by the PrimeTrack team for operators in this market.',
   },
+  /* These four used to be literals in their page templates, which kept them
+     out of the translation system: the /rw/ pages carried them in English.
+     The English values are exactly the strings the templates had. */
+  industriesIndex: {
+    title: 'Fleet Tracking by Industry in Rwanda | PrimeTrack',
+    description:
+      'GPS fleet tracking, video telematics and fuel monitoring for construction, logistics, transport, pharmaceutical, emergency and fuel distribution fleets across Rwanda.',
+  },
+  solutionsIndex: {
+    title: 'Fleet Management Solutions in Rwanda | PrimeTrack',
+    description:
+      'Fleet tracking, AI video telematics, fuel monitoring, vehicle and asset security, and fleet analytics for operators across Rwanda, on one platform.',
+  },
+  vehicleSecurity: {
+    title: 'Vehicle & Asset Security in Rwanda | PrimeTrack',
+    description:
+      'Vehicle and asset security in Rwanda: tamper alerts, geofence breaches, independent cargo tracking and electronic seals, with an alert the moment something moves that should not.',
+    /** The Service schema's name. */
+    schemaName: 'Vehicle and asset security',
+  },
+  /** Templated per industry: {name} is the industry's name. */
+  industryPage: {
+    title: '{name} Fleet Tracking in Rwanda | PrimeTrack',
+    /** The Service schema's name; {name} is lower-cased. */
+    schemaName: 'Fleet tracking for {name}',
+  },
   notFound: {
     title: 'Page Not Found | PrimeTrack Rwanda',
     description: 'The page you asked for could not be found. Browse PrimeTrack Rwanda products, services and contact details instead.',

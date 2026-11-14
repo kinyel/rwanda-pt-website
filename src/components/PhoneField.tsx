@@ -44,6 +44,12 @@ interface Labels {
 interface Props {
   /** Submitted field name. The value is always E.164. */
   name: string;
+  /**
+   * Country names in the page's language, keyed by ISO code. Any country not
+   * in the map shows its international name. The search matches both, so a
+   * visitor can type either.
+   */
+  names?: Record<string, string>;
   labels: Labels;
   id: string;
   invalid?: boolean;
@@ -85,7 +91,7 @@ export function phoneIsValid(country: Country, national: string): boolean {
   return d.length >= min && d.length <= max;
 }
 
-export default function PhoneField({ name, labels, id, invalid, describedBy, onValidityChange }: Props) {
+export default function PhoneField({ name, names, labels, id, invalid, describedBy, onValidityChange }: Props) {
   const listId = useId();
   const [iso, setIso] = useState(DEFAULT_ISO);
   const [national, setNational] = useState('');
@@ -99,14 +105,31 @@ export default function PhoneField({ name, labels, id, invalid, describedBy, onV
   const searchRef = useRef<HTMLInputElement>(null);
   const optionRefs = useRef<(HTMLLIElement | null)[]>([]);
 
+  /** The name shown for a country: the page's language where it has one. */
+  const nameOf = (c: { iso: string; name: string }) => names?.[c.iso] ?? c.name;
+
+  /* The region's countries stay first; the rest are ordered by the name the
+     visitor actually sees, so a Kinyarwanda list is alphabetical in
+     Kinyarwanda rather than in English. */
+  const listed = useMemo(() => {
+    if (!names) return orderedCountries;
+    const head = orderedCountries.slice(0, PRIORITY_COUNT);
+    const rest = orderedCountries.slice(PRIORITY_COUNT).sort((a, b) => nameOf(a).localeCompare(nameOf(b)));
+    return [...head, ...rest];
+  }, [names]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return orderedCountries;
+    if (!q) return listed;
     const bare = q.replace(/^\+/, '');
-    return orderedCountries.filter(
-      (c) => c.name.toLowerCase().includes(q) || c.dial.startsWith(bare) || c.iso.toLowerCase() === q,
+    return listed.filter(
+      (c) =>
+        nameOf(c).toLowerCase().includes(q) ||
+        c.name.toLowerCase().includes(q) ||
+        c.dial.startsWith(bare) ||
+        c.iso.toLowerCase() === q,
     );
-  }, [query]);
+  }, [query, listed]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* The parent needs to know whether this field is empty, because it is
      optional when empty and must be a real number when it is not. */
@@ -206,7 +229,7 @@ export default function PhoneField({ name, labels, id, invalid, describedBy, onV
           aria-haspopup="listbox"
           aria-expanded={open}
           aria-controls={open ? listId : undefined}
-          aria-label={`${labels.countryLabel}: ${country.name} +${country.dial}`}
+          aria-label={`${labels.countryLabel}: ${nameOf(country)} +${country.dial}`}
           onClick={() => setOpen((v) => !v)}
         >
           <span className="phone-flag" aria-hidden="true">{flagFor(country.iso)}</span>
@@ -293,7 +316,7 @@ export default function PhoneField({ name, labels, id, invalid, describedBy, onV
                   onClick={() => choose(c)}
                 >
                   <span className="phone-flag" aria-hidden="true">{flagFor(c.iso)}</span>
-                  <span className="phone-option-name">{c.name}</span>
+                  <span className="phone-option-name">{nameOf(c)}</span>
                   <span className="phone-option-dial">+{c.dial}</span>
                 </li>
               ))}

@@ -32,8 +32,8 @@ const icons = ['truck', 'video', 'fuel', 'shield', 'chart'];
 <BaseLayout
   locale={locale}
   path={routes.solutions}
-  title="Fleet Management Solutions in Rwanda | PrimeTrack"
-  description="Fleet tracking, AI video telematics, fuel monitoring, vehicle and asset security, and fleet analytics for operators across Rwanda, on one platform."
+  title={t.seo.solutionsIndex.title}
+  description={t.seo.solutionsIndex.description}
   schemas={[
     breadcrumbSchema([
       { name: t.common.common.home, url: new URL(localizePath(routes.home, locale), site).href },

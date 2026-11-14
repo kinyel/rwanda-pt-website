@@ -1,6 +1,7 @@
 import { useEffect, useId, useState, type FormEvent } from 'react';
 import { useForm, ValidationError } from '@formspree/react';
 import PhoneField from './PhoneField';
+import { countryNamesRw } from '../i18n/rw/countries';
 
 /**
  * Contact form, posting to Formspree through @formspree/react.
@@ -261,6 +262,7 @@ export default function ContactForm({ formId, labels, email, whatsappUrl, whatsa
           <PhoneField
             id={`${id}-phone`}
             name="phone"
+            names={locale === 'rw' ? countryNamesRw : undefined}
             invalid={Boolean(errors.phone)}
             describedBy={errors.phone ? `${id}-phone-error` : undefined}
             onValidityChange={setPhone}

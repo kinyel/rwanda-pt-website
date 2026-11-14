@@ -21,7 +21,7 @@ import RelatedLinks from '../components/RelatedLinks.astro';
 import { routes, resolveKey } from '../data/navigation';
 import { industryPath, type Industry } from '../data/industries';
 import { breadcrumbSchema, serviceSchema } from '../data/schema';
-import { useTranslations, localizePath, type Locale } from '../i18n';
+import { useTranslations, interpolate, localizePath, type Locale } from '../i18n';
 
 interface Props {
   locale: Locale;
@@ -41,7 +41,7 @@ const url = new URL(localizePath(path, locale), site).href;
 /* Titles and descriptions are derived rather than hand-written per sector: the
    pattern is unique per page, front-loads the sector plus the primary keyword,
    and stays inside display length for every one of the eight names. */
-const title = `${copy.name} Fleet Tracking in Rwanda | PrimeTrack`;
+const title = interpolate(t.seo.industryPage.title, { name: copy.name });
 const description = copy.summary;
 
 /* The link graph for this sector, resolved from routes to display names. */
@@ -67,7 +67,7 @@ const productLinks = industry.products.map((href) => ({ href, ...nameFor[href] }
   title={title}
   description={description}
   schemas={[
-    serviceSchema({ name: `Fleet tracking for ${copy.name.toLowerCase()}`, description, url }),
+    serviceSchema({ name: interpolate(t.seo.industryPage.schemaName, { name: copy.name.toLowerCase() }), description, url }),
     breadcrumbSchema([
       { name: t.common.common.home, url: new URL(localizePath(routes.home, locale), site).href },
       { name: t.industries.index.eyebrow, url: new URL(localizePath(routes.industries, locale), site).href },
