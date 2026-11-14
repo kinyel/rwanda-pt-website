@@ -22,6 +22,16 @@ export const en = { common, home, products, services, companyPages, industries, 
 export type Dictionary = typeof en;
 
 /**
+ * The SEO entries that belong to one page, with a title and a description.
+ * Excludes the templates filled in per page (such as `industryPage`), so a
+ * page template that reads `t.seo[key].description` can only be handed a key
+ * that has one.
+ */
+export type PageSeoKey = {
+  [K in keyof Dictionary['seo']]: Dictionary['seo'][K] extends { title: string; description: string } ? K : never;
+}[keyof Dictionary['seo']];
+
+/**
  * A partial mirror of `Dictionary`, to any depth. This is what a translation
  * file may supply: some keys now, the rest later.
  *

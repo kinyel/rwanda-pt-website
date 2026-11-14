@@ -36,8 +36,17 @@ interface Props {
    * and `dark` are fixed, for the footer and anywhere outside the header.
    */
   tone?: 'auto' | 'light' | 'dark';
-  /** `compact` uses EN/KIN, `full` uses English/Kinyarwanda. */
-  size?: 'compact' | 'full';
+  /**
+   * `compact` uses EN/KIN, `full` uses English/Kinyarwanda.
+   *
+   * `fit` is for the header bar: the full names wherever the bar has room for
+   * them, which is every screen from 360px up. Narrower phones (the original
+   * iPhone SE, a folded Fold) cannot fit the logo, call, menu and both names
+   * on one row, so there it shows EN/KIN rather than push the switcher off
+   * screen. Between lg and xl, where the full desktop menu shares the row,
+   * the chips run a little tighter so the row still fits at 1024px.
+   */
+  size?: 'compact' | 'full' | 'fit';
   class?: string;
 }
 
@@ -94,12 +103,20 @@ const idleChip = idleChips[tone];
                 ? `${meta.name}. ${t.common.language.current}`
                 : interpolate(t.common.language.switchTo, { language: meta.name })
             }
-            class={`inline-flex min-h-11 min-w-11 items-center justify-center rounded-[calc(var(--radius-card)-2px)] px-3
+            class={`inline-flex min-h-11 min-w-11 items-center justify-center rounded-[calc(var(--radius-card)-2px)]
                     text-[0.8125rem] font-bold transition-colors duration-[--duration-theme] ease-[--ease-prime]
                     sm:min-h-8 sm:min-w-0
+                    ${size === 'fit' ? 'px-2.5 sm:px-3 lg:max-xl:px-1.5 lg:max-xl:text-xs' : 'px-3'}
                     ${isActive ? activeChip : idleChip}`}
           >
-            {size === 'compact' ? meta.short : meta.name}
+            {size === 'compact' && meta.short}
+            {size === 'full' && meta.name}
+            {size === 'fit' && (
+              <>
+                <span class="min-[22.5rem]:hidden">{meta.short}</span>
+                <span class="hidden min-[22.5rem]:inline">{meta.name}</span>
+              </>
+            )}
           </a>
         );
       })

@@ -16,7 +16,7 @@ import CTA from '../components/CTA.astro';
 import RelatedLinks from '../components/RelatedLinks.astro';
 import { routes } from '../data/navigation';
 import { productSchema, breadcrumbSchema } from '../data/schema';
-import { useTranslations, localizePath, type Locale } from '../i18n';
+import { useTranslations, localizePath, type Locale, type PageSeoKey } from '../i18n';
 import type { ImageKey } from '../data/images';
 
 interface Props {
@@ -25,7 +25,7 @@ interface Props {
   productKey: 'videoTracking' | 'primesolar' | 'fuelmanagement' | 'containertracking' | 'fleettracking' | 'ectss';
   path: string;
   imageKey: ImageKey;
-  seoKey: keyof ReturnType<typeof useTranslations>['seo'];
+  seoKey: PageSeoKey;
   /** Locale-free paths of related pages, rendered at the foot of the page. */
   related: { href: string; titleKey: string; descriptorKey?: string }[];
 }
