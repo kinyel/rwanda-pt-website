@@ -66,7 +66,7 @@ export const seo: Translation<Dictionary['seo']> = {
   contact: {
     title: 'Twandikire: PrimeTrack Rwanda | Ibikoresho bya GPS i Kigali',
     description:
-      'PrimeTrack Rwanda, Igorofa rya 6, Tower A, Yyussa City Centre, Kigali. Hamagara cyangwa WhatsApp +250 793 017 263, cyangwa imeyili admin@primetrack.rw. PrimeCARE isubiza 24/7.',
+      'PrimeTrack Rwanda, Igorofa rya 4, Tower A, Yyussa City Centre, Kigali. Hamagara cyangwa WhatsApp +250 793 017 263, cyangwa imeyili admin@primetrack.rw. PrimeCARE isubiza 24/7.',
   },
   whyChoose: {
     title: 'Impamvu Wahitamo PrimeTrack Rwanda | Ibyiza 7',

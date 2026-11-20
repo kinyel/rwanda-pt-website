@@ -22,13 +22,25 @@ export type SceneKind =
   | 'blueprint'
   /** Eight routes arriving at one point. */
   | 'converge'
-  /** The land, as nothing but its contour lines. */
-  | 'contours';
+  /** A contract: three sheets, written, signed and sealed. */
+  | 'agreement'
+  /** Four shields, one inside the next, around a locked core. */
+  | 'shield'
+  /** A rosette whose ring is five years long. */
+  | 'seal'
+  /** Seven people round one table, each connected to it. */
+  | 'team'
+  /** An open book whose pages turn. */
+  | 'manual'
+  /** A located vehicle at the end of its route, signalling. */
+  | 'signal'
+  /** A radar sweep that finds the fleet and flags two of it. */
+  | 'radar';
 
 /**
  * WHY EACH FAMILY GETS WHAT IT GETS.
  *
- * ALL FIVE ARE LINE-WORK, and that is the whole lesson of the first build.
+ * ALL OF THEM ARE LINE-WORK, and that is the whole lesson of the first build.
  * Those scenes were shaded solids — plinths, slabs, tiles, filled contours —
  * and on a near-black ground a shaded solid is a dark lump with a rim. The
  * one that worked was the one made of lit lines in space. Lines hold their
@@ -51,14 +63,30 @@ export type SceneKind =
  * `contact` — the one page where every thread of the site is supposed to end,
  *   drawn as exactly that.
  *
- * `quiet` — warranty, careers, tools, the blog index, the legal pages, 404
- *   and the articles. A loud object on a privacy policy is a mistake, so this
- *   is the land with nothing on it: contour lines and no instruments.
+ * THE READING PAGES each get a drawing of their own subject. They used to
+ *   share one drawing of the land with nothing on it, which said nothing
+ *   about any of them. Their heroes are compact (see `PageHero`), so these
+ *   are drawn small, beside the heading.
+ *   `terms` — the contract itself, signed and sealed.
+ *   `privacy` — protection, as layers round a lock.
+ *   `warranty` — a seal whose ring is the five years it covers.
+ *   `careers` — the team, round one table.
+ *   `tools` — the manuals, as an open book.
+ *   `blog` and `articles` — one family: every article is about tracking, so
+ *   it is PrimeTrack's own mark, a located vehicle signalling.
+ *   `analyze` — the diagnosis, as a radar finding the fleet's problems.
  */
 export const heroScenes = {
   solutions: 'layers',
   industries: 'field',
   product: 'blueprint',
   contact: 'converge',
-  quiet: 'contours',
+  terms: 'agreement',
+  privacy: 'shield',
+  warranty: 'seal',
+  careers: 'team',
+  tools: 'manual',
+  blog: 'signal',
+  articles: 'signal',
+  analyze: 'radar',
 } as const satisfies Record<string, SceneKind>;

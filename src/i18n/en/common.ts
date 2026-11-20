@@ -16,7 +16,7 @@ export const common = {
   /** The two parts of the office address that are words rather than names.
    *  The building, the city and the structured data use src/data/company.ts. */
   address: {
-    line1: '6th Floor, Tower A',
+    line1: '4th Floor, Tower A',
     country: 'Republic of Rwanda',
   },
 
@@ -61,8 +61,6 @@ export const common = {
     current: 'Current language',
     /** Template for the inactive option's accessible name. */
     switchTo: 'Switch to {language}',
-    /** Shown above the footer's language switcher. */
-    availability: 'The whole site is available in English and Kinyarwanda.',
   },
 
   cta: {
@@ -92,9 +90,11 @@ export const common = {
     servicesTitle: 'Services',
     contactTitle: 'Contact',
     socialsTitle: 'Follow PrimeTrack',
-    careTitle: 'PrimeCARE',
+    /** Over the P.R.I.M.E. values under the logo. */
+    valuesTitle: 'Our Core Values',
+    careTitle: '24/7 Customer Support',
     careBody:
-      'PrimeCARE is our 24/7 customer service line. Call or message us on WhatsApp, or send an email and we will pick it up the same day.',
+      'PrimeCARE is our dedicated customer support service, available 24 hours a day, 7 days a week, providing prompt assistance whenever you need it. Reach us by phone, WhatsApp, email, or through any of our online platforms. We’re at your service always.',
     tipsTitle: 'PrimeTIPS',
     tipsBody: 'Occasional fleet and tracking notes from our team. No spam, and you can leave whenever you like.',
     emailPlaceholder: 'Your email address',
@@ -103,14 +103,14 @@ export const common = {
     /** {year} is substituted at build time. */
     copyright: '© {year} PrimeTrack Telematics Limited. All rights reserved.',
     licensed: 'Licensed in Rwanda by RURA',
-    warrantyLine: 'Up to 5-year product warranty',
-    supportLine: '24/7 PrimeCARE support',
+    /** Names the bottom bar's legal links for a screen reader. */
+    legalLabel: 'Legal',
     officeTitle: 'Rwanda office',
     nigeriaOfficeTitle: 'Nigeria office',
     nigeriaOfficeLink: 'Visit primetracknigeria.com',
     sitemapLabel: 'Footer',
     /** Reopens the cookie preferences dialog. */
-    cookiePreferences: 'Cookie preferences',
+    cookiePreferences: 'Cookie Preferences',
   },
 
   /**
@@ -157,12 +157,12 @@ export const common = {
   },
 
   links: {
-    supportManuals: 'Support manuals and documents',
-    whyChoose: 'Why choose PrimeTrack',
-    warranties: 'Prime warranties',
-    careers: 'Prime careers',
-    termsOfService: 'Terms of service',
-    privacyPolicy: 'Privacy policy',
+    supportManuals: 'Support Manuals and Documents',
+    whyChoose: 'Why Choose PrimeTrack',
+    warranties: 'Prime Warranties',
+    careers: 'Prime Careers',
+    termsOfService: 'Terms of Service',
+    privacyPolicy: 'Privacy Policy',
     vras: 'VRAS',
   },
 

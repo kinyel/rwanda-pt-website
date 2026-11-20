@@ -28,7 +28,7 @@ export function organizationSchema(logoUrl: string) {
       addressLocality: company.address.city,
       addressCountry: 'RW',
     },
-    sameAs: company.socials.map((s) => s.url),
+    sameAs: [...company.sameAs],
   };
 }
 

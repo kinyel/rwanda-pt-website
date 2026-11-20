@@ -13,9 +13,9 @@
  *   2. The live STAR Trackers page refers to "PrimeTrack Nigeria's STAR
  *      Trackers". Corrected to the unqualified brand name in products.ts.
  *
- * The terms of service genuinely publish info@primetrack.rw for legal
- * queries, distinct from the general admin@ address. That distinction is
- * preserved rather than flattened.
+ * Every contact address on the site is admin@primetrack.rw (src/data/
+ * company.ts). The live terms of service gave info@primetrack.rw for legal
+ * queries; that address does not exist, so the terms use admin@ too.
  */
 export const companyPages = {
   whyChoose: {
@@ -183,8 +183,6 @@ export const companyPages = {
       },
     ],
     contactNote: 'If you have questions or concerns about these terms, please contact us at {email}.',
-    /** The terms page publishes a distinct legal address from the general one. */
-    legalEmail: 'info@primetrack.rw',
     privacyLink: 'Read our privacy policy',
   },
 

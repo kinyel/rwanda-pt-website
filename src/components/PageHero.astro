@@ -16,6 +16,14 @@
  * does not take one renders exactly the markup it rendered before. The scene
  * is `aria-hidden`, carries no text and comes after the copy in the DOM, so
  * the heading, the lead and the reading order are untouched by it.
+ *
+ * COMPACT is for the reading pages (the legal pages, warranty, careers,
+ * tools, the blog, the fleet analysis), whose hero is a heading and at most a
+ * sentence or two. A full hero there was 636px tall on a laptop for a 110px
+ * heading. Compact sizes the hero to its copy: less padding, no height floor,
+ * and the scene drawn small beside the heading instead of standing in a
+ * column of its own (on a phone, in the heading's top corner rather than as
+ * a band under it). Nothing in the copy changes.
  */
 import Breadcrumbs from './Breadcrumbs.astro';
 import PageHeroScene from './PageHeroScene.astro';
@@ -32,18 +40,36 @@ interface Props {
   crumbs?: { name: string; href: string }[];
   /** Which 3D composition stands beside the copy. Omit for a plain hero. */
   scene?: SceneKind;
+  /** A hero only as tall as its copy, for the reading pages. See above. */
+  compact?: boolean;
 }
 
-const { locale, eyebrow, title, lead, chips, crumbs, scene } = Astro.props;
+const { locale, eyebrow, title, lead, chips, crumbs, scene, compact = false } = Astro.props;
 ---
 
 <section data-nav="dark" class="on-dark relative overflow-hidden bg-ink-950 bg-contour-prime">
   <div class="absolute inset-0 bg-prime-glow" aria-hidden="true"></div>
-  <div class="container-prime relative py-14 sm:py-16 lg:py-20">
+  <div
+    class:list={[
+      'container-prime relative',
+      compact ? 'py-10 sm:py-12 lg:py-14' : 'py-14 sm:py-16 lg:py-20',
+      compact && scene && 'pagehero-compact',
+    ]}
+  >
+    {
+      /* Compact: first, so on a phone it can float beside the breadcrumb and
+         the eyebrow. aria-hidden and wordless, so where it sits in the DOM
+         changes nothing for a reader, a screen reader or a crawler. */
+      scene && compact && (
+        <div class="pagehero-scene">
+          <PageHeroScene kind={scene} compact />
+        </div>
+      )
+    }
     {crumbs && <Breadcrumbs locale={locale} crumbs={crumbs} tone="dark" class="arrive mb-7" />}
 
-    <div class:list={['pagehero-body', scene && 'pagehero-body-scene']}>
-      <div>
+    <div class:list={['pagehero-body', scene && !compact && 'pagehero-body-scene', compact && scene && 'pagehero-body-compact']}>
+      <div class="pagehero-copy">
         {eyebrow && <p class="arrive eyebrow mb-4" style="--d:1">{eyebrow}</p>}
         <h1 class="arrive text-display text-white" style="--d:2">{title}</h1>
         {lead && <p class="arrive mt-5 measure text-lead text-ink-300" style="--d:3">{lead}</p>}
@@ -61,7 +87,7 @@ const { locale, eyebrow, title, lead, chips, crumbs, scene } = Astro.props;
         <slot />
       </div>
 
-      {scene && <PageHeroScene kind={scene} />}
+      {scene && !compact && <PageHeroScene kind={scene} />}
     </div>
   </div>
 </section>
@@ -93,6 +119,81 @@ const { locale, eyebrow, title, lead, chips, crumbs, scene } = Astro.props;
          roughly 500px on a laptop without making any page's first screen
          a picture with a sentence on it. */
       min-height: 26rem;
+    }
+  }
+
+  /* COMPACT. On a phone and a tablet the scene floats in the hero's top
+     corner, beside the breadcrumb and the eyebrow, and rises into the empty
+     padding above them. Those two lines are short, so they lose nothing to
+     it, and the heading starts below it with the full width: no title is
+     squeezed into a column beside the drawing or split round it. The float
+     reaches past its own margins at the top, right and bottom, where its
+     box is empty, so it takes as little room as the drawing needs. */
+  .pagehero-compact {
+    /* Contains the float, so the hero's height always includes it. */
+    display: flow-root;
+  }
+  .pagehero-compact .pagehero-scene {
+    float: right;
+    width: 11.5rem;
+    margin: -2.5rem -0.75rem -1.75rem 0.5rem;
+  }
+  .pagehero-body-compact {
+    /* A plain block (the default body is `display: contents`), and not a new
+       formatting context, so its lines still see the float. */
+    display: block;
+  }
+  /* The breadcrumb beside the float flows as one run of text, wrapping word
+     by word. As a flex row it moved the page's name to a line of its own
+     the moment it did not fit after "Home /", which beside the scene was
+     every time. Same markup and links; only how the line wraps changes. */
+  .pagehero-compact :global(nav > ol) {
+    display: block;
+  }
+  .pagehero-compact :global(nav > ol > li) {
+    display: inline;
+  }
+  .pagehero-compact :global(nav > ol > li > span[aria-hidden]) {
+    margin-inline: 0.5rem;
+  }
+  @media (width >= 40rem) {
+    .pagehero-compact .pagehero-scene {
+      width: 17rem;
+      margin: -3rem -1rem -2.75rem 1rem;
+    }
+  }
+  /* From a laptop up, two columns: the scene's column is 23rem, beside the
+     breadcrumb and the copy together, and its box reaches 3rem into the
+     hero's padding above and below. The drawing sits in the middle of that
+     box with empty space round it, so it can be this big while the hero
+     stays as tall as its copy (or about 13rem, whichever is more). */
+  @media (width >= 64rem) {
+    .pagehero-compact {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 23rem;
+      grid-template-rows: auto 1fr;
+      column-gap: 2.5rem;
+    }
+    .pagehero-compact .pagehero-scene {
+      float: none;
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      align-self: center;
+      width: 100%;
+      margin: -3rem -1rem -3rem 0;
+    }
+    /* Every cell named, none left to auto-placement. The breadcrumb is
+       another component's element, so this file's scoped styles cannot
+       reach it without :global; left to auto-placement it only landed in
+       the right cell because that cell happened to be free first. */
+    .pagehero-compact > :global(nav) {
+      grid-column: 1;
+      grid-row: 1;
+    }
+    .pagehero-body-compact {
+      grid-column: 1;
+      grid-row: 2;
+      align-self: center;
     }
   }
 </style>

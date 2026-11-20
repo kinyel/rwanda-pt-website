@@ -172,7 +172,6 @@ export const companyPages: Translation<Dictionary['companyPages']> = {
       },
     ],
     contactNote: 'Niba ufite ibibazo cyangwa impungenge kuri aya mabwiriza, twandikire kuri {email}.',
-    legalEmail: 'info@primetrack.rw',
     privacyLink: 'Soma politiki yacu yo kurinda amakuru bwite',
   },
 

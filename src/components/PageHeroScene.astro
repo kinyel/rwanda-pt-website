@@ -35,8 +35,10 @@
  * event derives from it in CSS. Each scene has a real event, and the event is
  * about what the page is for: the platform fans into its layers, the eight
  * operations rise off the ground, the unit assembles itself, the routes pulse
- * into the hub, the land lifts into its contours. Scrolling back runs it
- * backwards.
+ * into the hub; on the reading pages the seal comes down onto the terms, a
+ * scan passes over the privacy shield, the warranty's five years light one
+ * by one, the team connects, the manual's pages turn, the signal goes out
+ * and the radar finds the fleet. Scrolling back runs it backwards.
  *
  * COST. No WebGL, no 3D library, no model file, no images. One rAF-throttled
  * scroll handler for every scene on the page, writing one custom property;
@@ -55,9 +57,15 @@ import type { SceneKind } from '../data/hero-scenes';
 
 interface Props {
   kind: SceneKind;
+  /**
+   * The small version, for the compact heroes of the reading pages: beside
+   * the heading rather than a column of its own, so the depth and the line
+   * weights come down with the size (see the end of the stylesheet).
+   */
+  compact?: boolean;
 }
 
-const { kind } = Astro.props as Props;
+const { kind, compact = false } = Astro.props as Props;
 
 /* ---------------------------------------------------------------------------
    Geometry is generated, not hand-written.
@@ -119,40 +127,115 @@ const ROUTES = Array.from({ length: 8 }, (_, i) => {
   return { d: `M${f(ex)} ${f(ey)}Q${f(cx)} ${f(cy)} ${HUB.x} ${HUB.y}`, x: +f(ex), y: +f(ey), i };
 });
 
-/** CONTOURS: the land, as nothing but its lines.
-    Different radius falloff and ridge phase from the homepage model, so it
-    is the same landscape rather than the same object. */
-const CONTOUR_LEVELS = 7;
-function contour(level: number): string {
-  const steps = 40;
-  const t = level / (CONTOUR_LEVELS - 1);
-  const radius = 156 * (1 - t) ** 0.7 + 16;
-  const pts: [number, number][] = [];
-  for (let i = 0; i < steps; i++) {
+/* ---------------------------------------------------------------------------
+   THE READING PAGES. Each of these used to share one drawing of the land
+   (contour lines and nothing on them). They now each get a drawing of what
+   the page is about, in the same lit line-work as every other scene.
+--------------------------------------------------------------------------- */
+
+const f1 = (n: number) => n.toFixed(1);
+
+/** Horizontal position on the stage, as a percentage, of a point in the
+    400-unit drawing. The stage is 6:5 and the drawing is the centred square
+    of its height, so x runs over 83.33% of the width, not all of it. */
+const stageX = (x: number) => +(50 + ((x - 200) / 400) * 83.333).toFixed(3);
+const stageY = (y: number) => +((y / 400) * 100).toFixed(3);
+
+/** AGREEMENT: the terms, as the document they are. Three sheets of one
+    contract, the top one written on, signed, and sealed. */
+const SHEET = { x: 94, y: 38, w: 212, h: 318, r: 10 };
+const TERMS_LINES = [
+  { x1: 122, x2: 228, y: 80, head: true },
+  { x1: 122, x2: 278, y: 116 },
+  { x1: 122, x2: 264, y: 140 },
+  { x1: 122, x2: 278, y: 164 },
+  { x1: 122, x2: 246, y: 188 },
+  { x1: 122, x2: 272, y: 212 },
+  { x1: 122, x2: 216, y: 236 },
+].map((line, k) => ({ ...line, k }));
+const SIGNATURE = 'M124 302c6-17 13-24 17-15s-3 18 2 16 10-21 15-14-2 14 3 13 9-10 14-9 7 6 14 1';
+const SEAL = { x: 262, y: 304 };
+
+/** SHIELD: privacy, as layers of protection around one locked core. */
+function shieldPath(k: number) {
+  const P = (x: number, y: number) => `${f1(200 + x * k)} ${f1(206 + y * k)}`;
+  return (
+    `M${P(0, -152)}C${P(44, -127)} ${P(88, -121)} ${P(130, -121)}` +
+    `C${P(134, -34)} ${P(120, 54)} ${P(0, 152)}` +
+    `C${P(-120, 54)} ${P(-134, -34)} ${P(-130, -121)}` +
+    `C${P(-88, -121)} ${P(-44, -127)} ${P(0, -152)}Z`
+  );
+}
+const SHIELDS = [1, 0.78, 0.57, 0.37].map((k, i) => ({ d: shieldPath(k), i, t: +(i / 3).toFixed(3) }));
+
+/** SEAL: the warranty, as a rosette whose ring is five years long. */
+function scallop(r: number, amp: number, lobes: number) {
+  const steps = lobes * 8;
+  let d = '';
+  for (let i = 0; i <= steps; i++) {
     const a = (i / steps) * Math.PI * 2;
-    const ridge =
-      1 + 0.14 * Math.sin(a * 3 - level * 0.7) + 0.085 * Math.sin(a * 5 + level * 0.42);
-    const r = radius * ridge;
-    pts.push([200 + Math.cos(a) * r, 200 + Math.sin(a) * r * 0.86]);
-  }
-  const mid = (p: [number, number], q: [number, number]) =>
-    [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2] as [number, number];
-  const f = (n: number) => n.toFixed(1);
-  let d = `M${f(mid(pts[steps - 1], pts[0])[0])} ${f(mid(pts[steps - 1], pts[0])[1])}`;
-  for (let i = 0; i < steps; i++) {
-    const m = mid(pts[i], pts[(i + 1) % steps]);
-    d += `Q${f(pts[i][0])} ${f(pts[i][1])} ${f(m[0])} ${f(m[1])}`;
+    const rr = r + amp * Math.cos(a * lobes);
+    d += `${i ? 'L' : 'M'}${f1(200 + Math.cos(a) * rr)} ${f1(200 + Math.sin(a) * rr)}`;
   }
   return `${d}Z`;
 }
-const CONTOURS = Array.from({ length: CONTOUR_LEVELS }, (_, i) => ({
-  d: contour(i),
-  t: +(i / (CONTOUR_LEVELS - 1)).toFixed(3),
-  i,
-}));
+const ROSETTE = scallop(150, 7, 24);
+const YEARS = Array.from({ length: 5 }, (_, k) => {
+  const r = 116;
+  const a0 = ((-90 + k * 72 + 5) * Math.PI) / 180;
+  const a1 = ((-90 + k * 72 + 67) * Math.PI) / 180;
+  return {
+    k,
+    d: `M${f1(200 + Math.cos(a0) * r)} ${f1(200 + Math.sin(a0) * r)}A${r} ${r} 0 0 1 ${f1(200 + Math.cos(a1) * r)} ${f1(200 + Math.sin(a1) * r)}`,
+  };
+});
+
+/** TEAM: careers, as seven people round one table, each connected to it. */
+const PEOPLE = Array.from({ length: 7 }, (_, i) => {
+  const a = ((-90 + (i * 360) / 7) * Math.PI) / 180;
+  const x = 200 + Math.cos(a) * 140;
+  const y = 200 + Math.sin(a) * 140;
+  return {
+    i,
+    x: stageX(x),
+    y: stageY(y),
+    spoke: `M${f1(200 + Math.cos(a) * 58)} ${f1(200 + Math.sin(a) * 58)}L${f1(200 + Math.cos(a) * 124)} ${f1(200 + Math.sin(a) * 124)}`,
+  };
+});
+
+/** MANUAL: the support documents, as an open book whose pages turn. */
+const PAGES = [0, 1, 2, 3, 4];
+const PAGE_LINES = [18, 28, 38, 48, 58, 68, 78];
+
+/** SIGNAL: the articles are about tracking, so this is PrimeTrack's own
+    mark: a located vehicle, signalling, at the end of its route. */
+const SIGNAL_ROUTE = 'M58 338C110 318 96 262 150 252S228 270 214 226 196 208 200 200';
+const RIPPLES = [0, 1, 2];
+
+/** RADAR: analysing a fleet, as a sweep that finds the vehicles and flags
+    the two that need attention. Angles clockwise from the top, in degrees. */
+const BLIPS = [
+  { a: 38, r: 96, flag: false },
+  { a: 82, r: 132, flag: true },
+  { a: 128, r: 64, flag: false },
+  { a: 176, r: 118, flag: false },
+  { a: 226, r: 140, flag: true },
+  { a: 272, r: 84, flag: false },
+  { a: 316, r: 124, flag: false },
+].map((b, i) => {
+  const rad = ((b.a - 90) * Math.PI) / 180;
+  const x = 200 + Math.cos(rad) * b.r;
+  const y = 200 + Math.sin(rad) * b.r;
+  return { ...b, i, x: +f1(x), y: +f1(y), sx: stageX(x), sy: stageY(y) };
+});
+const RADAR_TICKS = Array.from({ length: 24 }, (_, i) => {
+  const a = (i / 24) * Math.PI * 2;
+  const r0 = i % 2 ? 152 : 146;
+  return `M${f1(200 + Math.cos(a) * r0)} ${f1(200 + Math.sin(a) * r0)}L${f1(200 + Math.cos(a) * 160)} ${f1(200 + Math.sin(a) * 160)}`;
+}).join('');
 ---
 
-<div class="phs" data-scene={kind} aria-hidden="true">
+<div class="phs" data-scene={kind} data-compact={compact ? '' : undefined} aria-hidden="true">
   <div class="phs-cam">
     <div class="phs-stage">
       {
@@ -294,14 +377,234 @@ const CONTOURS = Array.from({ length: CONTOUR_LEVELS }, (_, i) => ({
       }
 
       {
-        kind === 'contours' &&
-          CONTOURS.map((line) => (
-            <span class="contour" style={`--i:${line.i}; --t:${line.t}`}>
+        kind === 'agreement' && (
+          <>
+            {[0, 1].map((i) => (
+              <span class="sheet sheet-under" style={`--i:${i}`}>
+                <svg viewBox="0 0 400 400" focusable="false">
+                  <rect class="sheet-edge" x={SHEET.x} y={SHEET.y} width={SHEET.w} height={SHEET.h} rx={SHEET.r} />
+                </svg>
+              </span>
+            ))}
+            <span class="sheet sheet-top" style="--i:2">
               <svg viewBox="0 0 400 400" focusable="false">
-                <path d={line.d} />
+                <rect class="sheet-edge" x={SHEET.x} y={SHEET.y} width={SHEET.w} height={SHEET.h} rx={SHEET.r} />
+                {TERMS_LINES.map((line) => (
+                  <path
+                    class:list={['sheet-line', line.head && 'sheet-head']}
+                    d={`M${line.x1} ${line.y}H${line.x2}`}
+                    pathLength="1"
+                    style={`--k:${line.k}`}
+                  />
+                ))}
+                <path class="sheet-sign" d={SIGNATURE} pathLength="1" style="--k:7" />
+                <path class="sheet-line" d="M122 318H230" pathLength="1" style="--k:8" />
               </svg>
             </span>
-          ))
+            {/* The seal, above the page, coming down onto it. */}
+            <span class="stamp">
+              <svg viewBox="0 0 400 400" focusable="false">
+                <circle class="stamp-ring" cx={SEAL.x} cy={SEAL.y} r="27" />
+                <circle class="stamp-inner" cx={SEAL.x} cy={SEAL.y} r="19" />
+                <path class="stamp-tick" d={`M${SEAL.x - 9} ${SEAL.y}l7 7 14-15`} />
+              </svg>
+            </span>
+          </>
+        )
+      }
+
+      {
+        kind === 'shield' && (
+          <>
+            {SHIELDS.map((shield) => (
+              <span class="guard" style={`--i:${shield.i}; --t:${shield.t}`}>
+                <svg viewBox="0 0 400 400" focusable="false">
+                  <path class="guard-edge" d={shield.d} />
+                  {shield.i === 3 && (
+                    <>
+                      <circle class="guard-lock" cx="200" cy="196" r="11" />
+                      <path class="guard-lock" d="M194 205 190 230H210L206 205" />
+                    </>
+                  )}
+                </svg>
+              </span>
+            ))}
+            {/* A scan passing over the whole shield, clipped to its edge. */}
+            <span class="guard-scan">
+              <svg viewBox="0 0 400 400" focusable="false">
+                <defs>
+                  <clipPath id="phs-shield-clip">
+                    <path d={SHIELDS[0].d} />
+                  </clipPath>
+                  <linearGradient id="phs-scan-band" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#ff8c3c" stop-opacity="0" />
+                    <stop offset="100%" stop-color="#ff8c3c" stop-opacity="0.3" />
+                  </linearGradient>
+                </defs>
+                <g clip-path="url(#phs-shield-clip)">
+                  <rect class="scan-band" x="40" y="-44" width="320" height="44" />
+                  <line class="scan-line" x1="40" y1="0" x2="360" y2="0" />
+                </g>
+              </svg>
+            </span>
+          </>
+        )
+      }
+
+      {
+        kind === 'seal' && (
+          <>
+            <span class="medal" style="--i:0">
+              <svg viewBox="0 0 400 400" focusable="false">
+                {/* Two ribbon tails, under the rosette. */}
+                <path class="medal-ribbon" d="M170 318 150 384 168 372 182 392 196 330" />
+                <path class="medal-ribbon" d="M230 318 250 384 232 372 218 392 204 330" />
+                <path class="medal-edge" d={ROSETTE} />
+              </svg>
+            </span>
+            <span class="medal" style="--i:1">
+              <svg viewBox="0 0 400 400" focusable="false">
+                <circle class="medal-track" cx="200" cy="200" r="116" />
+                {YEARS.map((year) => (
+                  <path class="medal-year" d={year.d} style={`--k:${year.k}`} />
+                ))}
+              </svg>
+            </span>
+            <span class="medal" style="--i:2">
+              <svg viewBox="0 0 400 400" focusable="false">
+                <circle class="medal-core" cx="200" cy="200" r="78" />
+                <circle class="medal-rule" cx="200" cy="200" r="64" />
+                <path class="medal-tick" d="M168 202 192 226 236 178" />
+              </svg>
+            </span>
+          </>
+        )
+      }
+
+      {
+        kind === 'team' && (
+          <>
+            <span class="huddle">
+              <svg viewBox="0 0 400 400" focusable="false">
+                <circle class="table-ring" cx="200" cy="200" r="58" />
+                <circle class="table-ring table-outer" cx="200" cy="200" r="162" />
+                {PEOPLE.map((person) => (
+                  <path class="table-spoke" d={person.spoke} pathLength="1" style={`--i:${person.i}`} />
+                ))}
+                <circle class="table-hub" cx="200" cy="200" r="9" />
+              </svg>
+            </span>
+            {PEOPLE.map((person) => (
+              <span class="person" style={`--i:${person.i}; --x:${person.x}%; --y:${person.y}%`}>
+                <svg class="person-mark" viewBox="0 0 40 48" focusable="false">
+                  <circle cx="20" cy="13" r="8.5" />
+                  <path d="M5 46c0-12 7-19 15-19s15 7 15 19" />
+                </svg>
+              </span>
+            ))}
+          </>
+        )
+      }
+
+      {
+        kind === 'manual' && (
+          <>
+            <span class="leaf leaf-cover leaf-left">
+              <svg viewBox="0 0 68 100" preserveAspectRatio="none" focusable="false">
+                <rect class="leaf-edge" x="1" y="1" width="66" height="98" rx="3" />
+                {PAGE_LINES.slice(0, 5).map((y) => (
+                  <path class="leaf-line" d={`M10 ${y + 6}H${y % 20 ? 56 : 48}`} />
+                ))}
+              </svg>
+            </span>
+            <span class="leaf leaf-cover leaf-right">
+              <svg viewBox="0 0 68 100" preserveAspectRatio="none" focusable="false">
+                <rect class="leaf-edge" x="1" y="1" width="66" height="98" rx="3" />
+              </svg>
+            </span>
+            {PAGES.map((k) => (
+              <span class="leaf leaf-page" style={`--k:${k}`}>
+                <svg viewBox="0 0 68 100" preserveAspectRatio="none" focusable="false">
+                  <rect class="leaf-edge" x="1" y="1" width="66" height="98" rx="2" />
+                  <path class="leaf-line leaf-head" d="M10 14H40" />
+                  {PAGE_LINES.map((y) => (
+                    <path class="leaf-line" d={`M10 ${y + 10}H${y % 20 ? 58 : 50}`} />
+                  ))}
+                </svg>
+              </span>
+            ))}
+            <span class="spine" />
+          </>
+        )
+      }
+
+      {
+        kind === 'signal' && (
+          <>
+            <span class="map">
+              <svg viewBox="0 0 400 400" focusable="false">
+                <defs>
+                  <linearGradient id="phs-signal-route" gradientUnits="userSpaceOnUse" x1="58" y1="338" x2="200" y2="200">
+                    <stop offset="0%" stop-color="#ff7d29" stop-opacity="0.35" />
+                    <stop offset="100%" stop-color="#ffb07a" stop-opacity="1" />
+                  </linearGradient>
+                </defs>
+                {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+                  <path class="map-rule" d={`M${80 + i * 40} 70V330M70 ${80 + i * 40}H330`} />
+                ))}
+                <path class="map-route" d={SIGNAL_ROUTE} pathLength="1" />
+                <circle class="map-start" cx="58" cy="338" r="5" />
+                <circle class="map-spot" cx="200" cy="200" r="7" />
+              </svg>
+            </span>
+            {RIPPLES.map((k) => (
+              <span class="ripple" style={`--k:${k}`}>
+                <svg viewBox="0 0 400 400" focusable="false">
+                  <circle cx="200" cy="200" r="100" />
+                </svg>
+              </span>
+            ))}
+            <span class="pin" style={`--x:${stageX(200)}%; --y:${stageY(200)}%`}>
+              <svg class="pin-mark" viewBox="0 0 40 56" focusable="false">
+                <path d="M20 54S4 34.5 4 20.5a16 16 0 0 1 32 0C36 34.5 20 54 20 54Z" />
+                <circle class="pin-eye" cx="20" cy="20.5" r="6" />
+              </svg>
+            </span>
+          </>
+        )
+      }
+
+      {
+        kind === 'radar' && (
+          <>
+            <span class="scope">
+              <svg viewBox="0 0 400 400" focusable="false">
+                {[40, 80, 120, 160].map((r) => (
+                  <circle class:list={['scope-ring', r === 160 && 'scope-rim']} cx="200" cy="200" r={r} />
+                ))}
+                <path class="scope-cross" d="M40 200H360M200 40V360" />
+                <path class="scope-tick" d={RADAR_TICKS} />
+              </svg>
+            </span>
+            <span class="sweep">
+              <span class="sweep-arm" />
+            </span>
+            <span class="finds">
+              <svg viewBox="0 0 400 400" focusable="false">
+                {BLIPS.map((blip) => (
+                  <g class:list={['blip', blip.flag && 'blip-flag']} style={`--a:${blip.a}`}>
+                    {blip.flag && <circle class="blip-ring" cx={blip.x} cy={blip.y} r="12" />}
+                    <circle class="blip-dot" cx={blip.x} cy={blip.y} r={blip.flag ? 5.5 : 4.5} />
+                  </g>
+                ))}
+              </svg>
+            </span>
+            {/* The two flagged vehicles stand up off the scope. */}
+            {BLIPS.filter((blip) => blip.flag).map((blip) => (
+              <span class="beacon" style={`--a:${blip.a}; --x:${blip.sx}%; --y:${blip.sy}%`} />
+            ))}
+          </>
+        )
       }
     </div>
   </div>
@@ -339,6 +642,9 @@ const CONTOURS = Array.from({ length: CONTOUR_LEVELS }, (_, i) => ({
        authored at 32rem would keep its full relief at 18rem and burst out
        of its own frame. One number, set once per breakpoint. */
     --depth: 1;
+    /* Line weight, as a multiple, for the reading pages' scenes, so their
+       small versions can thin their strokes with their size. */
+    --lw: 1;
     /* Arrives rather than appears. One animation on the whole scene, not
        forty on its parts: the parts are a composition, and a composition
        that assembles itself in front of you is a loading screen. */
@@ -411,7 +717,16 @@ const CONTOURS = Array.from({ length: CONTOUR_LEVELS }, (_, i) => ({
   .plate svg,
   .part svg,
   .ground svg,
-  .contour svg {
+  .sheet svg,
+  .stamp svg,
+  .guard svg,
+  .guard-scan svg,
+  .medal svg,
+  .huddle svg,
+  .map svg,
+  .ripple svg,
+  .scope svg,
+  .finds svg {
     position: absolute;
     inset: 0;
     display: block;
@@ -664,31 +979,518 @@ const CONTOURS = Array.from({ length: CONTOUR_LEVELS }, (_, i) => ({
     filter: url(#phs-hub);
   }
 
-  /* ---------------------------------------------------------------------
-     THE LAND, AS LINES — warranty, careers, tools, blog, legal, 404 and
-     the articles.
+  /* =====================================================================
+     THE READING PAGES. Each used to share one drawing of the land; each now
+     gets a drawing of what it is about. Same rules as above: lit lines in
+     a dark room, every part at its own depth, nothing a dark lump.
 
-     A loud object on a privacy policy is a mistake, so this is the hill
-     with nothing on it: seven contours at seven elevations, unfilled, each
-     one visible through all the others.
+     Line weights carry `--lw`, so the small versions of these that sit
+     beside a heading on a phone can thin their strokes with their size.
   --------------------------------------------------------------------- */
-  [data-scene='contours'] {
-    /* The land lies flat, then tilts up into view and lifts apart. */
-    --in-tilt: -62deg;
-    --in-z: 80px;
-    --tilt: 58deg;
-    --spin: -24deg;
-  }
-  .contour {
+  .sheet,
+  .stamp,
+  .guard,
+  .guard-scan,
+  .medal,
+  .huddle,
+  .map,
+  .ripple,
+  .scope,
+  .finds {
     position: absolute;
     inset: 0;
-    transform: translateZ(calc(var(--i) * 15px * var(--depth)));
   }
-  .contour path {
+
+  /* --- THE AGREEMENT — terms of service ---------------------------------
+     Three sheets of one contract, the top one written, signed and sealed.
+     It arrives upright, facing the reader like a page held up to be read,
+     and lies down onto the desk; the text writes itself in as it does. */
+  [data-scene='agreement'] {
+    --tilt: 54deg;
+    --spin: -16deg;
+    --in-tilt: -46deg;
+    --in-spin: 24deg;
+    --in-shrink: 0.1;
+  }
+  .sheet {
+    transform: translateZ(calc(var(--i) * 12px * var(--depth))) rotateZ(calc((var(--i) - 2) * 4.5deg));
+  }
+  .sheet-edge {
     fill: none;
-    stroke: color-mix(in oklab, var(--color-prime-300) calc(48% + var(--t) * 52%), transparent);
-    stroke-width: calc(2.2px + var(--t) * 1.8px);
+    stroke: color-mix(in oklab, var(--color-prime-300) calc(40% + var(--i) * 30%), transparent);
+    stroke-width: calc(2.2px * var(--lw));
     vector-effect: non-scaling-stroke;
+  }
+  .sheet-top .sheet-edge {
+    fill: rgb(255 255 255 / 0.025);
+    stroke-width: calc(2.8px * var(--lw));
+  }
+  .sheet-line,
+  .sheet-sign {
+    fill: none;
+    stroke: rgb(255 214 186 / 0.62);
+    stroke-width: calc(2px * var(--lw));
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+    /* Written in, line by line, as the page arrives. */
+    stroke-dasharray: 1;
+    stroke-dashoffset: calc(1 - clamp(0, var(--phs-in) * 1.9 - var(--k) * 0.1, 1));
+  }
+  .sheet-head {
+    stroke: var(--color-prime-300);
+    stroke-width: calc(4.2px * var(--lw));
+  }
+  .sheet-sign {
+    stroke: var(--color-prime-200);
+    stroke-width: calc(2.4px * var(--lw));
+  }
+  .stamp {
+    transform: translateZ(calc(34px * var(--depth)));
+  }
+  .stamp-ring {
+    fill: rgb(243 93 1 / 0.16);
+    stroke: var(--color-prime-300);
+    stroke-width: calc(2.6px * var(--lw));
+    vector-effect: non-scaling-stroke;
+  }
+  .stamp-inner {
+    fill: none;
+    stroke: rgb(255 196 148 / 0.55);
+    stroke-width: calc(1.3px * var(--lw));
+    stroke-dasharray: 2 3;
+    vector-effect: non-scaling-stroke;
+  }
+  .stamp-tick {
+    fill: none;
+    stroke: #fff;
+    stroke-width: calc(2.8px * var(--lw));
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+
+  /* --- THE SHIELD — privacy policy ---------------------------------------
+     Four shields, one inside the next, each at its own height, around a
+     locked core: protection as layers, which is what the policy describes.
+     Rises out of the dark. */
+  [data-scene='shield'] {
+    --tilt: 56deg;
+    --spin: -14deg;
+    --in-z: -260px;
+    --in-tilt: 18deg;
+    --in-shrink: 0.25;
+  }
+  .guard {
+    transform: translateZ(calc(var(--i) * 18px * var(--depth)));
+  }
+  .guard-edge {
+    fill: none;
+    stroke: color-mix(in oklab, var(--color-prime-300) calc(42% + var(--t) * 58%), transparent);
+    stroke-width: calc((2.2px + var(--t) * 1.6px) * var(--lw));
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .guard-lock {
+    fill: none;
+    stroke: var(--color-amber-500);
+    stroke-width: calc(2.6px * var(--lw));
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+  /* The scan only runs while the page is being scrolled (below). */
+  .guard-scan {
+    transform: translateZ(calc(2px * var(--depth)));
+    opacity: 0;
+  }
+  .scan-line {
+    stroke: #ffe4d2;
+    stroke-width: calc(2.2px * var(--lw));
+    vector-effect: non-scaling-stroke;
+  }
+  .scan-band {
+    fill: url(#phs-scan-band);
+  }
+
+  /* --- THE SEAL — warranty ------------------------------------------------
+     A rosette whose ring is five years long, one segment a year, over a
+     ticked core. Spins in flat, like a medal tossed onto the table. */
+  [data-scene='seal'] {
+    --tilt: 52deg;
+    --spin: -10deg;
+    --in-spin: -140deg;
+    --in-shrink: 0.3;
+  }
+  .medal {
+    transform: translateZ(calc(var(--i) * 22px * var(--depth)));
+  }
+  .medal-edge {
+    fill: none;
+    stroke: color-mix(in oklab, var(--color-prime-300) 70%, transparent);
+    stroke-width: calc(2.2px * var(--lw));
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .medal-ribbon {
+    fill: none;
+    stroke: rgb(255 170 110 / 0.5);
+    stroke-width: calc(2px * var(--lw));
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .medal-track {
+    fill: none;
+    stroke: rgb(255 196 148 / 0.14);
+    stroke-width: calc(6px * var(--lw));
+    vector-effect: non-scaling-stroke;
+  }
+  .medal-year {
+    --lit: 1;
+    fill: none;
+    stroke: var(--color-prime-300);
+    stroke-width: calc(6px * var(--lw));
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+    opacity: calc(0.2 + 0.8 * var(--lit));
+  }
+  .medal-core {
+    fill: rgb(243 93 1 / 0.1);
+    stroke: var(--color-prime-200);
+    stroke-width: calc(2.6px * var(--lw));
+    vector-effect: non-scaling-stroke;
+  }
+  .medal-rule {
+    fill: none;
+    stroke: rgb(255 196 148 / 0.32);
+    stroke-width: calc(1.2px * var(--lw));
+    stroke-dasharray: 2 4;
+    vector-effect: non-scaling-stroke;
+  }
+  .medal-tick {
+    fill: none;
+    stroke: #fff;
+    stroke-width: calc(5px * var(--lw));
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+
+  /* --- THE TEAM — careers -------------------------------------------------
+     Seven people standing round one table, each connected to it. They are
+     upright in a scene that lies flat, so they turn to face the reader the
+     same way the posts above do, and they stand up one after another as
+     the scene arrives. */
+  [data-scene='team'] {
+    --tilt: 60deg;
+    --spin: -20deg;
+    --in-z: -200px;
+    --in-tilt: 14deg;
+    --in-shrink: 0.2;
+  }
+  .table-ring {
+    fill: none;
+    stroke: rgb(255 196 148 / 0.5);
+    stroke-width: calc(2px * var(--lw));
+    vector-effect: non-scaling-stroke;
+  }
+  .table-outer {
+    stroke: rgb(255 196 148 / 0.2);
+    stroke-dasharray: 3 6;
+  }
+  .table-spoke {
+    --conn: 1;
+    fill: none;
+    stroke: var(--color-prime-300);
+    stroke-width: calc(2.2px * var(--lw));
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+    stroke-dasharray: 1;
+    stroke-dashoffset: calc(1 - var(--conn));
+  }
+  .table-hub {
+    fill: var(--color-amber-500);
+  }
+  .person {
+    --conn: 1;
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: 0;
+    height: 0;
+    transform: rotateZ(calc(-1 * var(--spin))) rotateX(calc(-1 * var(--tilt)));
+    transform-origin: 50% 100%;
+    opacity: calc(0.4 + 0.6 * var(--conn));
+  }
+  .person-mark {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: calc(2.3rem * var(--depth));
+    height: calc(2.76rem * var(--depth));
+    translate: -50% 0;
+    overflow: visible;
+    fill: none;
+    stroke: var(--color-prime-200);
+    stroke-width: calc(2.4px * var(--lw));
+    stroke-linecap: round;
+    transform-origin: 50% 100%;
+    scale: clamp(0, var(--phs-in) * 1.9 - var(--i) * 0.13, 1);
+  }
+  .person-mark * {
+    vector-effect: non-scaling-stroke;
+  }
+
+  /* --- THE MANUAL — support manuals and documents ------------------------
+     An open book on the desk, its pages fanned across the spine. Each page
+     is hinged at the spine, so turning one is a single rotation. */
+  [data-scene='manual'] {
+    --tilt: 50deg;
+    --spin: -14deg;
+    --in-tilt: -40deg;
+    --in-spin: 30deg;
+    --in-shrink: 0.15;
+  }
+  .leaf {
+    position: absolute;
+    top: 25%;
+    width: 28.3%;
+    height: 50%;
+  }
+  .leaf svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .leaf-left {
+    left: 21.7%;
+    transform-origin: 100% 50%;
+    transform: rotateY(14deg);
+  }
+  .leaf-right {
+    left: 50%;
+    transform-origin: 0 50%;
+    transform: rotateY(-14deg);
+  }
+  /* At rest the five pages are fanned from right to left. */
+  .leaf-page {
+    --flip: calc(var(--k) * 0.25);
+    left: 50%;
+    transform-origin: 0 50%;
+    transform: translateZ(1px) rotateY(calc(-17deg - var(--flip) * 146deg));
+  }
+  .leaf-edge {
+    fill: none;
+    stroke: color-mix(in oklab, var(--color-prime-300) 68%, transparent);
+    stroke-width: calc(2.2px * var(--lw));
+    vector-effect: non-scaling-stroke;
+  }
+  .leaf-page .leaf-edge {
+    fill: rgb(16 17 22 / 0.62);
+    stroke: color-mix(in oklab, var(--color-prime-200) 72%, transparent);
+  }
+  .leaf-line {
+    fill: none;
+    stroke: rgb(255 214 186 / 0.5);
+    stroke-width: calc(1.6px * var(--lw));
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .leaf-head {
+    stroke: var(--color-prime-300);
+    stroke-width: calc(3px * var(--lw));
+  }
+  .spine {
+    position: absolute;
+    left: 50%;
+    top: 24%;
+    width: 2px;
+    height: 52%;
+    translate: -50% 0;
+    background-image: linear-gradient(transparent, rgb(255 189 140 / 0.9) 12%, rgb(255 189 140 / 0.9) 88%, transparent);
+  }
+
+  /* --- THE SIGNAL — blog index and articles -------------------------------
+     What every article is about: a vehicle located, at the end of its
+     route, signalling. PrimeTrack's own mark, standing on a map. */
+  [data-scene='signal'] {
+    --tilt: 58deg;
+    --spin: -24deg;
+    --in-z: 120px;
+    --in-tilt: -30deg;
+    --in-shrink: 0.1;
+  }
+  .map-rule {
+    fill: none;
+    stroke: rgb(255 196 148 / 0.13);
+    stroke-width: calc(1.2px * var(--lw));
+    vector-effect: non-scaling-stroke;
+  }
+  .map-route {
+    fill: none;
+    stroke: url(#phs-signal-route);
+    stroke-width: calc(3.4px * var(--lw));
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+    /* The route drives itself in as the scene arrives. */
+    stroke-dasharray: 1;
+    stroke-dashoffset: calc(1 - var(--phs-in));
+  }
+  .map-start {
+    fill: var(--color-prime-200);
+    fill-opacity: 0.8;
+  }
+  .map-spot {
+    fill: var(--color-amber-500);
+  }
+  .ripple {
+    transform: translateZ(calc(2px * var(--depth))) scale(calc(0.3 + var(--k) * 0.45));
+    opacity: calc(0.8 - var(--k) * 0.25);
+  }
+  .ripple circle {
+    fill: none;
+    stroke: var(--color-prime-300);
+    stroke-width: calc(2px * var(--lw));
+    vector-effect: non-scaling-stroke;
+  }
+  .pin {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: 0;
+    height: 0;
+    transform: rotateZ(calc(-1 * var(--spin))) rotateX(calc(-1 * var(--tilt)));
+    transform-origin: 50% 100%;
+  }
+  .pin-mark {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: calc(3.2rem * var(--depth));
+    height: calc(4.48rem * var(--depth));
+    translate: -50% 0;
+    overflow: visible;
+    fill: rgb(243 93 1 / 0.2);
+    stroke: var(--color-prime-200);
+    stroke-width: calc(2.6px * var(--lw));
+    stroke-linejoin: round;
+  }
+  .pin-mark * {
+    vector-effect: non-scaling-stroke;
+  }
+  .pin-eye {
+    fill: #fff;
+    stroke: none;
+  }
+
+  /* --- THE RADAR — analyse your fleet --------------------------------------
+     A scope, a sweep, and the vehicles it finds; the two that need
+     attention are flagged in amber and stand up off the scope. Spins in. */
+  [data-scene='radar'] {
+    --tilt: 58deg;
+    --spin: -18deg;
+    --in-spin: -120deg;
+    --in-tilt: 12deg;
+    --in-shrink: 0.2;
+    /* Where the sweep is, in degrees clockwise from the top. */
+    --sw: 330;
+  }
+  .scope-ring {
+    fill: none;
+    stroke: rgb(255 196 148 / 0.26);
+    stroke-width: calc(1.6px * var(--lw));
+    vector-effect: non-scaling-stroke;
+  }
+  .scope-rim {
+    stroke: color-mix(in oklab, var(--color-prime-300) 80%, transparent);
+    stroke-width: calc(2.6px * var(--lw));
+  }
+  .scope-cross {
+    stroke: rgb(255 196 148 / 0.18);
+    stroke-width: calc(1.2px * var(--lw));
+    vector-effect: non-scaling-stroke;
+  }
+  .scope-tick {
+    stroke: rgb(255 196 148 / 0.45);
+    stroke-width: calc(1.4px * var(--lw));
+    vector-effect: non-scaling-stroke;
+  }
+  .sweep {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    height: 80%;
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    border-radius: 50%;
+    transform: translateZ(calc(3px * var(--depth))) rotate(calc(var(--sw) * 1deg));
+    background-image: conic-gradient(
+      from 0deg,
+      transparent 0deg 250deg,
+      rgb(255 125 41 / 0.05) 290deg,
+      rgb(255 140 60 / 0.42) 360deg
+    );
+  }
+  .sweep-arm {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 2px;
+    height: 50%;
+    translate: -50% 0;
+    background-image: linear-gradient(to top, rgb(255 228 210 / 0.15), #ffe4d2);
+  }
+  .finds {
+    transform: translateZ(calc(5px * var(--depth)));
+  }
+  .blip {
+    --seen: 1;
+    opacity: calc(0.16 + 0.84 * var(--seen));
+  }
+  .blip-dot {
+    fill: var(--color-prime-200);
+  }
+  .blip-flag .blip-dot {
+    fill: var(--color-amber-500);
+  }
+  .blip-ring {
+    fill: none;
+    stroke: var(--color-amber-500);
+    stroke-width: calc(2px * var(--lw));
+    vector-effect: non-scaling-stroke;
+  }
+  .beacon {
+    --seen: 1;
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: 2px;
+    height: 0;
+    translate: -50% 0;
+    transform: rotateZ(calc(-1 * var(--spin))) rotateX(calc(-1 * var(--tilt)));
+    transform-origin: 50% 100%;
+  }
+  .beacon::before,
+  .beacon::after {
+    content: '';
+    position: absolute;
+    left: 0;
+  }
+  .beacon::before {
+    bottom: 0;
+    width: 2px;
+    height: calc(var(--seen) * 4.2rem * var(--depth));
+    background-image: linear-gradient(to top, rgb(255 125 41 / 0.15), rgb(255 200 150 / 1));
+  }
+  .beacon::after {
+    bottom: calc(var(--seen) * 4.2rem * var(--depth));
+    width: 0.5rem;
+    height: 0.5rem;
+    margin: 0 0 -0.25rem -0.2rem;
+    border-radius: 999px;
+    background-color: var(--color-amber-500);
+    box-shadow: 0 0 12px 3px rgb(243 93 1 / 0.55);
+    opacity: var(--seen);
   }
 
   /* ---------------------------------------------------------------------
@@ -703,6 +1505,28 @@ const CONTOURS = Array.from({ length: CONTOUR_LEVELS }, (_, i) => ({
       --post-h: 4.4rem;
       --col-h: 4.2rem;
       --datum-h: 5.6rem;
+    }
+  }
+
+  /* COMPACT: the reading pages' version, beside the heading. It fills the
+     box the hero gives it, and its depth and line weight come down in step
+     with that box (23rem on a wide screen, 17rem on a tablet, 11.5rem on a
+     phone, against the 32rem the full scene is drawn for). */
+  .phs[data-compact] {
+    max-width: none;
+    --depth: 0.72;
+    --lw: 1;
+  }
+  @media (width < 64rem) {
+    .phs[data-compact] {
+      --depth: 0.53;
+      --lw: 0.95;
+    }
+  }
+  @media (width < 40rem) {
+    .phs[data-compact] {
+      --depth: 0.36;
+      --lw: 0.82;
     }
   }
 
@@ -725,6 +1549,11 @@ const CONTOURS = Array.from({ length: CONTOUR_LEVELS }, (_, i) => ({
      is the band actually available — load to gone — mapped onto 0..1. */
   .phs[data-live] {
     --t: clamp(0, (var(--s, 0) - 0.12) * 1.15, 1);
+    /* The reading pages' event clock. Their heroes are short and sit high,
+       so the scroll alone would leave each one barely started on arrival
+       (an empty radar, an unlit seal). A third of the event plays as the
+       scene arrives and the scroll does the rest. */
+    --e: min(1, var(--t) * 0.72 + var(--phs-in) * 0.3);
   }
 
   /* The platform fans into its layers. */
@@ -787,15 +1616,90 @@ const CONTOURS = Array.from({ length: CONTOUR_LEVELS }, (_, i) => ({
     stroke-opacity: calc(0.55 + var(--t) * 0.45);
   }
 
-  /* The land lifts into its contours. Seven lines at seven elevations is a
-     fact about the object that a still picture cannot tell you; pulling
-     them apart as the page moves says it in one gesture. */
-  [data-live][data-scene='contours'] {
-    --tilt: calc(62deg - var(--s, 0) * 22deg);
-    --spin: calc(-32deg + var(--s, 0) * 46deg);
+  /* The contract fans a little as it is read, and the seal comes down onto
+     the top sheet: hovering when the page arrives, pressed home by the time
+     the reader is into the terms. */
+  [data-live][data-scene='agreement'] {
+    --tilt: calc(58deg - var(--s, 0) * 20deg);
+    --spin: calc(-24deg + var(--s, 0) * 34deg);
   }
-  [data-live][data-scene='contours'] .contour {
-    transform: translateZ(calc(var(--i) * (5px + var(--t) * 26px) * var(--depth) * var(--phs-in)));
+  [data-live][data-scene='agreement'] .sheet {
+    transform: translateZ(calc(var(--i) * (6px + var(--e) * 16px) * var(--depth)))
+      rotateZ(calc((var(--i) - 2) * (3deg + var(--e) * 4deg)));
+  }
+  [data-live][data-scene='agreement'] .stamp {
+    transform: translateZ(calc((2 * (6px + var(--e) * 16px) + 4px + (1 - var(--e)) * 96px) * var(--depth)));
+    opacity: calc(0.35 + 0.65 * var(--e));
+  }
+
+  /* The shields lift apart around the lock, and a scan passes over them. */
+  [data-live][data-scene='shield'] {
+    --tilt: calc(60deg - var(--s, 0) * 20deg);
+    --spin: calc(-22deg + var(--s, 0) * 36deg);
+  }
+  [data-live][data-scene='shield'] .guard {
+    transform: translateZ(calc(var(--i) * (8px + var(--e) * 26px) * var(--depth) * (0.25 + 0.75 * var(--phs-in))));
+  }
+  [data-live][data-scene='shield'] .guard-scan {
+    opacity: calc(min(1, var(--e) * 6) * (1 - max(0, var(--e) - 0.88) * 8));
+  }
+  [data-live][data-scene='shield'] .guard-scan g > * {
+    transform: translateY(calc(58px + var(--e) * 300px));
+  }
+
+  /* The five years light one after another as the page is read. */
+  [data-live][data-scene='seal'] {
+    --tilt: calc(58deg - var(--s, 0) * 22deg);
+    --spin: calc(-18deg + var(--s, 0) * 40deg);
+  }
+  [data-live][data-scene='seal'] .medal {
+    transform: translateZ(calc(var(--i) * (10px + var(--e) * 22px) * var(--depth)));
+  }
+  [data-live][data-scene='seal'] .medal-year {
+    --lit: clamp(0, var(--e) * 6 - var(--k) * 1.1, 1);
+  }
+
+  /* Each person is connected to the table in turn. */
+  [data-live][data-scene='team'] {
+    --tilt: calc(64deg - var(--s, 0) * 20deg);
+    --spin: calc(-30deg + var(--s, 0) * 44deg);
+  }
+  [data-live][data-scene='team'] :is(.table-spoke, .person) {
+    --conn: clamp(0, var(--e) * 2.2 + 0.3 - var(--i) * 0.16, 1);
+  }
+
+  /* The pages turn, one after another, from right to left. */
+  [data-live][data-scene='manual'] {
+    --tilt: calc(54deg - var(--s, 0) * 18deg);
+    --spin: calc(-22deg + var(--s, 0) * 30deg);
+  }
+  [data-live][data-scene='manual'] .leaf-page {
+    --flip-t: clamp(0, var(--e) * 5.2 - var(--k) * 0.95, 1);
+    --flip: calc(var(--flip-t) * var(--flip-t) * (3 - 2 * var(--flip-t)));
+  }
+
+  /* The signal goes out in rings, and the pin lifts as it does. */
+  [data-live][data-scene='signal'] {
+    --tilt: calc(62deg - var(--s, 0) * 20deg);
+    --spin: calc(-32deg + var(--s, 0) * 40deg);
+  }
+  [data-live][data-scene='signal'] .ripple {
+    --wave: mod(calc(var(--e) * 1.6 + var(--k) / 3), 1);
+    transform: translateZ(calc(2px * var(--depth))) scale(calc(0.15 + var(--wave) * 1.45));
+    opacity: calc((1 - var(--wave)) * 0.9);
+  }
+  [data-live][data-scene='signal'] .pin-mark {
+    translate: -50% calc(var(--e) * -14px * var(--depth));
+  }
+
+  /* The sweep goes round, and finds the fleet as it passes. */
+  [data-live][data-scene='radar'] {
+    --tilt: calc(62deg - var(--s, 0) * 18deg);
+    --spin: calc(-24deg + var(--s, 0) * 20deg);
+    --sw: calc(10 + var(--e) * 330);
+  }
+  [data-live][data-scene='radar'] :is(.blip, .beacon) {
+    --seen: clamp(0, (var(--sw) - var(--a)) / 22, 1);
   }
 
   /* The composition is finished at rest, so this only ever removes the

@@ -17,6 +17,7 @@ record of the judgement calls made along the way.
 | 6 | **Hosting decision** | Deploy | Redirect files ship for both: `public/_redirects` (Cloudflare Pages / Netlify) and `public/.htaccess` (Apache / Hostinger). Keep the two in step if you edit either. |
 | 7 | **Google Maps embed** | Contact page | Not embedded. The address is published as text and the office photo is a placeholder. Send me the exact coordinates or a Place ID if you want a map, and confirm you are happy with the third-party cookie implications. |
 | 8 | **Confirm the two corrections in §3** | Launch | Both are cases where the live site contradicts itself. I picked the Rwanda-correct option; you should confirm. |
+| 9 | **TikTok and YouTube links** | Footer | The footer's social icons are LinkedIn, Twitter, Instagram, TikTok and YouTube. TikTok and YouTube have no URL yet, so they point at `/social/tiktok/` and `/social/youtube/`, where no page is built: the host answers with the styled 404 and a real 404 status, the same arrangement as VRAS. They are `nofollow` meanwhile. To finish, put each URL in `src/data/company.ts` (`socials`). Facebook is no longer in the footer but is still in the Organization structured data (`sameAs`), unchanged; remove it there too if the page is gone. |
 
 ---
 
@@ -151,7 +152,7 @@ homepage.** Nothing in this build was assumed; everything traces to that crawl.
 **Business facts captured** (all in `src/data/company.ts`, nowhere else):
 
 - Phone / WhatsApp `+250 793 017 263`, email `admin@primetrack.rw`
-- Office: 6th Floor, Tower A, Yyussa City Centre, Kigali
+- Office: 4th Floor, Tower A, Yyussa City Centre, Kigali (corrected from the live site's "6th Floor" on your instruction)
 - Licensed in Rwanda by **RURA** (Nigeria's equivalent claim is NCC; the two must never be swapped)
 - Warranty **up to 5 years** (Nigeria's is 3; a build-time check fails on the wrong figure)
 - Stats: 5,000+ active trackers, 15+ years, 5+ countries, 24hr service (read from the homepage counter attributes)
@@ -172,8 +173,10 @@ changed silently.
 **a. Privacy policy contact address.** The live privacy policy tells Rwandan users
 to contact `admin@primetracknigeria.net`, a Nigeria address on a Rwanda page.
 Replaced with `admin@primetrack.rw`, which the same site publishes everywhere else.
-The terms of service separately publishes `info@primetrack.rw` for legal queries;
-that distinction is genuine and has been preserved.
+The terms of service also gave `info@primetrack.rw` for legal queries. That
+address does not exist (your confirmation), so every email contact on the site,
+the terms included, is `admin@primetrack.rw`, from `company.email` in
+`src/data/company.ts`.
 
 **b. STAR Trackers page.** The live copy reads "PrimeTrack Nigeria's STAR Trackers"
 on the Rwanda site. Changed to the unqualified brand name.

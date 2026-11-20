@@ -227,8 +227,11 @@ export const footerNav = {
        `external` is what stops the footer running it through localizePath,
        which would otherwise turn it into /rw/https:/manuals.primetrack.rw. */
     { titleKey: 'common.links.supportManuals', href: company.manualsUrl, external: true },
-    { titleKey: 'common.links.termsOfService', href: routes.terms },
+  ],
+  /* The legal pages, in the footer's bottom bar beside the licence line. */
+  legal: [
     { titleKey: 'common.links.privacyPolicy', href: routes.privacy },
+    { titleKey: 'common.links.termsOfService', href: routes.terms },
   ],
 } as const;
 

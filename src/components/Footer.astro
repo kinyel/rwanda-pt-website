@@ -36,8 +36,10 @@ const socialPaths: Record<string, string> = {
     'M12 2.2c3.2 0 3.6 0 4.9.07 1.2.05 1.8.25 2.2.42.6.22 1 .48 1.4.9.4.4.7.8.9 1.4.2.4.4 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c0 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .4-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2 0-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c0-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.4 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 3.2A6.6 6.6 0 1 0 18.6 12 6.6 6.6 0 0 0 12 5.4zm0 10.9A4.3 4.3 0 1 1 16.3 12 4.3 4.3 0 0 1 12 16.3zm6.9-11.1a1.5 1.5 0 1 1-1.5-1.6 1.6 1.6 0 0 1 1.5 1.6z',
   twitter:
     'M17.5 3h3.1l-6.8 7.8L21.8 21h-6.3l-4.9-6.4L4.9 21H1.8l7.3-8.3L1.5 3h6.4l4.4 5.9zm-1.1 16.1h1.7L7.1 4.8H5.3z',
-  facebook:
-    'M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.4v7A10 10 0 0 0 22 12z',
+  tiktok:
+    'M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z',
+  youtube:
+    'M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.5 3.55 12 3.55 12 3.55s-7.5 0-9.38.5A3.02 3.02 0 0 0 .5 6.19C0 8.07 0 12 0 12s0 3.93.5 5.81a3.02 3.02 0 0 0 2.12 2.14c1.87.5 9.38.5 9.38.5s7.5 0 9.38-.5a3.02 3.02 0 0 0 2.12-2.14C24 15.93 24 12 24 12s0-3.93-.5-5.81zM9.55 15.57V8.43L15.82 12l-6.27 3.57z',
   linkedin:
     'M4.98 3.5A2.5 2.5 0 1 1 2.5 6 2.5 2.5 0 0 1 5 3.5zM3 8.98h4v12H3zM9.5 8.98h3.8v1.64h.06a4.2 4.2 0 0 1 3.77-2.07c4 0 4.75 2.63 4.75 6.05v6.38h-4v-5.66c0-1.35 0-3.08-1.88-3.08s-2.17 1.47-2.17 3v5.74h-4z',
 };
@@ -57,7 +59,8 @@ const socialPaths: Record<string, string> = {
         </a>
         <p class="mt-5 measure text-[0.9375rem] leading-relaxed text-ink-400">{t.common.brand.tagline}</p>
 
-        <ul class="mt-6 flex flex-wrap gap-x-4 gap-y-2">
+        <h2 class="mt-7 text-label uppercase text-ink-500">{t.common.footer.valuesTitle}</h2>
+        <ul class="mt-3 flex flex-wrap gap-x-4 gap-y-2">
           {
             primeValues.map((value) => (
               <li class="text-[0.8125rem] font-bold uppercase tracking-[0.1em] text-ink-500">
@@ -73,13 +76,17 @@ const socialPaths: Record<string, string> = {
           {
             company.socials.map((social) => (
               <li>
+                {/* A profile with no link yet goes to the 404 page, in the
+                    same tab and unfollowed, until its URL is supplied in
+                    src/data/company.ts. */}
                 <a
-                  href={social.url}
-                  rel="noopener noreferrer"
-                  target="_blank"
+                  href={social.url ?? `/social/${social.key}/`}
+                  {...(social.url
+                    ? { rel: 'noopener noreferrer', target: '_blank' }
+                    : { rel: 'nofollow' })}
                   class="btn btn-md btn-icon btn-secondaryOnDark"
                 >
-                  <span class="sr-only">{`${t.common.brand.name} ${social.key}`}</span>
+                  <span class="sr-only">{`${t.common.brand.name} ${social.name}`}</span>
                   <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d={socialPaths[social.key]} />
                   </svg>
@@ -217,8 +224,7 @@ const socialPaths: Record<string, string> = {
 
       <div>
         <h2 class="text-h4 text-white">{t.common.language.label}</h2>
-        <p class="mt-3 text-[0.9375rem] text-ink-400">{t.common.language.availability}</p>
-        <LanguageSwitcher locale={locale} path={path} fallbackPath={switcherFallback} tone="dark" size="full" class="mt-4" />
+        <LanguageSwitcher locale={locale} path={path} fallbackPath={switcherFallback} tone="dark" size="full" class="mt-3" />
       </div>
     </div>
   </div>
@@ -227,12 +233,25 @@ const socialPaths: Record<string, string> = {
   <div class="border-t border-white/10">
     <div class="container-prime flex flex-col gap-3 py-6 text-[0.875rem] text-ink-500 sm:flex-row sm:items-center sm:justify-between">
       <p>{interpolate(t.common.footer.copyright, { year })}</p>
-      <ul class="flex flex-wrap items-center gap-x-4 gap-y-1">
+      <ul class="flex flex-wrap items-center gap-x-4 gap-y-1" aria-label={t.common.footer.legalLabel}>
         <li>{t.common.footer.licensed}</li>
-        <li aria-hidden="true" class="hidden h-3 w-px bg-white/15 sm:block"></li>
-        <li>{t.common.footer.warrantyLine}</li>
-        <li aria-hidden="true" class="hidden h-3 w-px bg-white/15 sm:block"></li>
-        <li>{t.common.footer.supportLine}</li>
+        {
+          footerNav.legal.map((link) => (
+            <>
+              <li aria-hidden="true" class="hidden h-3 w-px bg-white/15 sm:block"></li>
+              <li>
+                <a
+                  href={localizePath(link.href, locale)}
+                  aria-current={link.href === path ? 'page' : undefined}
+                  class={`inline-flex min-h-9 items-center underline underline-offset-[3px] transition-colors duration-[--duration-fast]
+                          ${link.href === path ? 'text-prime-400' : 'hover:text-white'}`}
+                >
+                  {resolveKey(t, link.titleKey)}
+                </a>
+              </li>
+            </>
+          ))
+        }
         <li aria-hidden="true" class="hidden h-3 w-px bg-white/15 sm:block"></li>
         <li>
           <!-- Reopens the preferences dialog. The island listens for this

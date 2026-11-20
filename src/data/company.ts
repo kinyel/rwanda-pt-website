@@ -32,23 +32,42 @@ export const company = {
   manualsUrl: 'https://manuals.primetrack.rw',
 
   address: {
-    line1: '6th Floor, Tower A',
+    line1: '4th Floor, Tower A',
     line2: 'Yyussa City Centre',
     city: 'Kigali',
     country: 'Republic of Rwanda',
     /** Single-line form for schema.org and meta descriptions. */
-    full: '6th Floor, Tower A, Yyussa City Centre, Kigali, Republic of Rwanda',
+    full: '4th Floor, Tower A, Yyussa City Centre, Kigali, Republic of Rwanda',
   },
 
-  /* Social profiles — audit source: footer social icons. ------------------
-     The LinkedIn URL genuinely points at the group's Nigeria-registered
-     company page; that is what the Rwanda site links to today, so it is
-     preserved rather than "corrected" to a page that may not exist. */
+  /* Social profiles, in the order the footer shows them. -----------------
+     The LinkedIn, Twitter and Instagram URLs are the ones the live site
+     links to (audit source: footer social icons). The LinkedIn URL genuinely
+     points at the group's Nigeria-registered company page; that is what the
+     Rwanda site links to today, so it is preserved rather than "corrected"
+     to a page that may not exist.
+
+     `url: null` is a profile whose link has not been supplied yet. The
+     footer points it at /social/<key>/, where no page is built, so it lands
+     on the styled 404 with a real 404 status until the link arrives: the
+     same arrangement as VRAS (docs/handoff.md). To finish one, put its URL
+     here; nothing else changes. */
   socials: [
-    { key: 'instagram', url: 'https://www.instagram.com/primetracktelematics/' },
-    { key: 'twitter', url: 'https://twitter.com/PrimeTrack' },
-    { key: 'facebook', url: 'https://facebook.com/primetrackltd' },
-    { key: 'linkedin', url: 'https://www.linkedin.com/company/primetrack-telematics-nigeria-ltd./' },
+    { key: 'linkedin', name: 'LinkedIn', url: 'https://www.linkedin.com/company/primetrack-telematics-nigeria-ltd./' },
+    { key: 'twitter', name: 'Twitter', url: 'https://twitter.com/PrimeTrack' },
+    { key: 'instagram', name: 'Instagram', url: 'https://www.instagram.com/primetracktelematics/' },
+    { key: 'tiktok', name: 'TikTok', url: null },
+    { key: 'youtube', name: 'YouTube', url: null },
+  ],
+
+  /* The profiles named in the Organization structured data (schema.org
+     `sameAs`). Kept exactly as it was, Facebook included, so the footer's
+     icons can change without moving the structured data. */
+  sameAs: [
+    'https://www.instagram.com/primetracktelematics/',
+    'https://twitter.com/PrimeTrack',
+    'https://facebook.com/primetrackltd',
+    'https://www.linkedin.com/company/primetrack-telematics-nigeria-ltd./',
   ],
 
   /* Headline figures — audit source: the homepage Elementor counters

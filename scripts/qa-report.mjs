@@ -100,8 +100,10 @@ for (const file of pages) {
   /* --- Internal links resolve ---
      /vras/ is a deliberate dead end: the source page is broken upstream and no
      copy exists to migrate. It is listed here so it does not hide a real
-     regression, and it is tracked in docs/handoff.md. */
-  const INTENTIONAL_DEAD_ENDS = new Set(['/vras/', '/rw/vras/']);
+     regression, and it is tracked in docs/handoff.md. The /social/ paths are
+     the footer's TikTok and YouTube icons, whose links have not been supplied
+     yet; they resolve to the 404 page the same way (see company.ts). */
+  const INTENTIONAL_DEAD_ENDS = new Set(['/vras/', '/rw/vras/', '/social/tiktok/', '/social/youtube/']);
   for (const [, href] of html.matchAll(/<a\b[^>]*href=["'](\/[^"'#?]*)["']/gi)) {
     stats.links++;
     const target = href.endsWith('/') ? href : `${href}/`;

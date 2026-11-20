@@ -17,7 +17,7 @@ export const common: Translation<Dictionary['common']> = {
   },
 
   address: {
-    line1: 'Igorofa rya 6, Tower A',
+    line1: 'Igorofa rya 4, Tower A',
     country: 'Repubulika y’u Rwanda',
   },
 
@@ -56,7 +56,6 @@ export const common: Translation<Dictionary['common']> = {
     srLabel: 'Hitamo ururimi',
     current: 'Ururimi rukoreshwa',
     switchTo: 'Hindura ujye mu {language}',
-    availability: 'Urubuga rwose ruboneka mu Cyongereza no mu Kinyarwanda.',
   },
 
   cta: {
@@ -84,9 +83,10 @@ export const common: Translation<Dictionary['common']> = {
     servicesTitle: 'Serivisi',
     contactTitle: 'Twandikire',
     socialsTitle: 'Kurikira PrimeTrack',
-    careTitle: 'PrimeCARE',
+    valuesTitle: 'Indangagaciro zacu',
+    careTitle: 'Ubufasha bw’abakiriya 24/7',
     careBody:
-      'PrimeCARE ni umurongo wacu wo kwita ku bakiriya amasaha 24 kuri 24, iminsi 7 kuri 7. Duhamagare cyangwa utwandikire kuri WhatsApp, cyangwa utwoherereze imeyili, tukagusubiza uwo munsi.',
+      'PrimeCARE ni serivisi yacu yihariye yo gufasha abakiriya, iboneka amasaha 24 ku munsi, iminsi 7 mu cyumweru, ikaguha ubufasha bwihuse igihe cyose ubukeneye. Tuvugishe kuri telefoni, kuri WhatsApp, kuri imeyili, cyangwa ku zindi mbuga zacu zo kuri interineti. Turi hano kugufasha igihe cyose.',
     tipsTitle: 'PrimeTIPS',
     tipsBody: 'Inama n’amakuru ku gucunga ibinyabiziga no kubikurikirana, rimwe na rimwe, biturutse ku itsinda ryacu. Nta butumwa butari ngombwa, kandi ushobora kubihagarika igihe cyose ubishakiye.',
     emailPlaceholder: 'Aderesi ya imeyili yawe',
@@ -94,8 +94,7 @@ export const common: Translation<Dictionary['common']> = {
     subscribe: 'Iyandikishe',
     copyright: '© {year} PrimeTrack Telematics Limited. Uburenganzira bwose burabitswe.',
     licensed: 'Twemerewe gukorera mu Rwanda na RURA',
-    warrantyLine: 'Garanti y’ibicuruzwa igera ku myaka 5',
-    supportLine: 'Ubufasha bwa PrimeCARE amasaha 24 kuri 24',
+    legalLabel: 'Amategeko',
     officeTitle: 'Ibiro byo mu Rwanda',
     nigeriaOfficeTitle: 'Ibiro byo muri Nigeriya',
     nigeriaOfficeLink: 'Sura primetracknigeria.com',

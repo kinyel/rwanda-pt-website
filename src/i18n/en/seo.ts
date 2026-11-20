@@ -74,7 +74,7 @@ export const seo = {
   contact: {
     title: 'Contact PrimeTrack Rwanda | GPS Trackers in Kigali',
     description:
-      'PrimeTrack Rwanda, 6th Floor Tower A, Yyussa City Centre, Kigali. Call or WhatsApp +250 793 017 263, or email admin@primetrack.rw. PrimeCARE answers 24/7.',
+      'PrimeTrack Rwanda, 4th Floor Tower A, Yyussa City Centre, Kigali. Call or WhatsApp +250 793 017 263, or email admin@primetrack.rw. PrimeCARE answers 24/7.',
   },
   whyChoose: {
     title: 'Why Choose PrimeTrack Rwanda | 7 Advantages',

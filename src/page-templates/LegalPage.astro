@@ -12,6 +12,7 @@ import { heroScenes } from '../data/hero-scenes';
 import Section from '../components/Section.astro';
 import { routes } from '../data/navigation';
 import { breadcrumbSchema } from '../data/schema';
+import { company } from '../data/company';
 import { useTranslations, localizePath, type Locale } from '../i18n';
 
 interface Props {
@@ -27,8 +28,8 @@ const path = page === 'terms' ? routes.terms : routes.privacy;
 const site = Astro.site ?? new URL('https://primetrack.rw');
 const url = new URL(localizePath(path, locale), site).href;
 
-/* Terms publishes a dedicated legal address; privacy uses the general one. */
-const contactEmail = page === 'terms' ? t.companyPages.terms.legalEmail : 'admin@primetrack.rw';
+/* Every contact on the site is the one address, admin@primetrack.rw. */
+const contactEmail = company.email;
 ---
 
 <BaseLayout
@@ -43,13 +44,18 @@ const contactEmail = page === 'terms' ? t.companyPages.terms.legalEmail : 'admin
     ]),
   ]}
 >
-  <PageHero scene={heroScenes.quiet} locale={locale} eyebrow={doc.eyebrow} title={doc.title} crumbs={[{ name: doc.title, href: path }]} />
+  <PageHero scene={heroScenes[page]} compact locale={locale} eyebrow={doc.eyebrow} title={doc.title} crumbs={[{ name: doc.title, href: path }]} />
 
   <Section tone="light">
     <div class="prose-prime">
       <p class="text-lead text-ink-700">{doc.intro}</p>
 
-      <ol class="mt-12 flex flex-col gap-9">
+      <!-- The numbers are the orange ones in each heading. `.prose-prime ol`
+           gives ordered lists the browser's own "1." as well, which printed
+           every number twice, so this list turns those off. role="list"
+           keeps it announced as a list in Safari, which drops the role from
+           a list with no markers. -->
+      <ol class="legal-sections mt-12 flex flex-col gap-9" role="list">
         {
           doc.sections.map((section, i) => (
             <li>
@@ -90,3 +96,11 @@ const contactEmail = page === 'terms' ? t.companyPages.terms.legalEmail : 'admin
     </div>
   </Section>
 </BaseLayout>
+
+<style>
+  /* Scoped, so it outranks `.prose-prime ol` from the global sheet. */
+  .legal-sections {
+    list-style: none;
+    padding-inline-start: 0;
+  }
+</style>

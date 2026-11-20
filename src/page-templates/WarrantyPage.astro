@@ -42,7 +42,7 @@ const url = new URL(localizePath(routes.warranty, locale), site).href;
     ]),
   ]}
 >
-  <PageHero scene={heroScenes.quiet} locale={locale} eyebrow={w.eyebrow} title={w.title} lead={w.lead} crumbs={[{ name: w.title, href: routes.warranty }]} />
+  <PageHero scene={heroScenes.warranty} compact locale={locale} eyebrow={w.eyebrow} title={w.title} lead={w.lead} crumbs={[{ name: w.title, href: routes.warranty }]} />
 
   <Section tone="light">
     <p class="measure-wide text-lead text-ink-700">{w.intro}</p>
