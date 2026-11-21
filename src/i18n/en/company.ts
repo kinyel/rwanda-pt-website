@@ -126,7 +126,7 @@ export const companyPages = {
        (src/data/careers.ts). The five requirements are the CEO's words. */
     driver: {
       title: 'Personal Driver to the CEO',
-      lead: 'Drive our Chief Executive Officer safely and on time, in Kigali, across Rwanda and beyond, often at short notice. You will be primarily responsible for our Chief Executive’s daily commute, safely & timely.',
+      lead: 'You will be primarily responsible for our Chief Executive’s daily commute, safely & timely.',
       seeRequirements: 'See requirements',
       howToApply: 'How to apply',
       requirementsLabel: 'Requirements',

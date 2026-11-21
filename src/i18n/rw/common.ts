@@ -18,7 +18,7 @@ export const common: Translation<Dictionary['common']> = {
 
   address: {
     line1: 'Igorofa rya 4, Tower A',
-    country: 'Repubulika y’u Rwanda',
+    country: 'u Rwanda',
   },
 
   nav: {
@@ -93,7 +93,7 @@ export const common: Translation<Dictionary['common']> = {
     emailLabel: 'Aderesi ya imeyili yo kwakira amakuru ya PrimeTIPS',
     subscribe: 'Iyandikishe',
     copyright: '© {year} PrimeTrack Telematics Limited. Uburenganzira bwose burabitswe.',
-    licensed: 'Twemerewe gukorera mu Rwanda na RURA',
+    licensed: 'Twemerewe na RURA',
     legalLabel: 'Amategeko',
     officeTitle: 'Ibiro byo mu Rwanda',
     nigeriaOfficeTitle: 'Ibiro byo muri Nigeriya',

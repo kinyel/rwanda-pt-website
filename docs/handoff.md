@@ -153,7 +153,7 @@ homepage.** Nothing in this build was assumed; everything traces to that crawl.
 
 - Phone / WhatsApp `+250 793 017 263`, email `admin@primetrack.rw`
 - Office: 4th Floor, Tower A, Yyussa City Centre, Kigali (corrected from the live site's "6th Floor" on your instruction)
-- Licensed in Rwanda by **RURA** (Nigeria's equivalent claim is NCC; the two must never be swapped)
+- Licensed by **RURA** (Nigeria's equivalent claim is NCC; the two must never be swapped)
 - Warranty **up to 5 years** (Nigeria's is 3; a build-time check fails on the wrong figure)
 - Stats: 5,000+ active trackers, 15+ years, 5+ countries, 24hr service (read from the homepage counter attributes)
 - P.R.I.M.E. values, PrimeCARE support brand

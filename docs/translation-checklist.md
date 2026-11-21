@@ -76,7 +76,7 @@ Usually deliberate: brand and product names, figures, addresses. Confirm each.
 | `common.brand.legalName` | PrimeTrack Telematics Limited | PrimeTrack Telematics Limited |
 | `common.brand.tagline` | GPS vehicle tracking and fleet management in Rwanda | Gukurikirana ibinyabiziga hakoreshejwe GPS no gucunga ibinyabiziga by’ikigo mu Rwanda |
 | `common.address.line1` | 4th Floor, Tower A | Igorofa rya 4, Tower A |
-| `common.address.country` | Republic of Rwanda | Repubulika y’u Rwanda |
+| `common.address.country` | Rwanda | u Rwanda |
 | `common.nav.primaryLabel` | Primary | Ibikubiyemo by’ingenzi |
 | `common.nav.home` | Home | Ahabanza |
 | `common.nav.solutions` | Solutions | Ibisubizo |
@@ -133,7 +133,7 @@ Usually deliberate: brand and product names, figures, addresses. Confirm each.
 | `common.footer.emailLabel` | Email address for PrimeTIPS updates | Aderesi ya imeyili yo kwakira amakuru ya PrimeTIPS |
 | `common.footer.subscribe` | Subscribe | Iyandikishe |
 | `common.footer.copyright` | © {year} PrimeTrack Telematics Limited. All rights reserved. | © {year} PrimeTrack Telematics Limited. Uburenganzira bwose burabitswe. |
-| `common.footer.licensed` | Licensed in Rwanda by RURA | Twemerewe gukorera mu Rwanda na RURA |
+| `common.footer.licensed` | Licensed by RURA | Twemerewe na RURA |
 | `common.footer.legalLabel` | Legal | Amategeko |
 | `common.footer.officeTitle` | Rwanda office | Ibiro byo mu Rwanda |
 | `common.footer.nigeriaOfficeTitle` | Nigeria office | Ibiro byo muri Nigeriya |
@@ -780,7 +780,7 @@ Usually deliberate: brand and product names, figures, addresses. Confirm each.
 | `companyPages.careers.closesToday` | Closes today | Birarangira uyu munsi |
 | `companyPages.careers.noOpenings` | No positions are open right now. | Nta mwanya w’akazi uhari ubu. |
 | `companyPages.careers.driver.title` | Personal Driver to the CEO | Umushoferi bwite w’Umuyobozi Mukuru |
-| `companyPages.careers.driver.lead` | Drive our Chief Executive Officer safely and on time, in Kigali, across Rwanda and beyond, often at short notice. You will be primarily responsible for our Chief Executive’s daily commute, safely & timely. | Utwara Umuyobozi Mukuru wacu mu mutekano kandi ku gihe, i Kigali, mu Rwanda hose no hanze yarwo, akenshi bitunguranye. Uzaba ushinzwe cyane cyane ingendo za buri munsi z’Umuyobozi Mukuru wacu, mu mutekano no ku gihe. |
+| `companyPages.careers.driver.lead` | You will be primarily responsible for our Chief Executive’s daily commute, safely & timely. | Uzaba ushinzwe cyane cyane ingendo za buri munsi z’Umuyobozi Mukuru wacu, mu mutekano no ku gihe. |
 | `companyPages.careers.driver.seeRequirements` | See requirements | Reba ibisabwa |
 | `companyPages.careers.driver.howToApply` | How to apply | Uko wasaba |
 | `companyPages.careers.driver.requirementsLabel` | Requirements | Ibisabwa |

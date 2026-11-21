@@ -17,7 +17,7 @@ export const common = {
    *  The building, the city and the structured data use src/data/company.ts. */
   address: {
     line1: '4th Floor, Tower A',
-    country: 'Republic of Rwanda',
+    country: 'Rwanda',
   },
 
   nav: {
@@ -102,7 +102,7 @@ export const common = {
     subscribe: 'Subscribe',
     /** {year} is substituted at build time. */
     copyright: '© {year} PrimeTrack Telematics Limited. All rights reserved.',
-    licensed: 'Licensed in Rwanda by RURA',
+    licensed: 'Licensed by RURA',
     /** Names the bottom bar's legal links for a screen reader. */
     legalLabel: 'Legal',
     officeTitle: 'Rwanda office',

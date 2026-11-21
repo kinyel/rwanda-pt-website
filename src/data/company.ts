@@ -35,9 +35,9 @@ export const company = {
     line1: '4th Floor, Tower A',
     line2: 'Yyussa City Centre',
     city: 'Kigali',
-    country: 'Republic of Rwanda',
+    country: 'Rwanda',
     /** Single-line form for schema.org and meta descriptions. */
-    full: '4th Floor, Tower A, Yyussa City Centre, Kigali, Republic of Rwanda',
+    full: '4th Floor, Tower A, Yyussa City Centre, Kigali, Rwanda',
   },
 
   /* Social profiles, in the order the footer shows them. -----------------

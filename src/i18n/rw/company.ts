@@ -115,7 +115,7 @@ export const companyPages: Translation<Dictionary['companyPages']> = {
 
     driver: {
       title: 'Umushoferi bwite w’Umuyobozi Mukuru',
-      lead: 'Utwara Umuyobozi Mukuru wacu mu mutekano kandi ku gihe, i Kigali, mu Rwanda hose no hanze yarwo, akenshi bitunguranye. Uzaba ushinzwe cyane cyane ingendo za buri munsi z’Umuyobozi Mukuru wacu, mu mutekano no ku gihe.',
+      lead: 'Uzaba ushinzwe cyane cyane ingendo za buri munsi z’Umuyobozi Mukuru wacu, mu mutekano no ku gihe.',
       seeRequirements: 'Reba ibisabwa',
       howToApply: 'Uko wasaba',
       requirementsLabel: 'Ibisabwa',
