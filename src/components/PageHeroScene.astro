@@ -228,6 +228,27 @@ const BLIPS = [
   const y = 200 + Math.sin(rad) * b.r;
   return { ...b, i, x: +f1(x), y: +f1(y), sx: stageX(x), sy: stageY(y) };
 });
+/** DRIVE: a steering wheel, in layers from the rim to the hub, standing
+    over the road it is driving down. The rim's two leather grips sit where
+    two hands would (ten to two), and a marker at twelve o'clock shows the
+    wheel turning. Angles clockwise from twelve. */
+const arcPath = (r: number, from: number, to: number) => {
+  const p = (deg: number) => {
+    const a = ((deg - 90) * Math.PI) / 180;
+    return `${f1(200 + Math.cos(a) * r)} ${f1(200 + Math.sin(a) * r)}`;
+  };
+  return `M${p(from)}A${r} ${r} 0 ${to - from > 180 ? 1 : 0} 1 ${p(to)}`;
+};
+const WHEEL_GRIPS = [arcPath(139, 286, 334), arcPath(139, 26, 74)];
+const WHEEL_STITCH = Array.from({ length: 36 }, (_, i) => i * 10)
+  .filter((deg) => !(deg > 280 && deg < 340) && !(deg > 20 && deg < 80) && Math.abs(deg) > 6 && deg < 354)
+  .map((deg) => {
+    const a = ((deg - 90) * Math.PI) / 180;
+    return `M${f1(200 + Math.cos(a) * 131)} ${f1(200 + Math.sin(a) * 131)}L${f1(200 + Math.cos(a) * 147)} ${f1(200 + Math.sin(a) * 147)}`;
+  })
+  .join('');
+const ROAD_DASHES = 'M200 0V400';
+
 const RADAR_TICKS = Array.from({ length: 24 }, (_, i) => {
   const a = (i / 24) * Math.PI * 2;
   const r0 = i % 2 ? 152 : 146;
@@ -235,7 +256,13 @@ const RADAR_TICKS = Array.from({ length: 24 }, (_, i) => {
 }).join('');
 ---
 
-<div class="phs" data-scene={kind} data-compact={compact ? '' : undefined} aria-hidden="true">
+<div
+  class="phs"
+  data-scene={kind}
+  data-compact={compact ? '' : undefined}
+  data-ambient={kind === 'drive' ? '' : undefined}
+  aria-hidden="true"
+>
   <div class="phs-cam">
     <div class="phs-stage">
       {
@@ -606,6 +633,65 @@ const RADAR_TICKS = Array.from({ length: 24 }, (_, i) => {
           </>
         )
       }
+
+      {
+        kind === 'drive' && (
+          <>
+            {/* The road, laid out ahead and below the wheel, its lane
+                markings running towards the reader. */}
+            <span class="road">
+              <svg viewBox="0 0 400 400" focusable="false">
+                <defs>
+                  <linearGradient id="phs-road-fade" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#ff9d5c" stop-opacity="0" />
+                    <stop offset="35%" stop-color="#ff9d5c" stop-opacity="0.75" />
+                    <stop offset="100%" stop-color="#ff9d5c" stop-opacity="0.95" />
+                  </linearGradient>
+                </defs>
+                <path class="road-edge" d="M122 0V400M278 0V400" />
+                <path class="road-shoulder" d="M92 0V400M308 0V400" />
+                <path class="road-lane" d={ROAD_DASHES} />
+              </svg>
+            </span>
+
+            {/* The wheel: rim at the back, then the spokes, then the hub
+                nearest the reader, as a real wheel is dished. */}
+            <span class="wheel">
+              <span class="wheel-layer" style="--i:0">
+                <svg viewBox="0 0 400 400" focusable="false">
+                  <circle class="wheel-rim" cx="200" cy="200" r="152" />
+                  <circle class="wheel-rim" cx="200" cy="200" r="126" />
+                </svg>
+              </span>
+              <span class="wheel-layer" style="--i:1">
+                <svg viewBox="0 0 400 400" focusable="false">
+                  <circle class="wheel-rim wheel-rim-front" cx="200" cy="200" r="152" />
+                  <circle class="wheel-rim wheel-rim-front" cx="200" cy="200" r="126" />
+                  <path class="wheel-stitch" d={WHEEL_STITCH} />
+                  {WHEEL_GRIPS.map((grip) => (
+                    <path class="wheel-grip" d={grip} />
+                  ))}
+                  <path class="wheel-mark" d="M200 50V74" />
+                </svg>
+              </span>
+              <span class="wheel-layer" style="--i:2">
+                <svg viewBox="0 0 400 400" focusable="false">
+                  <rect class="wheel-spoke" x="76" y="187" width="88" height="26" rx="10" />
+                  <rect class="wheel-spoke" x="236" y="187" width="88" height="26" rx="10" />
+                  <rect class="wheel-spoke" x="187" y="236" width="26" height="90" rx="10" />
+                </svg>
+              </span>
+              <span class="wheel-layer" style="--i:3">
+                <svg viewBox="0 0 400 400" focusable="false">
+                  <circle class="wheel-hub" cx="200" cy="200" r="42" />
+                  <circle class="wheel-hub-ring" cx="200" cy="200" r="27" />
+                  <circle class="wheel-hub-core" cx="200" cy="200" r="7" />
+                </svg>
+              </span>
+            </span>
+          </>
+        )
+      }
     </div>
   </div>
 
@@ -726,7 +812,9 @@ const RADAR_TICKS = Array.from({ length: 24 }, (_, i) => {
   .map svg,
   .ripple svg,
   .scope svg,
-  .finds svg {
+  .finds svg,
+  .road svg,
+  .wheel-layer svg {
     position: absolute;
     inset: 0;
     display: block;
@@ -1493,6 +1581,143 @@ const RADAR_TICKS = Array.from({ length: 24 }, (_, i) => {
     opacity: var(--seen);
   }
 
+  /* --- THE WHEEL — the personal driver advert --------------------------
+     A steering wheel standing nearly upright, the way a driver sees it,
+     with the road laid out flat beneath it. The scene's camera barely
+     tilts; the road is tipped down on its own so it reads as ground. The
+     wheel sways a little on its own, as hands on a wheel do on an open
+     road, and the lane markings run towards the reader: the only two
+     things in any of these scenes that move without the scroll, so the
+     scene is marked `data-ambient` and stops when it is off screen.
+     It arrives from far off, spinning, and settles. */
+  [data-scene='drive'] {
+    --tilt: 16deg;
+    --spin: 0deg;
+    --in-z: -360px;
+    --in-tilt: -10deg;
+    --in-shrink: 0.3;
+    --steer: 0deg;
+  }
+  .road,
+  .wheel,
+  .wheel-layer {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+  }
+  .road {
+    transform-origin: 50% 100%;
+    transform: translateY(30%) translateZ(calc(-40px * var(--depth))) rotateX(64deg);
+  }
+  .road-edge {
+    fill: none;
+    stroke: url(#phs-road-fade);
+    stroke-width: calc(2.6px * var(--lw));
+    vector-effect: non-scaling-stroke;
+  }
+  .road-shoulder {
+    fill: none;
+    stroke: rgb(255 196 148 / 0.16);
+    stroke-width: calc(1.4px * var(--lw));
+    vector-effect: non-scaling-stroke;
+  }
+  .road-lane {
+    fill: none;
+    stroke: #ffd7bd;
+    stroke-width: calc(3.2px * var(--lw));
+    stroke-linecap: round;
+    stroke-dasharray: 26 30;
+    vector-effect: non-scaling-stroke;
+  }
+
+  /* The wheel turns about its own centre: by the arrival's spin, by the
+     scroll (`--steer`, below), and by the sway, which rides on the
+     separate `rotate` property so the three add up. */
+  .wheel {
+    transform: rotateZ(calc(var(--steer) + (1 - var(--phs-in)) * -220deg));
+  }
+  .wheel-layer {
+    transform: translateZ(calc(var(--i) * 14px * var(--depth)));
+  }
+  .wheel-rim {
+    fill: none;
+    stroke: color-mix(in oklab, var(--color-prime-300) 52%, transparent);
+    stroke-width: calc(2.2px * var(--lw));
+    vector-effect: non-scaling-stroke;
+  }
+  .wheel-rim-front {
+    stroke: color-mix(in oklab, var(--color-prime-200) 88%, transparent);
+    stroke-width: calc(3px * var(--lw));
+  }
+  .wheel-stitch {
+    fill: none;
+    stroke: rgb(255 196 148 / 0.22);
+    stroke-width: calc(1.2px * var(--lw));
+    vector-effect: non-scaling-stroke;
+  }
+  .wheel-grip {
+    fill: none;
+    stroke: var(--color-prime-400);
+    stroke-width: calc(9px * var(--lw));
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .wheel-mark {
+    fill: none;
+    stroke: #fff;
+    stroke-width: calc(5px * var(--lw));
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .wheel-spoke {
+    fill: rgb(14 15 19 / 0.55);
+    stroke: color-mix(in oklab, var(--color-prime-300) 80%, transparent);
+    stroke-width: calc(2.4px * var(--lw));
+    vector-effect: non-scaling-stroke;
+  }
+  .wheel-hub {
+    fill: rgb(243 93 1 / 0.14);
+    stroke: var(--color-prime-200);
+    stroke-width: calc(2.8px * var(--lw));
+    vector-effect: non-scaling-stroke;
+  }
+  .wheel-hub-ring {
+    fill: none;
+    stroke: rgb(255 196 148 / 0.55);
+    stroke-width: calc(1.4px * var(--lw));
+    stroke-dasharray: 3 4;
+    vector-effect: non-scaling-stroke;
+  }
+  .wheel-hub-core {
+    fill: var(--color-amber-500);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .road-lane {
+      animation: drive-lane 1.1s linear infinite;
+    }
+    .wheel {
+      animation: drive-sway 7s ease-in-out infinite;
+    }
+  }
+  @keyframes drive-lane {
+    from {
+      stroke-dashoffset: 0;
+    }
+    to {
+      stroke-dashoffset: -56;
+    }
+  }
+  @keyframes drive-sway {
+    0%,
+    100% {
+      rotate: -5deg;
+    }
+    50% {
+      rotate: 6deg;
+    }
+  }
+
   /* ---------------------------------------------------------------------
      RECOMPOSED, NOT HIDDEN. Under the copy as its own band, smaller, and
      with most of the relief taken out: at this width the scene is read at
@@ -1700,6 +1925,13 @@ const RADAR_TICKS = Array.from({ length: 24 }, (_, i) => {
   }
   [data-live][data-scene='radar'] :is(.blip, .beacon) {
     --seen: clamp(0, (var(--sw) - var(--a)) / 22, 1);
+  }
+
+  /* The wheel is turned into a bend as the page is read, and the camera
+     drops a little towards the road. */
+  [data-live][data-scene='drive'] {
+    --tilt: calc(20deg - var(--s, 0) * 12deg);
+    --steer: calc(var(--t) * -100deg);
   }
 
   /* The composition is finished at rest, so this only ever removes the

@@ -35,7 +35,9 @@ export type SceneKind =
   /** A located vehicle at the end of its route, signalling. */
   | 'signal'
   /** A radar sweep that finds the fleet and flags two of it. */
-  | 'radar';
+  | 'radar'
+  /** A steering wheel over the road it drives down. */
+  | 'drive';
 
 /**
  * WHY EACH FAMILY GETS WHAT IT GETS.
@@ -89,4 +91,6 @@ export const heroScenes = {
   blog: 'signal',
   articles: 'signal',
   analyze: 'radar',
+  /* A job advert for a driver: the wheel. */
+  driverAdvert: 'drive',
 } as const satisfies Record<string, SceneKind>;
