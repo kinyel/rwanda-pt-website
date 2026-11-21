@@ -33,8 +33,9 @@ export default defineConfig({
         defaultLocale: 'en',
         locales: { en: 'en-RW', rw: 'rw-RW' },
       },
-      // Internal reference page — for the team, not for search engines.
-      filter: (page) => !page.includes('/design-system'),
+      // Internal pages: the design-system reference, for the team, and the
+      // CEO's draft advert, for review. Neither is for search engines.
+      filter: (page) => !page.includes('/design-system') && !page.includes('/ceo-draft-request'),
     }),
   ],
   vite: {

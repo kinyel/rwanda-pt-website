@@ -644,8 +644,9 @@ const RADAR_TICKS = Array.from({ length: 24 }, (_, i) => {
                 <defs>
                   <linearGradient id="phs-road-fade" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stop-color="#ff9d5c" stop-opacity="0" />
-                    <stop offset="35%" stop-color="#ff9d5c" stop-opacity="0.75" />
-                    <stop offset="100%" stop-color="#ff9d5c" stop-opacity="0.95" />
+                    <stop offset="40%" stop-color="#ff9d5c" stop-opacity="0.8" />
+                    <stop offset="85%" stop-color="#ff9d5c" stop-opacity="0.9" />
+                    <stop offset="100%" stop-color="#ff9d5c" stop-opacity="0" />
                   </linearGradient>
                 </defs>
                 <path class="road-edge" d="M122 0V400M278 0V400" />
@@ -1605,9 +1606,11 @@ const RADAR_TICKS = Array.from({ length: 24 }, (_, i) => {
     inset: 0;
     transform-style: preserve-3d;
   }
+  /* Hinged at its near end, which sits just under the wheel's rim, and
+     tipped away so it runs off behind the wheel into the distance. */
   .road {
     transform-origin: 50% 100%;
-    transform: translateY(30%) translateZ(calc(-40px * var(--depth))) rotateX(64deg);
+    transform: translateY(6%) translateZ(calc(-40px * var(--depth))) rotateX(66deg);
   }
   .road-edge {
     fill: none;
