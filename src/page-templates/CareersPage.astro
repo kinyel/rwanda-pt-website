@@ -2,10 +2,10 @@
 /**
  * Prime Careers.
  *
- * Two parts under the hero. First the open positions, as cards that link to
- * their postings; then a dark closing band, like the one at the foot of most
- * pages, with the two questions from the live copy and the way to send a
- * résumé. The copy is the live site's; only how it is set has changed.
+ * Under the hero, the open positions: cards that link to their postings on
+ * Job in Rwanda, and below them the Personal Driver to the CEO advert in
+ * full. (The two questions and the résumé band that used to close the page
+ * were removed on request.)
  *
  * ONE TEXT SIZE. Every line of running text below the hero is set at the
  * lead size, the same as the hero's own lead; emphasis is weight and colour,
@@ -26,7 +26,6 @@ import { heroScenes } from '../data/hero-scenes';
 import Section from '../components/Section.astro';
 import Button from '../components/Button.astro';
 import { routes } from '../data/navigation';
-import { company, primeValues, splitValueTitle } from '../data/company';
 import { openings, driverRole, type OpeningKey } from '../data/careers';
 import PageHeroScene from '../components/PageHeroScene.astro';
 import { breadcrumbSchema } from '../data/schema';
@@ -436,75 +435,6 @@ const roleIcon: Record<OpeningKey, string> = {
     </div>
   </Section>
 
-  <!-- ============ The two questions, and the résumé ============
-       A dark band, the same ground as the conversion block at the foot of
-       the other pages, so the page ends on its call to act. -->
-  <section data-nav="dark" class="careers-apply on-dark relative overflow-hidden bg-ink-950 bg-contour-prime">
-    <div class="absolute inset-0 bg-prime-glow" aria-hidden="true"></div>
-    <div class="container-prime relative py-16 sm:py-20 lg:py-24">
-      {/* `min-w-0` on both columns: a grid column is otherwise as wide as
-          its widest unbreakable thing, and a one-line button label in a long
-          language made the column wider than a 320px screen. */}
-      <div class="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)] lg:items-center lg:gap-20">
-        <div class="min-w-0">
-          <h2 class="text-h2 text-white" data-words>{c.questionsTitle}</h2>
-          <ol class="steps mt-10" role="list">
-            {
-              c.questions.map((question, i) => (
-                <li class="step reveal-left" style={`--n:${i}`}>
-                  <span class="step-n text-lead" aria-hidden="true">
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  <p class="text-lead font-medium text-ink-100">{question}</p>
-                </li>
-              ))
-            }
-          </ol>
-        </div>
-
-        <div class="reveal-right min-w-0">
-          {/* Tighter below 360px, with the button's own side padding, so the
-              longest label (Kinyarwanda's) still fits on its one line. */}
-          <div class="apply card card-dark p-5 min-[22.5rem]:p-7 sm:p-9">
-            <span class="apply-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false">
-                <path d="M21.5 2.5 10.6 13.4M21.5 2.5l-6.8 19-4.1-8.1-8.1-4.1z" />
-              </svg>
-            </span>
-            <p class="mt-6 measure text-lead text-ink-200">{c.closing}</p>
-            <Button href={`mailto:${company.careersEmail}`} variant="primary" size="lg" class="mt-7 max-[22.5rem]:px-4">
-              {c.applyCta}
-            </Button>
-            <p class="mt-5 text-lead text-ink-300">
-              {c.applyNote.split('{email}')[0]}
-              <a
-                href={`mailto:${company.careersEmail}`}
-                class="font-semibold text-prime-300 underline underline-offset-4 transition-colors duration-[--duration-fast] hover:text-prime-200"
-              >
-                {company.careersEmail}
-              </a>
-              {c.applyNote.split('{email}')[1]}
-            </p>
-
-            <ul class="values mt-8 border-t border-white/10 pt-6" role="list">
-              {
-                primeValues.map((value) => {
-                  const part = splitValueTitle(t.home.values.items[value].letter, t.home.values.items[value].title);
-                  return (
-                    <li class="value-chip text-label uppercase text-ink-300">
-                      {part.before}
-                      <span class="text-prime-400">{part.letter}</span>
-                      {part.after}
-                    </li>
-                  );
-                })
-              }
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
 </BaseLayout>
 
 <style>
@@ -1140,101 +1070,4 @@ const roleIcon: Record<OpeningKey, string> = {
     color: var(--color-prime-600);
   }
 
-  /* ---------------------------------------------------------------------
-     THE TWO QUESTIONS, AND THE RÉSUMÉ
-  --------------------------------------------------------------------- */
-  .steps {
-    display: grid;
-    gap: 1.75rem;
-  }
-  .step {
-    position: relative;
-    display: grid;
-    grid-template-columns: 3rem minmax(0, 1fr);
-    column-gap: 1.125rem;
-    align-items: start;
-  }
-  /* Each question hangs off a numbered node, and a line runs from one node
-     to the next: two questions read as one train of thought. */
-  .step-n {
-    display: grid;
-    place-items: center;
-    width: 3rem;
-    height: 3rem;
-    border-radius: 50%;
-    border: 1px solid rgb(255 125 41 / 0.5);
-    background-image: radial-gradient(circle at 30% 22%, rgb(255 125 41 / 0.26), rgb(255 125 41 / 0.05) 70%);
-    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08);
-    color: var(--color-prime-300);
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    line-height: 1;
-  }
-  .step p {
-    /* The first line of the question sits level with the node's middle. */
-    padding-top: 0.45rem;
-    padding-top: calc((3rem - 1lh) / 2);
-  }
-  .step:not(:last-child)::after {
-    content: '';
-    position: absolute;
-    left: calc(1.5rem - 0.5px);
-    top: 3.375rem;
-    bottom: -1.375rem;
-    width: 1px;
-    background-image: linear-gradient(to bottom, rgb(255 125 41 / 0.55), rgb(255 125 41 / 0.1));
-  }
-
-  .apply {
-    isolation: isolate;
-    overflow: hidden;
-  }
-  /* The same lit top edge as the job cards, full width: this is the card
-     the page ends on. */
-  .apply::before {
-    content: '';
-    position: absolute;
-    inset: 0 0 auto 0;
-    height: 2px;
-    background-image: linear-gradient(90deg, var(--color-prime-500), var(--color-amber-400) 55%, transparent);
-  }
-  /* A pool of warm light in the card's top corner. A gradient, not a blur. */
-  .apply::after {
-    content: '';
-    position: absolute;
-    top: -45%;
-    right: -35%;
-    z-index: -1;
-    width: 85%;
-    aspect-ratio: 1;
-    background-image: radial-gradient(closest-side, rgb(243 93 1 / 0.2), transparent);
-    pointer-events: none;
-  }
-  .apply-icon {
-    display: grid;
-    place-items: center;
-    width: 3rem;
-    height: 3rem;
-    border-radius: var(--radius-btn);
-    border: 1px solid rgb(255 125 41 / 0.34);
-    background-image: linear-gradient(145deg, rgb(255 125 41 / 0.2), rgb(255 125 41 / 0.04));
-    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08);
-    color: var(--color-prime-300);
-  }
-  .apply-icon svg {
-    width: 1.375rem;
-    height: 1.375rem;
-  }
-
-  .values {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-  .value-chip {
-    border-radius: 999px;
-    border: 1px solid rgb(255 255 255 / 0.1);
-    background-color: rgb(255 255 255 / 0.03);
-    padding: 0.5rem 0.8rem;
-  }
 </style>

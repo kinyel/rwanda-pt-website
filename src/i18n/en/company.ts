@@ -95,15 +95,6 @@ export const companyPages = {
     title: 'A job at PrimeTrack is different',
     lead:
       'It will challenge you. It will inspire you. Beyond that it will reward you to the measure of the talent and productivity you bring, so that you can grow and achieve what you set out to. Every PrimePerson knows this from the day they join the team.',
-    questionsTitle: 'Two questions worth sitting with',
-    questions: [
-      'How big are your dreams, and how confident are you in your ability to achieve them?',
-      'How passionate are you about creating exceptional value in everything you do?',
-    ],
-    closing:
-      'If you are convinced you have what it takes to be a PrimePerson, whether through talent, skills or qualifications, send us a brief résumé.',
-    applyCta: 'Send your résumé',
-    applyNote: 'Applications go to {email}.',
 
     /* Open positions (src/data/careers.ts). Titles are the postings' own. */
     openingsEyebrow: 'We are hiring',
@@ -129,7 +120,7 @@ export const companyPages = {
     dayLeft: '1 day left',
     closesToday: 'Closes today',
     /** Shown in place of the list once every posting has closed. */
-    noOpenings: 'No positions are open right now. You can still send us your résumé below.',
+    noOpenings: 'No positions are open right now.',
 
     /* The Personal Driver to the CEO advert, shown in full on this page
        (src/data/careers.ts). The five requirements are the CEO's words. */

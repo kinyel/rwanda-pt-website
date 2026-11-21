@@ -87,15 +87,6 @@ export const companyPages: Translation<Dictionary['companyPages']> = {
     title: 'Gukora muri PrimeTrack biratandukanye',
     lead:
       'Bizagusaba byinshi. Bizagutera imbaraga. Kandi birenze ibyo bizaguhemba bijyanye n’impano n’umusaruro uzana, kugira ngo ukure kandi ugere ku byo wiyemeje. Buri PrimePerson abimenya kuva ku munsi wa mbere yinjiye mu itsinda.',
-    questionsTitle: 'Ibibazo bibiri bikwiye gutekerezwaho',
-    questions: [
-      'Inzozi zawe ni nini zingana iki, kandi wizeye ute ubushobozi bwawe bwo kuzigeraho?',
-      'Ushishikajwe ute no guhanga agaciro kadasanzwe muri byose ukora?',
-    ],
-    closing:
-      'Niba wemera udashidikanya ko ufite ibisabwa kugira ngo ube PrimePerson, haba mu mpano, mu bumenyi cyangwa mu mpamyabumenyi, twoherereze umwirondoro wawe mu ncamake.',
-    applyCta: 'Ohereza umwirondoro wawe',
-    applyNote: 'Ubusabe bwoherezwa kuri {email}.',
 
     /* Imyanya y'akazi. The job titles stay as the postings publish them:
        they are the official titles, and the postings themselves are in
@@ -120,7 +111,7 @@ export const companyPages: Translation<Dictionary['companyPages']> = {
     daysLeft: 'Hasigaye iminsi {n}',
     dayLeft: 'Hasigaye umunsi 1',
     closesToday: 'Birarangira uyu munsi',
-    noOpenings: 'Nta mwanya w’akazi uhari ubu. Ushobora gukomeza kutwoherereza umwirondoro wawe hepfo.',
+    noOpenings: 'Nta mwanya w’akazi uhari ubu.',
 
     driver: {
       title: 'Umushoferi bwite w’Umuyobozi Mukuru',
