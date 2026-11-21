@@ -108,8 +108,7 @@ export const companyPages = {
     /* Open positions (src/data/careers.ts). Titles are the postings' own. */
     openingsEyebrow: 'We are hiring',
     openingsTitle: 'Open positions',
-    openingsLead:
-      'We are hiring for these roles now. Each posting on Job in Rwanda has the full description and tells you how to apply.',
+    openingsLead: 'We are hiring for these roles now. Each one has the full description and tells you how to apply.',
     openings: {
       gpsTechnician: {
         title: 'GPS Tracker Technician',
@@ -131,6 +130,55 @@ export const companyPages = {
     closesToday: 'Closes today',
     /** Shown in place of the list once every posting has closed. */
     noOpenings: 'No positions are open right now. You can still send us your résumé below.',
+
+    /* The Personal Driver to the CEO advert, shown in full on this page
+       (src/data/careers.ts). The five requirements are the CEO's words. */
+    driver: {
+      title: 'Personal Driver to the CEO',
+      lead: 'Drive our Chief Executive Officer safely and on time, in Kigali, across Rwanda and beyond, often at short notice. You will be primarily responsible for our Chief Executive’s daily commute, safely & timely.',
+      chips: ['Kigali, with travel at short notice', 'Full-time', 'Reports to the CEO'],
+      seeRequirements: 'See requirements',
+      howToApply: 'How to apply',
+      requirementsLabel: 'Requirements',
+      requirementsTitle: 'What you must have',
+      requirements: [
+        'English language proficiency',
+        'Residence in Kigali',
+        'Free to travel at short notice',
+        'National Id card and valid driving licence issued by RNP',
+        'At least 3 years driving experience',
+      ],
+      roleLabel: 'The role',
+      roleTitle: 'Who we are looking for',
+      role: 'We are looking for a reliable, discreet and experienced driver to drive our Chief Executive Officer to meetings, client visits, the airport and other engagements, in Kigali, across Rwanda and beyond when required, often at short notice.',
+      aboutTitle: 'About PrimeTrack',
+      about: 'PrimeTrack Telematics is licensed by RURA to provide GPS vehicle tracking and telematics services in Rwanda. We help businesses track their vehicles, manage their fleets, monitor fuel and keep their drivers safe, backed by round-the-clock support from our PrimeCARE team.',
+      dutiesLabel: 'Responsibilities',
+      dutiesTitle: 'What the job involves',
+      duties: [
+        'Drive the CEO safely and punctually, observing traffic laws at all times',
+        'Plan routes and timings in advance, allowing for traffic, so every appointment is met on time',
+        'Keep the vehicle clean, fuelled and roadworthy; report faults promptly and arrange servicing',
+        'Keep the vehicle’s documents, including insurance and technical inspection, up to date',
+        'Keep an accurate log of trips, mileage and fuel',
+        'Run errands and deliver documents when required',
+        'Treat everything seen or heard in the course of duty with strict confidentiality',
+      ],
+      glanceTitle: 'At a glance',
+      glancePosition: 'Position',
+      glanceLocation: 'Location',
+      glanceLocationValue: 'Kigali, with travel at short notice',
+      glanceType: 'Employment type',
+      glanceReportsTo: 'Reports to',
+      glanceReportsToValue: 'Chief Executive Officer',
+      applyLabel: 'How to apply',
+      applyLead: 'Send an email to:',
+      /** {email} and {phone} become links. */
+      applyBody: 'Please send an email to our recruitment agency at: {email} or call {phone}.',
+      applyEmailCta: 'Email the recruitment agency',
+      applyCallCta: 'Call {phone}',
+      equalOpportunity: 'PrimeTrack is an equal opportunity employer.',
+    },
   },
 
   contact: {

@@ -102,8 +102,7 @@ export const companyPages: Translation<Dictionary['companyPages']> = {
        English, so the title is what an applicant will look for there. */
     openingsEyebrow: 'Turashaka abakozi',
     openingsTitle: 'Imyanya y’akazi ihari',
-    openingsLead:
-      'Ubu turashaka abakozi kuri iyi myanya. Itangazo rya buri mwanya kuri Job in Rwanda (mu Cyongereza) risobanura akazi n’uko wasaba.',
+    openingsLead: 'Ubu turashaka abakozi kuri iyi myanya. Buri mwanya ufite ibisobanuro byawo byose n’uko wasaba.',
     openings: {
       gpsTechnician: {
         title: 'GPS Tracker Technician',
@@ -122,6 +121,52 @@ export const companyPages: Translation<Dictionary['companyPages']> = {
     dayLeft: 'Hasigaye umunsi 1',
     closesToday: 'Birarangira uyu munsi',
     noOpenings: 'Nta mwanya w’akazi uhari ubu. Ushobora gukomeza kutwoherereza umwirondoro wawe hepfo.',
+
+    driver: {
+      title: 'Umushoferi bwite w’Umuyobozi Mukuru',
+      lead: 'Utwara Umuyobozi Mukuru wacu mu mutekano kandi ku gihe, i Kigali, mu Rwanda hose no hanze yarwo, akenshi bitunguranye. Uzaba ushinzwe cyane cyane ingendo za buri munsi z’Umuyobozi Mukuru wacu, mu mutekano no ku gihe.',
+      chips: ['Kigali, n’ingendo zitunguranye', 'Akazi k’igihe cyose', 'Ayoborwa n’Umuyobozi Mukuru'],
+      seeRequirements: 'Reba ibisabwa',
+      howToApply: 'Uko wasaba',
+      requirementsLabel: 'Ibisabwa',
+      requirementsTitle: 'Ibyo ugomba kuba ufite',
+      requirements: [
+        'Kumenya neza ururimi rw’Icyongereza',
+        'Gutura i Kigali',
+        'Kuba witeguye gukora ingendo zitunguranye',
+        'Indangamuntu n’uruhushya rwo gutwara ibinyabiziga rwemewe rutangwa na RNP',
+        'Uburambe bw’imyaka nibura 3 mu gutwara ibinyabiziga',
+      ],
+      roleLabel: 'Umwanya',
+      roleTitle: 'Uwo dushaka',
+      role: 'Turashaka umushoferi wizewe, ubika ibanga kandi ufite uburambe, uzajya atwara Umuyobozi Mukuru wacu mu nama, mu gusura abakiriya, ku kibuga cy’indege no mu bindi bikorwa, i Kigali, mu Rwanda hose no hanze yarwo igihe bibaye ngombwa, akenshi bitunguranye.',
+      aboutTitle: 'Ibyerekeye PrimeTrack',
+      about: 'PrimeTrack Telematics ifite uruhushya rwa RURA rwo gutanga serivisi zo gukurikirana ibinyabiziga hakoreshejwe GPS na telematiki mu Rwanda. Dufasha ibigo gukurikirana ibinyabiziga byabyo, kubicunga, kugenzura lisansi no kurinda umutekano w’abashoferi babyo, dushyigikiwe n’itsinda ryacu rya PrimeCARE riboneka amasaha 24 kuri 24.',
+      dutiesLabel: 'Inshingano',
+      dutiesTitle: 'Ibyo akazi gasaba',
+      duties: [
+        'Gutwara Umuyobozi Mukuru mu mutekano no ku gihe, wubahiriza amategeko y’umuhanda igihe cyose',
+        'Gutegura mbere inzira n’igihe, uzirikana umubyigano w’imodoka, kugira ngo buri gahunda yubahirizwe ku gihe',
+        'Kugira imodoka isukuye, irimo lisansi kandi imeze neza; kumenyesha vuba ibibazo no gutegura isuzumwa ryayo',
+        'Gukurikirana ko ibyangombwa by’imodoka, harimo ubwishingizi n’isuzuma rya tekiniki, bihora bigezweho',
+        'Kwandika neza ingendo, ibirometero na lisansi',
+        'Gukora ibindi bikorwa no kugeza inyandiko aho zikenewe igihe bibaye ngombwa',
+        'Kubika ibanga rikomeye ku byo ubona cyangwa wumva byose mu kazi',
+      ],
+      glanceTitle: 'Mu ncamake',
+      glancePosition: 'Umwanya',
+      glanceLocation: 'Aho akazi gakorerwa',
+      glanceLocationValue: 'Kigali, n’ingendo zitunguranye',
+      glanceType: 'Ubwoko bw’akazi',
+      glanceReportsTo: 'Ayoborwa na',
+      glanceReportsToValue: 'Umuyobozi Mukuru',
+      applyLabel: 'Uko wasaba',
+      applyLead: 'Ohereza imeyili kuri:',
+      applyBody: 'Ohereza imeyili ku kigo cyacu gishinzwe gushaka abakozi kuri: {email} cyangwa uhamagare {phone}.',
+      applyEmailCta: 'Andikira ikigo gishinzwe gushaka abakozi',
+      applyCallCta: 'Hamagara {phone}',
+      equalOpportunity: 'PrimeTrack iha amahirwe angana abasaba akazi bose.',
+    },
   },
 
   contact: {

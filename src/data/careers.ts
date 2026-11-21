@@ -27,3 +27,22 @@ export const openings = [
 ] as const;
 
 export type OpeningKey = (typeof openings)[number]['key'];
+
+/**
+ * The Personal Driver to the CEO advert, shown in full on the careers page
+ * rather than linked out: it is not posted on Job in Rwanda. Its copy is in
+ * both dictionaries under `companyPages.careers.driver`; the five
+ * requirements there are the CEO's own words. Applications go to the
+ * recruitment agency, not to admin@, by the CEO's instruction.
+ *
+ * No deadline has been set, so it does not expire on its own; set `open` to
+ * false (or delete the box) to take it down.
+ */
+export const driverRole = {
+  open: true,
+  email: 'pgnventures@gmail.com',
+  /** As the CEO gave it, and in international form for the tel: link. */
+  phone: { display: '0793017263', tel: '+250793017263' },
+  /** Pre-filled in the email the button opens. */
+  subject: 'Application: Personal Driver to the CEO',
+} as const;
