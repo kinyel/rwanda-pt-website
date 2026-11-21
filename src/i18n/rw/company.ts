@@ -96,6 +96,32 @@ export const companyPages: Translation<Dictionary['companyPages']> = {
       'Niba wemera udashidikanya ko ufite ibisabwa kugira ngo ube PrimePerson, haba mu mpano, mu bumenyi cyangwa mu mpamyabumenyi, twoherereze umwirondoro wawe mu ncamake.',
     applyCta: 'Ohereza umwirondoro wawe',
     applyNote: 'Ubusabe bwoherezwa kuri {email}.',
+
+    /* Imyanya y'akazi. The job titles stay as the postings publish them:
+       they are the official titles, and the postings themselves are in
+       English, so the title is what an applicant will look for there. */
+    openingsEyebrow: 'Turashaka abakozi',
+    openingsTitle: 'Imyanya y’akazi ihari',
+    openingsLead:
+      'Ubu turashaka abakozi kuri iyi myanya. Itangazo rya buri mwanya kuri Job in Rwanda (mu Cyongereza) risobanura akazi n’uko wasaba.',
+    openings: {
+      gpsTechnician: {
+        title: 'GPS Tracker Technician',
+        location: 'Kigali, n’ingendo nyinshi z’akazi',
+      },
+      juniorAdmin: {
+        title: 'Junior Administrative Officer (Data & Customer Support)',
+        location: 'Kigali',
+      },
+    },
+    fullTime: 'Akazi k’igihe cyose',
+    applyBy: 'Saba bitarenze {date}',
+    viewPosting: 'Reba itangazo',
+    hiringNow: 'Turakira ubusabe',
+    daysLeft: 'Hasigaye iminsi {n}',
+    dayLeft: 'Hasigaye umunsi 1',
+    closesToday: 'Birarangira uyu munsi',
+    noOpenings: 'Nta mwanya w’akazi uhari ubu. Ushobora gukomeza kutwoherereza umwirondoro wawe hepfo.',
   },
 
   contact: {

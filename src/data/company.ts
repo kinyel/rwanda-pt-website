@@ -131,6 +131,21 @@ export const clients = [
    advantage 7. The initial letter of each value spells the company name. */
 export const primeValues = ['performance', 'reliability', 'innovation', 'multifunction', 'efficiency'] as const;
 
+/**
+ * A value's title split round its P.R.I.M.E. letter, so the letter can be lit
+ * where it actually is: the start of the English title ("Performance"), or
+ * the start of the English word in brackets in the Kinyarwanda one
+ * ("Imikorere (Performance)"). Lighting the title's first character instead
+ * printed "PMikorere" in Kinyarwanda. If the letter is nowhere at the start
+ * of a word, it goes in front of the whole title.
+ */
+export function splitValueTitle(letter: string, title: string) {
+  const match = new RegExp(`(^|[\\s(])${letter}`).exec(title);
+  if (!match) return { before: '', letter, after: ` ${title}` };
+  const at = match.index + match[1].length;
+  return { before: title.slice(0, at), letter: title.slice(at, at + 1), after: title.slice(at + 1) };
+}
+
 /* --- Formspree ------------------------------------------------------------
    The live form ID, with PUBLIC_FORMSPREE_ID able to override it.
 

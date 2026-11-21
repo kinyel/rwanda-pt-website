@@ -104,6 +104,33 @@ export const companyPages = {
       'If you are convinced you have what it takes to be a PrimePerson, whether through talent, skills or qualifications, send us a brief résumé.',
     applyCta: 'Send your résumé',
     applyNote: 'Applications go to {email}.',
+
+    /* Open positions (src/data/careers.ts). Titles are the postings' own. */
+    openingsEyebrow: 'We are hiring',
+    openingsTitle: 'Open positions',
+    openingsLead:
+      'We are hiring for these roles now. Each posting on Job in Rwanda has the full description and tells you how to apply.',
+    openings: {
+      gpsTechnician: {
+        title: 'GPS Tracker Technician',
+        location: 'Kigali, with significant travel',
+      },
+      juniorAdmin: {
+        title: 'Junior Administrative Officer (Data & Customer Support)',
+        location: 'Kigali',
+      },
+    },
+    fullTime: 'Full-time',
+    applyBy: 'Apply by {date}',
+    viewPosting: 'View the posting',
+    /** The small status label on each open role. */
+    hiringNow: 'Hiring now',
+    /** How long a role stays open, counted in days in Kigali. */
+    daysLeft: '{n} days left',
+    dayLeft: '1 day left',
+    closesToday: 'Closes today',
+    /** Shown in place of the list once every posting has closed. */
+    noOpenings: 'No positions are open right now. You can still send us your résumé below.',
   },
 
   contact: {

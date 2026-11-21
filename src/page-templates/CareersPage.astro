@@ -1,7 +1,24 @@
 ---
 /**
- * Prime Careers. Short page, so it is composed rather than padded: the two
- * questions from the live copy carry the middle of the page instead of filler.
+ * Prime Careers.
+ *
+ * Two parts under the hero. First the open positions, as cards that link to
+ * their postings; then a dark closing band, like the one at the foot of most
+ * pages, with the two questions from the live copy and the way to send a
+ * résumé. The copy is the live site's; only how it is set has changed.
+ *
+ * ONE TEXT SIZE. Every line of running text below the hero is set at the
+ * lead size, the same as the hero's own lead; emphasis is weight and colour,
+ * not size. Only the section headings and the small uppercase labels (the
+ * status pills, the P.R.I.M.E. chips) differ.
+ *
+ * WHAT MOVES. Everything arrives through the site's one-shot reveals. The
+ * only thing that moves on its own is the dot on each "hiring now" label,
+ * which is paused whenever the list is off screen (`data-ambient`) and never
+ * runs under reduced motion. Hover adds a light that follows the pointer on
+ * the job cards, on devices that have a pointer. No filters anywhere, so
+ * nothing here costs a phone the graphics memory the reveals were careful
+ * to give back.
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHero from '../components/PageHero.astro';
@@ -9,9 +26,10 @@ import { heroScenes } from '../data/hero-scenes';
 import Section from '../components/Section.astro';
 import Button from '../components/Button.astro';
 import { routes } from '../data/navigation';
-import { company, primeValues } from '../data/company';
+import { company, primeValues, splitValueTitle } from '../data/company';
+import { openings, type OpeningKey } from '../data/careers';
 import { breadcrumbSchema } from '../data/schema';
-import { useTranslations, localizePath, type Locale } from '../i18n';
+import { useTranslations, localizePath, interpolate, type Locale } from '../i18n';
 
 interface Props {
   locale: Locale;
@@ -22,6 +40,40 @@ const t = useTranslations(locale);
 const c = t.companyPages.careers;
 const site = Astro.site ?? new URL('https://primetrack.rw');
 const url = new URL(localizePath(routes.careers, locale), site).href;
+
+/* Roles still open when the site is built. The page also hides any that
+   close between builds (the script after the list). */
+const builtAt = Date.now();
+const open = openings.filter((opening) => Date.parse(opening.closes) > builtAt);
+const deadline = new Intl.DateTimeFormat(locale === 'rw' ? 'rw-RW' : 'en-GB', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'Africa/Kigali',
+});
+
+/* Whole days until a posting closes, counted on Kigali's calendar (UTC+2,
+   no daylight saving), so "1 day left" means tomorrow in Kigali whatever
+   the visitor's own clock says. The script after the list uses the same
+   sum to keep the label right between builds. */
+const KIGALI_OFFSET = 2 * 60 * 60 * 1000;
+const DAY = 24 * 60 * 60 * 1000;
+const kigaliDay = (time: number) => Math.floor((time + KIGALI_OFFSET) / DAY);
+const daysLeft = (closes: string) => kigaliDay(Date.parse(closes)) - kigaliDay(builtAt);
+const leftLabel = (days: number) =>
+  days <= 0 ? c.closesToday : days === 1 ? c.dayLeft : interpolate(c.daysLeft, { n: days });
+/* From this many days out, the label turns to the accent colour. */
+const SOON = 3;
+
+/* One drawing per role, in the site's line-work: a tracker unit sending its
+   signal, and a headset. Used small in the card's badge and large, faint,
+   in its corner. 24-unit grid, stroked by the card's own CSS. */
+const roleIcon: Record<OpeningKey, string> = {
+  gpsTechnician:
+    '<rect x="3.5" y="10.5" width="11" height="9.5" rx="2"/><circle cx="7.6" cy="15.2" r="1.3"/><path d="M11 15.2h1"/><path d="M14.5 6.5a4 4 0 0 1 4 4"/><path d="M14.5 3a7.5 7.5 0 0 1 7.5 7.5"/>',
+  juniorAdmin:
+    '<path d="M4.5 13.5V12a7.5 7.5 0 0 1 15 0v1.5"/><rect x="3" y="13" width="4" height="6.5" rx="1.6"/><rect x="17" y="13" width="4" height="6.5" rx="1.6"/><path d="M19 19.5v.2a2.3 2.3 0 0 1-2.3 2.3h-3.2"/><circle cx="12.4" cy="22" r="1.1"/>',
+};
 ---
 
 <BaseLayout
@@ -38,46 +90,644 @@ const url = new URL(localizePath(routes.careers, locale), site).href;
 >
   <PageHero scene={heroScenes.careers} compact locale={locale} eyebrow={c.eyebrow} title={c.title} lead={c.lead} crumbs={[{ name: c.title, href: routes.careers }]} />
 
-  <Section tone="light">
-    <div class="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)] lg:gap-20">
-      <div>
-        <h2 class="text-h2">{c.questionsTitle}</h2>
-        <ol class="mt-8 flex flex-col gap-8">
-          {
-            c.questions.map((question, i) => (
-              <li class="flex gap-5">
-                <span class="text-stat leading-none text-prime-100" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
-                <p class="self-center text-h3 text-ink-800">{question}</p>
-              </li>
-            ))
-          }
-        </ol>
-      </div>
-
-      <div class="card card-muted p-7 sm:p-9 lg:self-start">
-        <p class="measure text-ink-700">{c.closing}</p>
-        <Button href={`mailto:${company.careersEmail}`} variant="primary" size="lg" class="mt-7">
-          {c.applyCta}
-        </Button>
-        <p class="mt-4 text-[0.9375rem] text-ink-600">
-          {c.applyNote.split('{email}')[0]}
-          <a href={`mailto:${company.careersEmail}`} class="font-semibold text-prime-700 underline underline-offset-4">
-            {company.careersEmail}
-          </a>
-          {c.applyNote.split('{email}')[1]}
+  <!-- ============ Open positions ============ -->
+  <Section tone="light" class="careers-open">
+    <div
+      class="relative"
+      data-openings
+      data-empty={c.noOpenings}
+      data-days={c.daysLeft}
+      data-day={c.dayLeft}
+      data-today={c.closesToday}
+      data-soon={SOON}
+    >
+      <div class="reveal">
+        {open.length > 0 && <p class="eyebrow mb-4" data-openings-eyebrow>{c.openingsEyebrow}</p>}
+        <h2 class="text-h2" data-words>{c.openingsTitle}</h2>
+        <p class="mt-4 measure text-lead text-ink-700" data-openings-lead>
+          {open.length > 0 ? c.openingsLead : c.noOpenings}
         </p>
-
-        <ul class="mt-8 flex flex-wrap gap-x-4 gap-y-2 border-t border-ink-200 pt-6">
-          {
-            primeValues.map((value) => (
-              <li class="text-[0.8125rem] font-bold uppercase tracking-[0.1em] text-ink-500">
-                <span class="text-prime-600">{t.home.values.items[value].letter}</span>
-                {t.home.values.items[value].title.slice(1)}
-              </li>
-            ))
-          }
-        </ul>
       </div>
+
+      {
+        open.length > 0 && (
+          <>
+            <ul class="jobs mt-10" role="list" data-ambient>
+              {open.map((opening, i) => {
+                const role = c.openings[opening.key];
+                const days = daysLeft(opening.closes);
+                return (
+                  <li class="reveal-scale" style={`--n:${i}`} data-closes={opening.closes}>
+                    <div class="job card card-interactive">
+                      <span class="job-glow" aria-hidden="true" />
+                      <svg class="job-mark" viewBox="0 0 24 24" aria-hidden="true" focusable="false" set:html={roleIcon[opening.key]} />
+
+                      <div class="job-top">
+                        <span class="job-icon" aria-hidden="true">
+                          <svg viewBox="0 0 24 24" focusable="false" set:html={roleIcon[opening.key]} />
+                        </span>
+                        <span class="job-status text-label uppercase">
+                          <i class="job-dot" aria-hidden="true" />
+                          {c.hiringNow}
+                        </span>
+                      </div>
+
+                      <h3 class="text-lead font-semibold text-ink-950">
+                        {/* The title is the link, and its ::after covers the
+                            card, so the whole card opens the posting while the
+                            link's name is the role itself. */}
+                        <a href={opening.url} target="_blank" rel="noopener noreferrer" class="job-link">
+                          {role.title}
+                          <span class="sr-only">{` (${t.common.common.externalLink})`}</span>
+                        </a>
+                      </h3>
+
+                      <ul class="job-meta text-lead text-ink-600" role="list">
+                        <li>
+                          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path d="M12 21.5s-6.5-5.6-6.5-10.6a6.5 6.5 0 0 1 13 0c0 5-6.5 10.6-6.5 10.6z" />
+                            <circle cx="12" cy="10.8" r="2.3" />
+                          </svg>
+                          {role.location}
+                        </li>
+                        <li>
+                          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <rect x="3.5" y="7.5" width="17" height="12" rx="2" />
+                            <path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5M3.5 13h17" />
+                          </svg>
+                          {c.fullTime}
+                        </li>
+                        <li>
+                          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <rect x="3.5" y="5" width="17" height="15.5" rx="2.2" />
+                            <path d="M8 3v4M16 3v4M3.5 10h17" />
+                          </svg>
+                          {interpolate(c.applyBy, { date: deadline.format(new Date(opening.closes)) })}
+                        </li>
+                      </ul>
+
+                      <div class="job-foot">
+                        <span class="job-cta text-lead font-semibold text-prime-700" aria-hidden="true">
+                          {c.viewPosting}
+                          <svg viewBox="0 0 24 24" focusable="false">
+                            <path d="M7 17 17 7M8 7h9v9" />
+                          </svg>
+                        </span>
+                        <span class="job-left text-label uppercase" data-days-left data-closing-soon={days <= SOON ? '' : undefined}>
+                          {leftLabel(days)}
+                        </span>
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+
+            {/* Keeps the list honest between builds, and adds the pointer
+                light. Inline and straight after the list, so it has run
+                before the list is first painted:
+                  - a posting past its deadline is hidden;
+                  - each "days left" label is recounted from the visitor's
+                    clock, on Kigali's calendar;
+                  - with none left, the list goes and the lead says so
+                    (the sentence travels as a data attribute, so it is not
+                    in the page's text while there are roles to show);
+                  - on a device with a pointer, each card is told where the
+                    pointer is, for the light that follows it. */}
+            <script is:inline>
+              (function () {
+                var block = document.currentScript.closest('[data-openings]');
+                var list = block.querySelector('.jobs');
+                var now = Date.now();
+                var DAY = 864e5;
+                var kigaliDay = function (time) {
+                  return Math.floor((time + 72e5) / DAY);
+                };
+                var soon = Number(block.getAttribute('data-soon')) || 0;
+                var left = 0;
+
+                list.querySelectorAll('[data-closes]').forEach(function (item) {
+                  var closes = Date.parse(item.getAttribute('data-closes'));
+                  if (closes <= now) {
+                    item.hidden = true;
+                    return;
+                  }
+                  left += 1;
+                  var days = kigaliDay(closes) - kigaliDay(now);
+                  var label = item.querySelector('[data-days-left]');
+                  if (!label) return;
+                  label.textContent =
+                    days <= 0
+                      ? block.getAttribute('data-today')
+                      : days === 1
+                        ? block.getAttribute('data-day')
+                        : block.getAttribute('data-days').replace('{n}', String(days));
+                  label.toggleAttribute('data-closing-soon', days <= soon);
+                });
+
+                if (!left) {
+                  list.hidden = true;
+                  var eyebrow = block.querySelector('[data-openings-eyebrow]');
+                  if (eyebrow) eyebrow.hidden = true;
+                  var lead = block.querySelector('[data-openings-lead]');
+                  if (lead) lead.textContent = block.getAttribute('data-empty');
+                  return;
+                }
+
+                if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+                var frame = 0;
+                list.addEventListener(
+                  'pointermove',
+                  function (event) {
+                    var card = event.target.closest('.job');
+                    if (!card || frame) return;
+                    var x = event.clientX;
+                    var y = event.clientY;
+                    frame = requestAnimationFrame(function () {
+                      frame = 0;
+                      var box = card.getBoundingClientRect();
+                      card.style.setProperty('--mx', x - box.left + 'px');
+                      card.style.setProperty('--my', y - box.top + 'px');
+                    });
+                  },
+                  { passive: true },
+                );
+              })();
+            </script>
+          </>
+        )
+      }
     </div>
   </Section>
+
+  <!-- ============ The two questions, and the résumé ============
+       A dark band, the same ground as the conversion block at the foot of
+       the other pages, so the page ends on its call to act. -->
+  <section data-nav="dark" class="careers-apply on-dark relative overflow-hidden bg-ink-950 bg-contour-prime">
+    <div class="absolute inset-0 bg-prime-glow" aria-hidden="true"></div>
+    <div class="container-prime relative py-16 sm:py-20 lg:py-24">
+      {/* `min-w-0` on both columns: a grid column is otherwise as wide as
+          its widest unbreakable thing, and a one-line button label in a long
+          language made the column wider than a 320px screen. */}
+      <div class="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)] lg:items-center lg:gap-20">
+        <div class="min-w-0">
+          <h2 class="text-h2 text-white" data-words>{c.questionsTitle}</h2>
+          <ol class="steps mt-10" role="list">
+            {
+              c.questions.map((question, i) => (
+                <li class="step reveal-left" style={`--n:${i}`}>
+                  <span class="step-n text-lead" aria-hidden="true">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <p class="text-lead font-medium text-ink-100">{question}</p>
+                </li>
+              ))
+            }
+          </ol>
+        </div>
+
+        <div class="reveal-right min-w-0">
+          {/* Tighter below 360px, with the button's own side padding, so the
+              longest label (Kinyarwanda's) still fits on its one line. */}
+          <div class="apply card card-dark p-5 min-[22.5rem]:p-7 sm:p-9">
+            <span class="apply-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M21.5 2.5 10.6 13.4M21.5 2.5l-6.8 19-4.1-8.1-8.1-4.1z" />
+              </svg>
+            </span>
+            <p class="mt-6 measure text-lead text-ink-200">{c.closing}</p>
+            <Button href={`mailto:${company.careersEmail}`} variant="primary" size="lg" class="mt-7 max-[22.5rem]:px-4">
+              {c.applyCta}
+            </Button>
+            <p class="mt-5 text-lead text-ink-300">
+              {c.applyNote.split('{email}')[0]}
+              <a
+                href={`mailto:${company.careersEmail}`}
+                class="font-semibold text-prime-300 underline underline-offset-4 transition-colors duration-[--duration-fast] hover:text-prime-200"
+              >
+                {company.careersEmail}
+              </a>
+              {c.applyNote.split('{email}')[1]}
+            </p>
+
+            <ul class="values mt-8 border-t border-white/10 pt-6" role="list">
+              {
+                primeValues.map((value) => {
+                  const part = splitValueTitle(t.home.values.items[value].letter, t.home.values.items[value].title);
+                  return (
+                    <li class="value-chip text-label uppercase text-ink-300">
+                      {part.before}
+                      <span class="text-prime-400">{part.letter}</span>
+                      {part.after}
+                    </li>
+                  );
+                })
+              }
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 </BaseLayout>
+
+<style>
+  /* ---------------------------------------------------------------------
+     OPEN POSITIONS
+  --------------------------------------------------------------------- */
+
+  /* A dot screen in the section's top corner, fading out into the page: the
+     same particle texture the homepage's glass uses, at a whisper. Two
+     gradients on one static box, no mask and no filter.
+
+     :global, because the section element is the Section component's, and a
+     scoped selector from this file cannot reach another component's root.
+     The content above it is positioned (`relative` on its wrapper), so it
+     always paints over the texture. */
+  :global(.careers-open)::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto auto;
+    width: min(46rem, 70%);
+    height: 22rem;
+    background-image:
+      radial-gradient(120% 100% at 100% 0%, transparent 30%, #fff 78%),
+      radial-gradient(circle, rgb(243 93 1 / 0.22) 1px, transparent 1.4px);
+    background-size:
+      100% 100%,
+      18px 18px;
+    pointer-events: none;
+  }
+
+  .jobs {
+    position: relative;
+    display: grid;
+    gap: 1.25rem;
+  }
+  @media (width >= 48rem) {
+    .jobs {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  /* The reveal's wrapper passes its height on, so the two cards of a row
+     stand the same height whatever their titles run to. */
+  .jobs > li {
+    display: flex;
+  }
+
+  .job {
+    isolation: isolate;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 1.75rem;
+  }
+  @media (width >= 40rem) {
+    .job {
+      padding: 2.125rem;
+    }
+  }
+
+  /* Every drawing in a card is line-work, stroked in whatever colour its
+     own box is given. */
+  .job svg,
+  .apply-icon svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* A lit edge along the top: a third of it at rest, the whole width when
+     the card is hovered or its link has the keyboard. */
+  .job::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 2px;
+    background-image: linear-gradient(90deg, var(--color-prime-500), var(--color-amber-400) 60%, transparent);
+    transform: scaleX(0.34);
+    transform-origin: 0 50%;
+    transition: transform var(--duration-slow) var(--ease-out);
+  }
+  .job:hover::before,
+  .job:has(:focus-visible)::before {
+    transform: scaleX(1);
+  }
+
+  /* The light that follows the pointer. Behind the content, in front of the
+     card's own ground; only ever shown where there is a pointer to follow. */
+  .job-glow {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: 0;
+    background-image: radial-gradient(
+      20rem circle at var(--mx, 50%) var(--my, 0%),
+      color-mix(in oklab, var(--color-prime-500) 12%, transparent),
+      transparent 62%
+    );
+    transition: opacity var(--duration-slow) var(--ease-prime);
+    pointer-events: none;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .job:hover .job-glow {
+      opacity: 1;
+    }
+  }
+
+  /* The role's drawing again, large and faint, off the card's right edge
+     beside the details: clear of the status label above it and of the foot
+     below, so it never sits behind the perforation. */
+  .job-mark {
+    position: absolute;
+    right: -1.75rem;
+    top: 4.75rem;
+    z-index: -1;
+    width: 10.5rem;
+    height: 10.5rem;
+    color: var(--color-prime-500);
+    opacity: 0.075;
+    stroke-width: 1;
+    transform: rotate(-12deg);
+    transition:
+      transform var(--duration-enter) var(--ease-out),
+      opacity var(--duration-slow) var(--ease-prime);
+    pointer-events: none;
+  }
+  .job:hover .job-mark {
+    opacity: 0.13;
+    transform: rotate(-4deg) scale(1.06);
+  }
+  /* Smaller and further out on a phone, where the card is narrow and the
+     details run nearly its full width. */
+  @media (width < 40rem) {
+    .job-mark {
+      right: -2.25rem;
+      top: 4.25rem;
+      width: 8.5rem;
+      height: 8.5rem;
+    }
+  }
+
+  .job-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.375rem;
+  }
+  .job-icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: var(--radius-btn);
+    border: 1px solid color-mix(in oklab, var(--color-prime-500) 24%, transparent);
+    background-image: linear-gradient(145deg, var(--color-prime-50), #fff 78%);
+    box-shadow:
+      inset 0 1px 0 #fff,
+      0 8px 16px -10px rgb(243 93 1 / 0.5);
+    color: var(--color-prime-700);
+  }
+  .job-icon svg {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .job-status,
+  .job-left {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 999px;
+    border: 1px solid rgb(8 9 11 / 0.08);
+    padding: 0.45rem 0.75rem;
+    white-space: nowrap;
+  }
+  .job-status {
+    background-color: #fff;
+    color: var(--color-ink-600);
+  }
+  .job-left {
+    background-color: var(--color-ink-50);
+    color: var(--color-ink-600);
+  }
+  /* Closing within a few days: the accent, so it is seen. */
+  .job-left[data-closing-soon] {
+    border-color: color-mix(in oklab, var(--color-prime-500) 30%, transparent);
+    background-color: var(--color-prime-50);
+    color: var(--color-prime-800);
+  }
+
+  /* The one thing here that moves by itself: a ring going out from the dot,
+     like the signal the site is about. Stopped off screen by `data-ambient`
+     on the list, and absent under reduced motion. */
+  .job-dot {
+    position: relative;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background-color: var(--color-prime-500);
+  }
+  .job-dot::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background-color: inherit;
+    animation: job-signal calc(var(--duration-enter) * 2.5) var(--ease-out) infinite;
+  }
+  @keyframes job-signal {
+    from {
+      opacity: 0.6;
+      transform: scale(1);
+    }
+    70%,
+    to {
+      opacity: 0;
+      transform: scale(3);
+    }
+  }
+  /* The site's off-screen pause reaches elements, not pseudo-elements, so
+     this one is told by name. */
+  .jobs[data-ambient-off] .job-dot::after {
+    animation-play-state: paused;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .job-dot::after {
+      animation: none;
+    }
+  }
+
+  .job-link {
+    transition: color var(--duration-fast) var(--ease-prime);
+  }
+  .job-link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+  .job:hover .job-link {
+    color: var(--color-prime-700);
+  }
+  /* The card shows the keyboard's ring (`.card-interactive:has(:focus-visible)`),
+     so the link inside it does not draw a second one round its own words.
+     Only where `:has()` exists: a browser without it keeps the link's own
+     ring, because otherwise it would show the keyboard nothing at all. */
+  @supports selector(:has(*)) {
+    .job-link:focus-visible {
+      outline: none;
+    }
+  }
+
+  .job-meta {
+    display: grid;
+    gap: 0.3rem;
+    /* Below it, the least the foot ever stands off these details; the foot
+       itself is pinned to the card's base by `margin-top: auto`. */
+    margin: 0.875rem 0 1.625rem;
+  }
+  .job-meta li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  .job-meta svg {
+    flex: none;
+    width: 1.2rem;
+    height: 1.2rem;
+    /* Centred on the first line of its text, however that line is set. */
+    margin-top: 0.4rem;
+    margin-top: calc((1lh - 1.2rem) / 2);
+    color: var(--color-prime-600);
+  }
+
+  /* The foot: a ticket's perforation, then the way in and the time left. */
+  .job-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+    margin-top: auto;
+    border-top: 1px dashed rgb(8 9 11 / 0.14);
+    padding-top: 1.375rem;
+  }
+  .job-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .job-cta svg {
+    width: 1.125rem;
+    height: 1.125rem;
+    stroke-width: 2.2;
+    transition: transform var(--duration-base) var(--ease-out);
+  }
+  .job:hover .job-cta svg {
+    transform: translate(3px, -3px);
+  }
+
+  /* ---------------------------------------------------------------------
+     THE TWO QUESTIONS, AND THE RÉSUMÉ
+  --------------------------------------------------------------------- */
+  .steps {
+    display: grid;
+    gap: 1.75rem;
+  }
+  .step {
+    position: relative;
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr);
+    column-gap: 1.125rem;
+    align-items: start;
+  }
+  /* Each question hangs off a numbered node, and a line runs from one node
+     to the next: two questions read as one train of thought. */
+  .step-n {
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    border: 1px solid rgb(255 125 41 / 0.5);
+    background-image: radial-gradient(circle at 30% 22%, rgb(255 125 41 / 0.26), rgb(255 125 41 / 0.05) 70%);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08);
+    color: var(--color-prime-300);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .step p {
+    /* The first line of the question sits level with the node's middle. */
+    padding-top: 0.45rem;
+    padding-top: calc((3rem - 1lh) / 2);
+  }
+  .step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: calc(1.5rem - 0.5px);
+    top: 3.375rem;
+    bottom: -1.375rem;
+    width: 1px;
+    background-image: linear-gradient(to bottom, rgb(255 125 41 / 0.55), rgb(255 125 41 / 0.1));
+  }
+
+  .apply {
+    isolation: isolate;
+    overflow: hidden;
+  }
+  /* The same lit top edge as the job cards, full width: this is the card
+     the page ends on. */
+  .apply::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 2px;
+    background-image: linear-gradient(90deg, var(--color-prime-500), var(--color-amber-400) 55%, transparent);
+  }
+  /* A pool of warm light in the card's top corner. A gradient, not a blur. */
+  .apply::after {
+    content: '';
+    position: absolute;
+    top: -45%;
+    right: -35%;
+    z-index: -1;
+    width: 85%;
+    aspect-ratio: 1;
+    background-image: radial-gradient(closest-side, rgb(243 93 1 / 0.2), transparent);
+    pointer-events: none;
+  }
+  .apply-icon {
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: var(--radius-btn);
+    border: 1px solid rgb(255 125 41 / 0.34);
+    background-image: linear-gradient(145deg, rgb(255 125 41 / 0.2), rgb(255 125 41 / 0.04));
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08);
+    color: var(--color-prime-300);
+  }
+  .apply-icon svg {
+    width: 1.375rem;
+    height: 1.375rem;
+  }
+
+  .values {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .value-chip {
+    border-radius: 999px;
+    border: 1px solid rgb(255 255 255 / 0.1);
+    background-color: rgb(255 255 255 / 0.03);
+    padding: 0.5rem 0.8rem;
+  }
+</style>
