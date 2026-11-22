@@ -3,7 +3,7 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
-  RedirectMatch 301 ^/egy/?$ https://primetracknigeria.com/egy
+  RedirectMatch 301 ^/egy/?$ https://primetrack.ng/egy/
 
   Redirect 301 /10-reasons-you-should-track/ /blog/
   Redirect 301 /primetrack-is-10-yippie/     /blog/

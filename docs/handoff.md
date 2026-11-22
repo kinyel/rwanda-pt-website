@@ -10,14 +10,14 @@ record of the judgement calls made along the way.
 | # | Item | Blocks | Notes |
 |---|---|---|---|
 | 1 | **Formspree form ID** | The contact form | Set `PUBLIC_FORMSPREE_ID` in `.env`. Until then the form renders a clearly-labelled "not yet connected" panel with WhatsApp and email instead of silently dropping submissions. Nothing else needs changing. |
-| 2 | **VRAS copy** | `/vras/` | The live page returns a database error (`Could not connect to the database primetra_autoboss`) with no recoverable content. Per your instruction the menu entry resolves to the 404 page. See §4 for the tradeoff and the one-line fix once you have copy. |
+| 2 | **VRAS** | Nothing | Removed from the site entirely on your instruction: no menu entry, no footer link, no page. See §4. |
 | 3 | **14 photographs** | Visual finish | Full checklist in `src/assets/images/README.md`. Each placeholder is a labelled grey plate at the exact filename and dimensions the real image will use, so replacing one is a straight overwrite. |
 | 4 | **Kinyarwanda translation** | — | Done: every interface string (924, enforced by the type checker) and all 48 articles (`/rw/<slug>/`). See `docs/translation-checklist.md`. |
 | 5 | **Native review of the Kinyarwanda** | Launch | The whole Kinyarwanda site (`src/i18n/rw/*.ts`, `src/i18n/rw/countries.ts`, `src/content/articles-rw/`) should be confirmed by a native speaker, the legal pages first; until then the English legal pages are the authoritative ones. `docs/translation-checklist.md` is the review sheet: every string, English beside Kinyarwanda. |
 | 6 | **Hosting decision** | Deploy | Redirect files ship for both: `public/_redirects` (Cloudflare Pages / Netlify) and `public/.htaccess` (Apache / Hostinger). Keep the two in step if you edit either. |
 | 7 | **Google Maps embed** | Contact page | Not embedded. The address is published as text and the office photo is a placeholder. Send me the exact coordinates or a Place ID if you want a map, and confirm you are happy with the third-party cookie implications. |
 | 8 | **Confirm the two corrections in §3** | Launch | Both are cases where the live site contradicts itself. I picked the Rwanda-correct option; you should confirm. |
-| 9 | **TikTok and YouTube links** | Footer | The footer's social icons are LinkedIn, Twitter, Instagram, TikTok and YouTube. TikTok and YouTube have no URL yet, so they point at `/social/tiktok/` and `/social/youtube/`, where no page is built: the host answers with the styled 404 and a real 404 status, the same arrangement as VRAS. They are `nofollow` meanwhile. To finish, put each URL in `src/data/company.ts` (`socials`). Facebook is no longer in the footer but is still in the Organization structured data (`sameAs`), unchanged; remove it there too if the page is gone. |
+| 9 | **TikTok and YouTube links** | Footer | The footer's social icons are LinkedIn, Twitter, Instagram, TikTok and YouTube. TikTok and YouTube have no URL yet, so they point at `/social/tiktok/` and `/social/youtube/`, where no page is built: the host answers with the styled 404 and a real 404 status. They are `nofollow` meanwhile. To finish, put each URL in `src/data/company.ts` (`socials`). Facebook is no longer in the footer but is still in the Organization structured data (`sameAs`), unchanged; remove it there too if the page is gone. |
 
 ---
 
@@ -183,23 +183,16 @@ on the Rwanda site. Changed to the unqualified brand name.
 
 ---
 
-## 4. The VRAS decision, and how to undo it
+## 4. VRAS: removed
 
-`/vras/` is in the Services menu on both the Rwanda and Nigeria sites. It currently
-returns a database error with zero content, so there is nothing to migrate and
-nothing may be invented.
+`/vras/` was in the Services menu on the live Rwanda and Nigeria sites, and the
+live page returns a database error with no content. It first pointed at the 404
+page on your instruction; it has since been removed entirely, also on your
+instruction. Nothing on the site links to it and no page is built there, so the
+old URL simply returns the styled 404 with a correct 404 status.
 
-You asked for it to point at the 404 page. It does: the menu entry links to
-`/vras/`, no page is built there, and the host serves the styled 404 with a correct
-404 status. This keeps the legacy URL rather than throwing it away.
-
-**The tradeoff you should know about:** this is a sitewide navigation link that
-returns 404 on every page of the site. Crawlers will see it. If VRAS copy is not
-coming soon, removing the entry is the better SEO position.
-
-**To fix once you have copy:** add a service page and change one line in
-`src/data/navigation.ts` (`serviceNav`, the `common.links.vras` entry) to point at
-its route. **To remove instead:** delete that same entry.
+**To bring it back with real copy:** add a service page, a route for it in
+`src/data/routes.ts`, and an entry in `serviceNav` in `src/data/navigation.ts`.
 
 ---
 
@@ -216,7 +209,7 @@ New routes: `/blog/` (an index for the articles, which previously had none) and
 
 | From | To | Why |
 |---|---|---|
-| `/egy/` | `primetracknigeria.com/egy` | Empty stub. The country switcher has always pointed Egypt at the Nigeria domain; the orphan now follows it. |
+| `/egy/` | `primetrack.ng/egy/` | Empty stub. The country switcher has always pointed Egypt at the Nigeria domain; the orphan now follows it. |
 | `/10-reasons-you-should-track/`, `/primetrack-is-10-yippie/`, `/another-awesome-news-post/` | `/blog/` | Three URLs, one duplicated 2020 anniversary note, titles that did not match the body. Consolidated. |
 | `/nothing/` | `/blog/` | An advertisement for an unrelated finance offer. |
 | `/confirmed/`, `/confirmation/`, `/2604e-received/` | `/contactus/` | Contact Form 7 receipt pages. The rebuilt form confirms inline. |

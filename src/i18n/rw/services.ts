@@ -17,7 +17,7 @@ export const services: Translation<Dictionary['services']> = {
 
   fleetAnalytics: {
     name: 'Isesengura ry’ibinyabiziga',
-    menuDescriptor: 'Uburyo cumi na butanu bwa raporo n’isesengura',
+    menuDescriptor: 'Uburyo bwa raporo n’isesengura',
     tagline: 'Uburyo cumi na butanu bwo gusobanukirwa ibinyabiziga byawe',
     heroKicker: 'Isesengura ry’ibinyabiziga',
     summary:
@@ -160,7 +160,7 @@ export const services: Translation<Dictionary['services']> = {
 
   drivermonitoring: {
     name: 'Gukurikirana abashoferi',
-    menuDescriptor: 'Amanota y’imyitwarire ajyanye n’umutekano, lisansi no kubahiriza amategeko',
+    menuDescriptor: 'Amakuru agufasha gusobanukirwa imyitwarire y’abashoferi mu muhanda',
     tagline: 'Abashoferi bawe ni bo bagena byinshi mu biciro by’ibinyabiziga byawe',
     heroKicker: 'Gukurikirana imyitwarire y’abashoferi',
     summary:

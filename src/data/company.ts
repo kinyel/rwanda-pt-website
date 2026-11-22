@@ -28,6 +28,10 @@ export const company = {
 
   whatsappUrl: 'https://api.whatsapp.com/send?phone=250793017263',
 
+  /** The Nigeria site. Every link and mention of it uses this address
+      (it used to be primetracknigeria.com). */
+  nigeriaUrl: 'https://primetrack.ng',
+
   /** Device manuals and platform documentation, on their own subdomain. */
   manualsUrl: 'https://manuals.primetrack.rw',
 
@@ -49,8 +53,8 @@ export const company = {
 
      `url: null` is a profile whose link has not been supplied yet. The
      footer points it at /social/<key>/, where no page is built, so it lands
-     on the styled 404 with a real 404 status until the link arrives: the
-     same arrangement as VRAS (docs/handoff.md). To finish one, put its URL
+     on the styled 404 with a real 404 status until the link arrives (see
+     docs/handoff.md). To finish one, put its URL
      here; nothing else changes. */
   socials: [
     { key: 'linkedin', name: 'LinkedIn', url: 'https://www.linkedin.com/company/primetrack-telematics-nigeria-ltd./' },
@@ -99,9 +103,9 @@ export const company = {
    The orphaned local /egy/ page is not linked from the switcher, matching
    current behaviour. */
 export const countries = [
-  { code: 'NGR', locale: 'en-NG', url: 'https://www.primetracknigeria.com', external: true },
+  { code: 'NGR', locale: 'en-NG', url: company.nigeriaUrl, external: true },
   { code: 'RWA', locale: 'en-RW', url: '/', external: false },
-  { code: 'EGY', locale: 'en-EG', url: 'https://primetracknigeria.com/egy', external: true },
+  { code: 'EGY', locale: 'en-EG', url: `${company.nigeriaUrl}/egy/`, external: true },
 ] as const;
 
 export type CountryCode = (typeof countries)[number]['code'];

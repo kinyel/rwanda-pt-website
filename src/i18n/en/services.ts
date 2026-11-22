@@ -17,7 +17,7 @@ export const services = {
 
   fleetAnalytics: {
     name: 'Fleet Analytics',
-    menuDescriptor: 'Fifteen reporting and analytics capabilities',
+    menuDescriptor: 'Reporting and analytics capabilities',
     tagline: 'Fifteen ways to read your fleet',
     heroKicker: 'Fleet analytics',
     summary:
@@ -160,7 +160,7 @@ export const services = {
 
   drivermonitoring: {
     name: 'Driver Monitoring',
-    menuDescriptor: 'Behaviour scoring for safety, fuel and compliance',
+    menuDescriptor: 'Data to understand driver road behaviour',
     tagline: 'Your drivers decide most of your fleet costs',
     heroKicker: 'Driver behaviour monitoring',
     summary:

@@ -4,7 +4,7 @@ import type { Dictionary, Translation } from '../index';
  * Site-wide chrome in Kinyarwanda: navigation, footer, buttons, forms,
  * accessibility labels. Mirrors src/i18n/en/common.ts key for key.
  *
- * Brand and product names (PrimeTrack, PrimeCARE, PrimeTIPS, VRAS, RURA,
+ * Brand and product names (PrimeTrack, PrimeCARE, PrimeTIPS, RURA,
  * WhatsApp) stay as they are: they are names, and they are what people search
  * for. Everything else is written as natural Kinyarwanda rather than word for
  * word. See docs/translation-checklist.md for native-speaker review.
@@ -35,7 +35,6 @@ export const common: Translation<Dictionary['common']> = {
     menu: 'Ibikubiyemo',
     openMenu: 'Fungura ibikubiyemo',
     closeMenu: 'Funga ibikubiyemo',
-    trustRailTitle: 'Buri gikoresho cya PrimeTrack kizana na',
     skipToContent: 'Simbukira ku bikubiyemo',
   },
 
@@ -97,7 +96,7 @@ export const common: Translation<Dictionary['common']> = {
     legalLabel: 'Amategeko',
     officeTitle: 'Ibiro byo mu Rwanda',
     nigeriaOfficeTitle: 'Ibiro byo muri Nigeriya',
-    nigeriaOfficeLink: 'Sura primetracknigeria.com',
+    nigeriaOfficeLink: 'Sura primetrack.ng',
     sitemapLabel: 'Hasi ku rubuga',
     cookiePreferences: 'Uko cookies zikoreshwa',
   },
@@ -135,7 +134,6 @@ export const common: Translation<Dictionary['common']> = {
     careers: 'Akazi muri Prime',
     termsOfService: 'Amabwiriza y’imikoreshereze',
     privacyPolicy: 'Politiki yo kurinda amakuru bwite',
-    vras: 'VRAS',
   },
 
   form: {

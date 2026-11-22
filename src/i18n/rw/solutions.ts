@@ -35,7 +35,7 @@ export const solutions: Translation<Dictionary['solutions']> = {
     },
     fleetAnalytics: {
       name: 'Isesengura n’ubusobanuro ku binyabiziga',
-      menuDescriptor: 'Uburyo cumi na butanu bwa raporo ku binyabiziga byose',
+      menuDescriptor: 'Uburyo bwa raporo ku binyabiziga byose',
       outcome: 'Hindura amakuru y’ibinyabiziga ibyemezo',
     },
   },

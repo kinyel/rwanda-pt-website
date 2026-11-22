@@ -35,8 +35,6 @@ export const common = {
     menu: 'Menu',
     openMenu: 'Open the main menu',
     closeMenu: 'Close the main menu',
-    /** Shown in the mega-menu's trust rail. */
-    trustRailTitle: 'Every PrimeTrack device ships with',
     skipToContent: 'Skip to content',
   },
 
@@ -107,7 +105,7 @@ export const common = {
     legalLabel: 'Legal',
     officeTitle: 'Rwanda office',
     nigeriaOfficeTitle: 'Nigeria office',
-    nigeriaOfficeLink: 'Visit primetracknigeria.com',
+    nigeriaOfficeLink: 'Visit primetrack.ng',
     sitemapLabel: 'Footer',
     /** Reopens the cookie preferences dialog. */
     cookiePreferences: 'Cookie Preferences',
@@ -163,7 +161,6 @@ export const common = {
     careers: 'Prime Careers',
     termsOfService: 'Terms of Service',
     privacyPolicy: 'Privacy Policy',
-    vras: 'VRAS',
   },
 
   form: {

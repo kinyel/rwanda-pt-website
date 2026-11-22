@@ -102,7 +102,6 @@ const entries: NavEntry[] = primaryNav.map((group) => ({
   intro: group.introKey ? resolveKey(t, group.introKey) : undefined,
   indexHref: group.indexHref ? localizePath(group.indexHref, locale) : undefined,
   indexLabel: group.indexLabelKey ? resolveKey(t, group.indexLabelKey) : undefined,
-  rail: group.railKeys?.map((key) => resolveKey(t, key)),
   items: group.items?.map((item) => ({
     label: resolveKey(t, item.titleKey),
     descriptor: item.descriptorKey ? resolveKey(t, item.descriptorKey) : undefined,
@@ -140,7 +139,6 @@ const entries: NavEntry[] = primaryNav.map((group) => ({
         openLabel={t.common.nav.openMenu}
         closeLabel={t.common.nav.closeMenu}
         navLabel={t.common.nav.primaryLabel}
-        railTitle={t.common.nav.trustRailTitle}
         phoneLabel={company.phone.display}
         phoneHref={`tel:${company.phone.e164}`}
         regions={regions}

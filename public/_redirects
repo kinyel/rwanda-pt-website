@@ -5,8 +5,8 @@
 
 # /egy/ existed as an empty stub. The country switcher has always pointed Egypt
 # at the Nigeria domain, so the orphaned stub follows it.
-/egy/                          https://primetracknigeria.com/egy  301
-/egy                           https://primetracknigeria.com/egy  301
+/egy/                          https://primetrack.ng/egy/  301
+/egy                           https://primetrack.ng/egy/  301
 
 # Three URLs shared one duplicated 2020 anniversary note, and their titles did
 # not match that body. Consolidated onto the blog index.

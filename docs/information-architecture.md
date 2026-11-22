@@ -46,7 +46,7 @@ Two promotions from the live structure:
   search results. They now have a hub.
 
 Not rebuilt: `/egy/` (empty stub, 301s to the Nigeria Egypt page, which is where the
-country switcher has always pointed) and `/vras/` (broken upstream, see handoff §4).
+country switcher has always pointed) and `/vras/` (broken upstream, and removed from the site entirely; see handoff §4).
 
 ---
 

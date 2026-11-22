@@ -65,8 +65,8 @@ for (const [file, text] of sources) {
 }
 
 /* --- Rule 3: no Nigeria contact details on the Rwanda site. -----------
-   The Rwanda site legitimately LINKS to primetracknigeria.com, so the domain
-   itself is allowed; the Nigeria contact channels are not. */
+   The Rwanda site legitimately LINKS to the Nigeria site (primetrack.ng), so
+   the domain itself is allowed; the Nigeria contact channels are not. */
 const nigeriaContact = [
   { pattern: /admin@primetracknigeria\.net/i, what: 'Nigeria email address' },
   { pattern: /\+?234[\s\d-]{7,}/, what: 'Nigeria phone number' },

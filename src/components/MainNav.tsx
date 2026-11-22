@@ -61,7 +61,6 @@ export interface NavEntry {
   intro?: string;
   indexHref?: string;
   indexLabel?: string;
-  rail?: string[];
   active?: boolean;
   /**
    * A stable name for the group ('products', 'industries', ...). The header
@@ -88,7 +87,6 @@ interface Props {
   openLabel: string;
   closeLabel: string;
   navLabel: string;
-  railTitle: string;
   phoneLabel: string;
   phoneHref: string;
   /**
@@ -133,7 +131,6 @@ export default function MainNav({
   openLabel,
   closeLabel,
   navLabel,
-  railTitle,
   phoneLabel,
   phoneHref,
   regions,
@@ -487,11 +484,7 @@ export default function MainNav({
                     className="nav-panel absolute top-[calc(100%+0.625rem)] z-50 w-[min(52rem,calc(100vw-2rem))]
                                p-2.5 motion-safe:animate-[nav-panel-in_var(--duration-base)_var(--ease-out)]"
                   >
-                    <div
-                      className={`grid gap-2 sm:grid-cols-[11.5rem_minmax(0,1fr)] ${
-                        entry.rail ? 'lg:grid-cols-[11.5rem_minmax(0,1fr)_14rem]' : ''
-                      }`}
-                    >
+                    <div className="grid gap-2 sm:grid-cols-[11.5rem_minmax(0,1fr)]">
                       {/* Column one: what this menu is about, and the way in to
                           the section as a whole where one exists. */}
                       <div className="flex flex-col px-3 py-2.5">
@@ -551,21 +544,6 @@ export default function MainNav({
                         ))}
                       </ul>
 
-                      {entry.rail && (
-                        <aside className="hidden rounded-[--radius-card] bg-ink-950 p-4 lg:block">
-                          <p className="text-label uppercase text-prime-400">{railTitle}</p>
-                          <ul className="mt-3 flex flex-col gap-2.5">
-                            {entry.rail.map((line) => (
-                              <li key={line} className="flex items-start gap-2 text-[0.875rem] leading-snug text-ink-200">
-                                <svg className="mt-1 h-3 w-3 shrink-0 text-prime-400" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                                  <path d="m2 6.4 2.6 2.6L10 3.6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                                {line}
-                              </li>
-                            ))}
-                          </ul>
-                        </aside>
-                      )}
                     </div>
                   </div>
                 </li>

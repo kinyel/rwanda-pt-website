@@ -12,7 +12,7 @@ the brief asks for. The route-journey concept survives; the visual is rebuilt.
 **2. CSS 3D and SVG, no WebGL.** Roughly 0 KB of added JavaScript.
 
 That second decision is better supported than it might look. The brief names
-primetracknigeria.com as the quality benchmark, so I audited it:
+primetrack.ng (then primetracknigeria.com) as the quality benchmark, so I audited it:
 
 | | Nigeria benchmark |
 |---|---|

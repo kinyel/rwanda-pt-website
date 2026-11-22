@@ -44,7 +44,7 @@ export const solutions = {
     },
     fleetAnalytics: {
       name: 'Fleet analytics and insights',
-      menuDescriptor: 'Fifteen reporting capabilities across the fleet',
+      menuDescriptor: 'Reporting capabilities across the fleet',
       outcome: 'Turn what the fleet reports into decisions',
     },
   },

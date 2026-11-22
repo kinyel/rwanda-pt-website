@@ -40,17 +40,6 @@ export const routes = {
   // Content
   blog: '/blog/',
   notFound: '/404/',
-  /**
-   * VRAS has no page. /vras/ on the live site returns a database error with no
-   * recoverable content, so nothing can be migrated and nothing may be invented.
-   * Per the client's instruction the menu entry resolves to the 404 page: the
-   * legacy URL is kept, and because no page is built at it the host serves the
-   * styled 404 with a proper status code.
-   *
-   * This is a deliberate dead end pending copy from the client. See
-   * docs/handoff.md, item 1.
-   */
-  vras: '/vras/',
 } as const;
 
 export type RouteKey = keyof typeof routes;

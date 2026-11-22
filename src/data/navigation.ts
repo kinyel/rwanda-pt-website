@@ -36,8 +36,6 @@ export interface NavGroup {
   titleKey: string;
   href?: string;
   items?: NavItem[];
-  /** Shown in the mega-menu's right-hand rail. */
-  railKeys?: string[];
   /**
    * One line at the head of the mega-menu panel, giving the group a subject
    * rather than leaving it as a bare list of links.
@@ -133,12 +131,8 @@ export const solutionNav: NavItem[] = [
 ];
 
 /**
- * Services.
- *
- * VRAS appears in the live Services menu, but /vras/ currently returns a
- * database error with no recoverable content. Per the client's instruction it
- * points at the 404 page rather than being silently dropped or given invented
- * copy. Tracked in docs/handoff.md.
+ * Services. (VRAS, which the live menu lists but whose page is broken
+ * upstream, was removed from the site entirely on the client's instruction.)
  */
 export const serviceNav: NavItem[] = [
   {
@@ -158,10 +152,6 @@ export const serviceNav: NavItem[] = [
     descriptorKey: 'services.drivermonitoring.menuDescriptor',
     href: routes.drivermonitoring,
     imageKey: 'serviceDriverMonitoring',
-  },
-  {
-    titleKey: 'common.links.vras',
-    href: routes.vras,
   },
 ];
 
@@ -196,7 +186,6 @@ export const primaryNav: NavGroup[] = [
     introKey: 'solutions.index.title',
     indexHref: routes.solutions,
     indexLabelKey: 'solutions.index.cta',
-    railKeys: ['home.trust.licensed.title', 'home.trust.warranty.title', 'home.trust.support.title'],
   },
   {
     titleKey: 'common.nav.industries',
