@@ -139,7 +139,6 @@ export const companyPages = {
         'At least 3 years driving experience',
       ],
       applyLabel: 'How to apply',
-      applyLead: 'Send an email to:',
       /** {email} and {phone} become links. */
       applyBody: 'Please send an email to our recruitment agency at: {email} or call {phone}.',
       applyEmailCta: 'Email the recruitment agency',

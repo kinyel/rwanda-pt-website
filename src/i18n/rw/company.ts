@@ -128,7 +128,6 @@ export const companyPages: Translation<Dictionary['companyPages']> = {
         'Uburambe bw’imyaka nibura 3 mu gutwara ibinyabiziga',
       ],
       applyLabel: 'Uko wasaba',
-      applyLead: 'Ohereza imeyili kuri:',
       applyBody: 'Ohereza imeyili ku kigo cyacu gishinzwe gushaka abakozi kuri: {email} cyangwa uhamagare {phone}.',
       applyEmailCta: 'Andikira ikigo gishinzwe gushaka abakozi',
       applyCallCta: 'Hamagara {phone}',
