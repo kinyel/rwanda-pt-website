@@ -4,9 +4,10 @@ import type { Dictionary, Translation } from '../index';
 export const home: Translation<Dictionary['home']> = {
   hero: {
     eyebrow: 'Gukurikirana ibinyabiziga hakoreshejwe GPS no gucunga ibinyabiziga mu Rwanda',
-    title: 'Ibinyabiziga byawe byose, ubibona neza',
+    title: 'Ibinyabiziga byawe -',
+    titleRest: 'bigaragara, byubahiriza amategeko, bitekanye',
     lead:
-      'PrimeTrack ihuza buri kinyabiziga, buri mushoferi na buri mutwaro ufite ku rubuga rumwe: aho biri, uko bitwarwa, n’ibyo ibinyabiziga byawe bigutwara.',
+      'PrimeTrack igufasha gukurikirana ibinyabiziga byawe, kugenzura imyitwarire y’abashoferi, kugenzura ibiciro by’imikorere, kubahiriza amabwiriza no kongera umutekano, byose ako kanya.',
     primaryCta: 'Vugana n’impuguke',
     secondaryCta: 'Reba ibisubizo',
     descriptors: [
@@ -196,13 +197,12 @@ export const home: Translation<Dictionary['home']> = {
   values: {
     eyebrow: 'Indangagaciro zacu',
     title: 'P.R.I.M.E.',
-    lead: 'Amagambo atanu y’Icyongereza izina ry’ikigo rikomokaho, akurikiranye uko yandika PRIME.',
     items: {
-      performance: { letter: 'P', title: 'Imikorere (Performance)', body: 'Sisitemu zipimirwa ku cyo zihindura mu kazi kawe, si ku rupapuro rw’ibiziranga.' },
-      reliability: { letter: 'R', title: 'Kwizerwa (Reliability)', body: 'Ibikoresho n’ubufasha ushobora kugenderaho, ndetse no mu bihe bikomereye byombi.' },
-      innovation: { letter: 'I', title: 'Guhanga udushya (Innovation)', body: 'AI, IoT n’ingufu z’imirasire y’izuba bikoreshwa aho bikemura ikibazo nyacyo.' },
-      multifunction: { letter: 'M', title: 'Gukora byinshi (Multifunction)', body: 'Urubuga rumwe rukubiyemo ibinyabiziga, imizigo, lisansi n’abashoferi, aho kuba amasezerano ane atandukanye.' },
-      efficiency: { letter: 'E', title: 'Gukora neza (Efficiency)', body: 'Buri bushobozi bupimirwa ku kuba bugabanya ibyo gukoresha ibinyabiziga bitwara.' },
+      performance: { letter: 'P', title: 'Imikorere (Performance)', body: 'Gukurikirana ku buryo bunoze, butanga umusaruro igihe bikenewe.' },
+      reliability: { letter: 'R', title: 'Kwizerwa (Reliability)', body: 'Serivisi ushobora kwiringira no mu bihe bikomeye.' },
+      innovation: { letter: 'I', title: 'Guhanga udushya (Innovation)', body: 'Buri gihe turi ku isonga ry’ikoranabuhanga rigenda ritera imbere.' },
+      multifunction: { letter: 'M', title: 'Gukora byinshi (Multi-function)', body: 'Urubuga rumwe rukora byinshi, ku bikenewe byose mu gukurikirana.' },
+      efficiency: { letter: 'E', title: 'Gukora neza (Efficiency)', body: 'Imbaraga zacu zirambye kurusha izindi, kandi zivugira ubwazo.' },
     },
   },
 

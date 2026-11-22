@@ -16,10 +16,13 @@ export const home = {
        outcome-led rather than a search phrase read aloud. The page title and
        meta description carry it too. */
     eyebrow: 'GPS tracking and fleet management in Rwanda',
-    /** The single h1 for the site's most important page. Four words on purpose. */
-    title: 'Your fleet, completely visible',
+    /** The single h1 for the site's most important page, in two parts: the
+        subject large, and what it gets, set smaller on its own line. Read
+        together they are one heading. */
+    title: 'Your fleet -',
+    titleRest: 'visible, compliant, safe',
     lead:
-      'PrimeTrack connects every vehicle, driver and load you run to one platform: where things are, how they are being driven, and what the fleet is costing you.',
+      'PrimeTrack helps you track your vehicles, monitor driver behaviour, control operating costs, enforce policy compliance, & enhance security, all in real time.',
     primaryCta: 'Talk to our expert',
     secondaryCta: 'Explore solutions',
     /** Descriptor band. Source: the live site's hero subhead. Lifted out of the
@@ -259,13 +262,12 @@ export const home = {
   values: {
     eyebrow: 'Our core values',
     title: 'P.R.I.M.E.',
-    lead: 'The five words the company is named after, in the order they spell it.',
     items: {
-      performance: { letter: 'P', title: 'Performance', body: 'Systems judged by what they change in your operation, not by their specification sheet.' },
-      reliability: { letter: 'R', title: 'Reliability', body: 'Hardware and support you can plan around, in conditions that are hard on both.' },
-      innovation: { letter: 'I', title: 'Innovation', body: 'AI, IoT and solar power applied where they solve a real problem.' },
-      multifunction: { letter: 'M', title: 'Multifunction', body: 'One platform covering vehicles, cargo, fuel and drivers rather than four separate contracts.' },
-      efficiency: { letter: 'E', title: 'Efficiency', body: 'Every capability measured against whether it lowers what the fleet costs to run.' },
+      performance: { letter: 'P', title: 'Performance', body: 'Precision tracking that delivers when it matters.' },
+      reliability: { letter: 'R', title: 'Reliability', body: 'A service you can depend on when the chips are down.' },
+      innovation: { letter: 'I', title: 'Innovation', body: 'Always at the cutting edge of evolving technology.' },
+      multifunction: { letter: 'M', title: 'Multi-function', body: 'One versatile platform for every tracking need.' },
+      efficiency: { letter: 'E', title: 'Efficiency', body: 'Our most enduring strength, and it speaks for itself.' },
     },
   },
 

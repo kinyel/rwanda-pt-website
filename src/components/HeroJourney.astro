@@ -134,7 +134,9 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
         <!-- Screen one: the hero proper. -->
         <div class="journey-panel">
           <p class="journey-eyebrow eyebrow mb-6 enter" style="--d:0">{t.home.hero.eyebrow}</p>
-          <h1 class="journey-title text-display-xl text-white enter" style="--d:1">{t.home.hero.title}</h1>
+          <h1 class="journey-title text-display-xl text-white enter" style="--d:1">
+            {t.home.hero.title} <span class="journey-title-rest">{t.home.hero.titleRest}</span>
+          </h1>
           <p class="journey-lead mt-7 measure text-lead text-ink-300 enter" style="--d:2">{t.home.hero.lead}</p>
 
           <div class="journey-ctas mt-10 flex flex-wrap gap-3 enter" style="--d:3">
@@ -473,6 +475,18 @@ const ROUTE = 'M 196 18 C 40 190, 336 320, 168 494 S 26 772, 252 988';
      an element while its opacity is zero, so a long start delay on the
      headline would push LCP back by exactly that delay. 110ms is inside
      the noise; a fashionable 600ms stagger would not be. */
+  /* The heading's second half: what the fleet gets, on its own line, a size
+     down and lighter, so the subject reads first. Still one heading. */
+  .journey-title-rest {
+    display: block;
+    margin-top: 0.28em;
+    font-size: 0.5em;
+    font-weight: 500;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    color: var(--color-ink-200);
+  }
+
   .enter {
     animation: hero-enter var(--duration-enter) var(--ease-out) both;
     animation-delay: calc(var(--d, 0) * 110ms);

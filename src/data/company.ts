@@ -80,7 +80,7 @@ export const company = {
     { key: 'trackers', value: 5000, suffix: '+' },
     { key: 'years', value: 15, suffix: '+' },
     { key: 'countries', value: 5, suffix: '+' },
-    { key: 'support', value: 24, suffix: 'hr' },
+    { key: 'support', value: 24, suffix: 'hrs' },
   ],
 
   /** Rwanda's telecoms/transport regulator. Audit source: /why-choose-prime/

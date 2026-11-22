@@ -12,9 +12,7 @@ import type { Dictionary, Translation } from '../index';
 export const companyPages: Translation<Dictionary['companyPages']> = {
   whyChoose: {
     eyebrow: 'Impamvu PrimeTrack',
-    title: 'Ibyiza birindwi bidutandukanya n’abandi',
-    lead:
-      'Buri kigo gikurikirana ibinyabiziga kivuga ko cyizewe. Ibi ni ibintu birindwi byihariye twerekana iyo umuyobozi w’ibinyabiziga atubajije impamvu yatwizera ibinyabiziga bye.',
+    title: 'Ibyiza byacu byihariye',
     advantages: {
       regulator: {
         title: 'Twemewe n’urwego rugenzura',
@@ -51,8 +49,6 @@ export const companyPages: Translation<Dictionary['companyPages']> = {
         body: 'Imikorere (Performance), Kwizerwa (Reliability), Guhanga udushya (Innovation), Gukora byinshi (Multi-functionality), Gukora neza (Efficiency).',
       },
     },
-    ctaTitle: 'Uracyatekereza?',
-    ctaBody: 'Uburyo bwihuse bwo kumenya ikigo gikurikirana ibinyabiziga ni ukugiha ikibazo nyacyo. Twoherereze icyawe.',
   },
 
   warranty: {

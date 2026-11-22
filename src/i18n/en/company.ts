@@ -20,9 +20,7 @@
 export const companyPages = {
   whyChoose: {
     eyebrow: 'Why PrimeTrack',
-    title: 'Seven advantages that set us apart',
-    lead:
-      'Every tracking company says it is reliable. These are the seven specific things we point to when a fleet operator asks why they should trust us with their vehicles.',
+    title: 'Our Unique Selling Points',
     advantages: {
       regulator: {
         title: 'Regulator-approved',
@@ -59,8 +57,6 @@ export const companyPages = {
         body: 'Performance, Reliability, Innovation, Multi-functionality, Efficiency.',
       },
     },
-    ctaTitle: 'Still deciding?',
-    ctaBody: 'The fastest way to judge a tracking company is to give it a real problem. Send us yours.',
   },
 
   warranty: {
