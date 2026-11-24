@@ -2,9 +2,19 @@
 /**
  * The scrolling strip carried over from the live site.
  *
- * Duplicated content is aria-hidden so a screen reader hears the phrase once.
- * The whole thing is decorative, so it stops entirely under reduced motion
- * rather than looping without animation.
+ * ENDLESS AT EVERY WIDTH. The track is two identical halves, and the loop
+ * slides it by exactly one half, so the second half lands precisely where
+ * the first began and there is no seam and no jump. Each half repeats the
+ * phrases `COPIES` times, which makes one half wider than any screen it will
+ * meet (about 5,500px), so the strip is always full edge to edge, with no
+ * empty run at the right while it waits for the loop to come round. (It used
+ * to hold the phrases twice in all, about 1,600px, which left a gap on every
+ * laptop and desktop.) Each half also ends with the same space that sits
+ * between phrases, so the join is spaced like every other gap.
+ *
+ * Only the first run of phrases is read out; every repeat is aria-hidden, so
+ * a screen reader hears the strip once. The whole thing is decorative, so it
+ * stops entirely under reduced motion rather than looping without animation.
  */
 interface Props {
   items: readonly string[];
@@ -12,18 +22,26 @@ interface Props {
 }
 
 const { items, tone = 'prime' } = Astro.props;
-const doubled = [...items, ...items];
+const COPIES = 6;
+const run = Array.from({ length: COPIES }, () => items).flat();
 const shell = tone === 'prime' ? 'bg-prime-500 text-white' : 'bg-ink-900 text-ink-200';
 ---
 
 <div data-nav="dark" class={`marquee overflow-hidden ${shell}`} role="presentation">
-  <div class="marquee-track flex w-max items-center gap-10 py-3.5">
+  <div class="marquee-track flex w-max" style={`--copies:${COPIES}`}>
     {
-      doubled.map((item, i) => (
-        <span class="flex shrink-0 items-center gap-10 text-[0.9375rem] font-semibold" aria-hidden={i >= items.length}>
-          {item}
-          <span class="h-1 w-1 rounded-full bg-current opacity-50" />
-        </span>
+      [0, 1].map((half) => (
+        <div class="flex shrink-0 items-center gap-10 py-3.5 pr-10" aria-hidden={half === 1 ? 'true' : undefined}>
+          {run.map((item, i) => (
+            <span
+              class="flex shrink-0 items-center gap-10 text-[0.9375rem] font-semibold"
+              aria-hidden={half === 0 && i < items.length ? undefined : 'true'}
+            >
+              {item}
+              <span class="h-1 w-1 rounded-full bg-current opacity-50" />
+            </span>
+          ))}
+        </div>
       ))
     }
   </div>
@@ -35,15 +53,19 @@ const shell = tone === 'prime' ? 'bg-prime-500 text-white' : 'bg-ink-900 text-in
      perpetual motion on the site, and it stops for anyone who might be trying
      to read it, whether they arrived with a pointer or with a keyboard.
      `linear` is deliberate and is not a raw easing value: a ribbon that eased
-     would visibly surge and slow. */
+     would visibly surge and slow.
+
+     The duration grows with the number of copies, so the speed does not
+     depend on how long each half is, and is halved on request: the ribbon
+     runs twice as fast as it originally did (about 48px a second). */
   @media (prefers-reduced-motion: no-preference) {
     .marquee-track {
-      animation: marquee-track var(--duration-marquee) linear infinite;
+      animation: marquee-track calc(var(--duration-marquee) * var(--copies) / 2) linear infinite;
     }
     .marquee:hover .marquee-track,
     .marquee:focus-within .marquee-track {
       animation-play-state: paused;
     }
   }
-  /* Under reduced motion the track simply sits still, showing the first items. */
+  /* Under reduced motion the track simply sits still, full width. */
 </style>
