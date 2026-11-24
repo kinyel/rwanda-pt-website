@@ -52,10 +52,9 @@ export const company = {
      to a page that may not exist.
 
      `url: null` is a profile whose link has not been supplied yet. The
-     footer points it at /social/<key>/, where no page is built, so it lands
-     on the styled 404 with a real 404 status until the link arrives (see
-     docs/handoff.md). To finish one, put its URL
-     here; nothing else changes. */
+     footer shows its icon faded and unclickable, so nothing links to a page
+     that does not exist (see docs/handoff.md). To finish one, put its URL
+     here; it becomes a working link and nothing else changes. */
   socials: [
     { key: 'linkedin', name: 'LinkedIn', url: 'https://www.linkedin.com/company/primetrack-telematics-nigeria-ltd./' },
     { key: 'twitter', name: 'Twitter', url: 'https://twitter.com/PrimeTrack' },

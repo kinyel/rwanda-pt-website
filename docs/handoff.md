@@ -17,7 +17,7 @@ record of the judgement calls made along the way.
 | 6 | **Hosting decision** | Deploy | Redirect files ship for both: `public/_redirects` (Cloudflare Pages / Netlify) and `public/.htaccess` (Apache / Hostinger). Keep the two in step if you edit either. |
 | 7 | **Google Maps embed** | Contact page | Not embedded. The address is published as text and the office photo is a placeholder. Send me the exact coordinates or a Place ID if you want a map, and confirm you are happy with the third-party cookie implications. |
 | 8 | **Confirm the two corrections in §3** | Launch | Both are cases where the live site contradicts itself. I picked the Rwanda-correct option; you should confirm. |
-| 9 | **TikTok and YouTube links** | Footer | The footer's social icons are LinkedIn, Twitter, Instagram, TikTok and YouTube. TikTok and YouTube have no URL yet, so they point at `/social/tiktok/` and `/social/youtube/`, where no page is built: the host answers with the styled 404 and a real 404 status. They are `nofollow` meanwhile. To finish, put each URL in `src/data/company.ts` (`socials`). Facebook is no longer in the footer but is still in the Organization structured data (`sameAs`), unchanged; remove it there too if the page is gone. |
+| 9 | **TikTok and YouTube links** | Footer | The footer's social icons are LinkedIn, Twitter, Instagram, TikTok and YouTube. TikTok and YouTube have no URL yet, so their icons are shown faded and are not links: nothing on the site leads to a "page not found". To finish, put each URL in `src/data/company.ts` (`socials`) and the icon becomes a working link. Facebook is no longer in the footer but is still in the Organization structured data (`sameAs`), unchanged; remove it there too if the page is gone. |
 
 ---
 

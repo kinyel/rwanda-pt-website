@@ -98,15 +98,12 @@ for (const file of pages) {
   }
 
   /* --- Internal links resolve ---
-     The /social/ paths are deliberate dead ends: the footer's TikTok and
-     YouTube icons, whose links have not been supplied yet, resolve to the 404
-     page until they are (see company.ts and docs/handoff.md). Listed here so
-     they do not hide a real regression. */
-  const INTENTIONAL_DEAD_ENDS = new Set(['/social/tiktok/', '/social/youtube/']);
+     No exceptions: nothing on the site may link to a page that is not there.
+     (A link that is not ready yet is shown but not made a link; see the
+     footer's social icons.) */
   for (const [, href] of html.matchAll(/<a\b[^>]*href=["'](\/[^"'#?]*)["']/gi)) {
     stats.links++;
     const target = href.endsWith('/') ? href : `${href}/`;
-    if (INTENTIONAL_DEAD_ENDS.has(target)) continue;
     if (!routes.has(target) && !existsSync(join(DIST, href.replace(/^\//, '')))) {
       errors.push(at(`internal link 404: ${href}`));
     }

@@ -80,21 +80,30 @@ const socialPaths: Record<string, string> = {
           {
             company.socials.map((social) => (
               <li>
-                {/* A profile with no link yet goes to the 404 page, in the
-                    same tab and unfollowed, until its URL is supplied in
+                {/* A profile with no link yet is shown but not a link: faded
+                    and inert, so nothing on the site leads to a page that is
+                    not there. It becomes a link the moment its URL is put in
                     src/data/company.ts. */}
-                <a
-                  href={social.url ?? `/social/${social.key}/`}
-                  {...(social.url
-                    ? { rel: 'noopener noreferrer', target: '_blank' }
-                    : { rel: 'nofollow' })}
-                  class="btn btn-md btn-icon btn-secondaryOnDark"
-                >
-                  <span class="sr-only">{`${t.common.brand.name} ${social.name}`}</span>
-                  <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d={socialPaths[social.key]} />
-                  </svg>
-                </a>
+                {social.url ? (
+                  <a
+                    href={social.url}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                    class="btn btn-md btn-icon btn-secondaryOnDark"
+                  >
+                    <span class="sr-only">{`${t.common.brand.name} ${social.name}`}</span>
+                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d={socialPaths[social.key]} />
+                    </svg>
+                  </a>
+                ) : (
+                  <span class="btn btn-md btn-icon btn-secondaryOnDark social-off" aria-disabled="true">
+                    <span class="sr-only">{`${t.common.brand.name} ${social.name}`}</span>
+                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d={socialPaths[social.key]} />
+                    </svg>
+                  </span>
+                )}
               </li>
             ))
           }
@@ -269,3 +278,12 @@ const socialPaths: Record<string, string> = {
     </div>
   </div>
 </footer>
+
+<style>
+  /* A social profile with no link yet: faded, and no hover, press or click. */
+  .social-off {
+    opacity: 0.38;
+    pointer-events: none;
+    cursor: default;
+  }
+</style>
