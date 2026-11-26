@@ -17,6 +17,11 @@
 @import "@fontsource/alegreya-sans/latin-800.css";
 @import "@fontsource/alegreya-sans/latin-ext-800.css";
 @import "@fontsource/alegreya-sans/latin-400-italic.css";
+/* The data face: IBM Plex Mono, for numbers, labels and readouts only (the
+   instrument voice of a tracking product). Latin only, two weights; it is
+   never used for running text, so nothing else is needed. */
+@import "@fontsource/ibm-plex-mono/latin-400.css";
+@import "@fontsource/ibm-plex-mono/latin-500.css";
 
 @import "tailwindcss";
 
@@ -111,6 +116,9 @@
   --font-sans: "Alegreya Sans", ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-display: var(--font-sans);
+  /* Paired with Alegreya Sans, and the only other face: numbers, labels,
+     readouts. Never body copy. */
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   --text-display-xl: clamp(2.9rem, 1.65rem + 4.9vw, 5.6rem);
   --text-display-xl--line-height: 1.03;
@@ -2267,27 +2275,21 @@
   /* The reader's progress, as a rule across the very top. Above the sticky
      header, pointer-events off, and only created at all when motion is
      allowed — see the script in BaseLayout. */
-  /* --- Reading progress, with a car on it ------------------------------
-     A road along the top edge of the screen, lit up to the car, and the car
-     driving it as the page scrolls (`--sp`, written by BaseLayout). The car is
-     built the way the hero's is: flat planes stacked straight up the screen
-     into a body seen from above and behind, a shadow and a headlight beam on
-     the road. It faces the way the reader is going and turns round when they
-     scroll back (`data-scroll-dir`), and its brake lights come on when they
-     stop (`data-scroll-idle`). Above the header in the stack and outside it in
-     the DOM, so it stays where it is when the bar slides away. */
-  @property --sp-bob {
-    syntax: '<number>';
-    inherits: true;
-    initial-value: 0;
-  }
+  /* --- Reading progress, with a triangle on it -------------------------
+     A line along the top edge of the screen, lit up to a small triangle that
+     rides it as the page scrolls (`--sp`, written by BaseLayout). The
+     triangle points the way the reader is going and turns round when they
+     scroll back (`data-scroll-dir`).
 
+     IN THE STACK: above the header (50), so it is never hidden under the
+     bar, but below the "Menu" tab (55), so it slides behind that tab
+     rather than across it. */
   .site-progress {
     position: fixed;
     inset-inline: 0;
     top: 0;
     height: 2px;
-    z-index: 60;
+    z-index: 52;
     pointer-events: none;
     container-type: inline-size;
   }
@@ -2298,110 +2300,46 @@
     background-color: color-mix(in oklab, var(--color-prime-500) 16%, transparent);
   }
 
-  /* A full-width strip slid left until its right edge meets the car: the lit
-     road always ends exactly under it, by transform alone. */
+  /* A full-width strip slid left until its right edge meets the triangle's
+     middle: the lit line always ends exactly under it, by transform alone. */
   .site-progress-fill {
     position: absolute;
     inset: 0;
     background-image: linear-gradient(to right, var(--color-amber-500), var(--color-prime-500));
-    translate: calc(var(--sp, 0) * (100cqw - 2.5rem) + 1.25rem - 100cqw) 0;
+    translate: calc(var(--sp, 0) * (100cqw - 0.75rem) + 0.375rem - 100cqw) 0;
   }
 
-  /* 2.5rem long: big enough to read as a car with depth, small enough to
-     stay an accent on a 3px line rather than a vehicle parked on the bar. */
-  .site-progress-car {
+  /* 0.75rem: a marker on the line, not an object parked on it. It hangs
+     just under the line, so the top edge of the screen never cuts it. */
+  .site-progress-mark {
     position: absolute;
     top: 1px;
     left: 0;
-    width: 2.5rem;
-    height: 1.4286rem;
-    translate: calc(var(--sp, 0) * (100cqw - 2.5rem)) 0;
+    width: 0.75rem;
+    height: 0.75rem;
+    translate: calc(var(--sp, 0) * (100cqw - 0.75rem)) 0;
     /* Not parked over the logo at the top of the page: it arrives with the
        first bit of progress, which is also when the bar starts to leave. */
     opacity: clamp(0, var(--sp, 0) * 60, 1);
   }
 
-  .site-progress-car svg {
+  .site-progress-mark svg {
     display: block;
     width: 100%;
     height: 100%;
     overflow: visible;
+    filter: drop-shadow(0 0 3px color-mix(in oklab, var(--color-prime-500) 70%, transparent));
   }
 
-  /* Faces the way the page is going. */
+  /* Points the way the page is going. */
   .sp-turn {
+    fill: var(--color-prime-400);
+    transform-box: fill-box;
+    transform-origin: center;
     transition: transform 380ms var(--ease-out);
   }
   :root[data-scroll-dir='up'] .sp-turn {
     transform: scaleX(-1);
-  }
-
-  /* The planes, lifted straight up the screen, the roof riding the springs. */
-  .sp-l {
-    translate: 0 calc((var(--k) + var(--sp-bob) * var(--k) * 0.12) * -1px);
-  }
-
-  .sp-shadow {
-    fill: #000;
-    fill-opacity: 0.55;
-  }
-  .sp-beam {
-    opacity: 0.85;
-    transition: opacity 300ms ease;
-  }
-  .sp-chassis rect {
-    fill: #0a0705;
-  }
-  .sp-chassis path {
-    fill: #1c0d04;
-  }
-  .sp-side path {
-    fill: #8a3c0b;
-  }
-  .sp-body path {
-    fill: var(--color-prime-400);
-  }
-  /* Tinted, not black: a black glasshouse at this size reads as a hole in
-     the roof. */
-  .sp-glass path {
-    fill: #4a2c1c;
-  }
-  .sp-roof path {
-    fill: #ffb27a;
-  }
-  .sp-head {
-    fill: #fff6e6;
-  }
-  .sp-brake {
-    fill: #ff2d14;
-    opacity: 0.35;
-    transition: opacity 200ms ease;
-  }
-
-  /* Stopped: brake lights up, beam down. */
-  :root[data-scroll-idle] .sp-brake {
-    opacity: 1;
-    filter: drop-shadow(0 0 2px #ff2d14);
-  }
-  :root[data-scroll-idle] .sp-beam {
-    opacity: 0.35;
-  }
-
-  /* On its springs only while the page is moving: an animation running
-     forever on every page, for a car that is parked, was work for nothing. */
-  @media (prefers-reduced-motion: no-preference) {
-    :root[data-scroll-dir]:not([data-scroll-idle]) .site-progress-car {
-      animation: sp-bob 0.9s ease-in-out infinite alternate;
-    }
-  }
-
-  @keyframes sp-bob {
-    from {
-      --sp-bob: -1;
-    }
-    to {
-      --sp-bob: 1;
-    }
   }
 
   /* Reduced motion: the progress script does not run, so there is nothing to

@@ -44,7 +44,7 @@ export const home = {
     eyebrow: 'Start here',
     title: 'What are you trying to stop losing?',
     lead:
-      'Pick what is costing you most. We will point you at the part of the system built for it, and you can decide from there whether it is worth a conversation.',
+      'Pick what is costing you most. We will point you to the part of the system built for it, and you can decide from there whether it is worth a conversation.',
     /** Each maps to a real product or service page. */
     items: {
       theft: { label: 'Vehicle theft', body: 'Live location, geofence breaches and instant alerts the moment a vehicle moves when it should not.' },
@@ -102,77 +102,6 @@ export const home = {
         body: 'The best technology is the kind nobody needs training to use. Our interfaces are built so a dispatcher can pick them up on the first morning.',
       },
     },
-  },
-
-  /**
-   * The hero journey: the scroll-driven narrative that runs from the headline
-   * down into the first content section.
-   *
-   * The idea is that scrolling IS the trip. A vehicle travels a route down the
-   * right of the screen while the reader scrolls, and each waypoint it passes
-   * reveals one of the things a PrimeTrack unit actually reports. For a company
-   * whose entire product is following a vehicle along a route, that is the one
-   * animation on this site that is not decoration: it is the product, drawn.
-   *
-   * Every figure and every waypoint below is verified from the live site. The
-   * two specs are the strongest concrete numbers PrimeTrack publishes (Fleet
-   * Trackers page: "location accuracy within five metres, updated every ten
-   * seconds"). Nothing is a fabricated interface or invented telemetry.
-   */
-  journey: {
-    eyebrow: 'What a PrimeTrack unit reports',
-    title: 'Where every vehicle is, to within five metres',
-    /* Two sentences, because in the pinned presentation this sits between the
-       heading and the report sequence and has room for about two lines. Every
-       fact in it is also stated in full by the four reports below. */
-    lead:
-      'Position every ten seconds. Fuel, driver behaviour and camera footage on the same connection, into one platform.',
-    /** The line the sequence is travelling toward. It replaces the lead in the
-     *  same slot when the fourth report lands, so the section closes on a
-     *  sentence rather than trailing off. */
-    closing:
-      'Four reports on one connection. By the end of the trip you have a record of a journey you were never on.',
-    specs: {
-      accuracy: { value: '5', unit: 'm', label: 'Location accuracy' },
-      interval: { value: '10', unit: 's', label: 'Update interval' },
-    },
-    /**
-     * The four reports, in the order the vehicle reaches them.
-     *
-     * `refrain` is the storytelling spine: each report adds one more thing the
-     * operator knows, so read top to bottom the section is certainty
-     * accumulating over a single trip. `label` is the plain name of the report
-     * and is also what the route graphic prints beside each waypoint, so the
-     * two columns name the same thing at the same moment. `body` is the
-     * verified capability, unchanged.
-     */
-    waypoints: {
-      position: {
-        label: 'Position and route',
-        refrain: 'You know where it is.',
-        body: 'Location, speed and the full trip history, accurate to five metres.',
-      },
-      fuel: {
-        label: 'Fuel',
-        refrain: 'You know what it is burning.',
-        body: 'Tank level and consumption rate, with an alert the moment fuel drops suddenly.',
-      },
-      driver: {
-        label: 'Driver behaviour',
-        refrain: 'You know how it is being driven.',
-        body: 'Harsh braking, speeding and sharp cornering, measured per driver.',
-      },
-      video: {
-        label: 'Video',
-        refrain: 'You know what happened.',
-        body: 'Live feed from four weatherproof cameras, and the recording as evidence.',
-      },
-    },
-    /** Accessible name for the route graphic. */
-    railLabel: 'A vehicle travelling a route, marking what the tracker reports at each stage',
-    /** Names the report counter for a screen reader. The visible counter is
-     *  decorative chrome for the scroll sequence and is hidden from the tree. */
-    counterLabel: 'Reports in a single trip',
   },
 
   trust: {
@@ -237,14 +166,40 @@ export const home = {
     secondaryCta: 'More about video tracking',
   },
 
-  /** Source: homepage fuel monitoring section. */
-  fuelFeature: {
-    eyebrow: 'Fuel monitoring',
-    title: 'Monitor consumption, find the waste, deter the theft',
-    body:
-      'Monitoring probes track fuel usage precisely and identify where it is being wasted. The system pinpoints the inefficiencies and gives you specific recommendations rather than a chart to interpret on your own.',
-    primaryCta: 'Talk to us about fuel tracking',
-    secondaryCta: 'More about fuel tracking',
+  /**
+   * The hero's three scenes after the opening (see HeroStory). Every fact is
+   * one PrimeTrack already publishes: five-metre accuracy and ten-second
+   * updates (Fleet Trackers page), tank probes that flag a sudden drop and
+   * recommend rather than chart (the fuel copy), per-driver behaviour
+   * (Driver Monitoring), four cameras recorded as evidence (Video Tracking).
+   */
+  story: {
+    /** The three steps of the hero, for its progress marker. */
+    steps: ['Overview', 'Fuel', 'Tracking'],
+    fuel: {
+      eyebrow: 'Fuel monitoring',
+      title: 'Every litre, accounted for.',
+      body: 'Probes in the tank measure every litre in and out. A sudden drop is flagged the moment it happens, with a clear next step instead of a chart to decode.',
+      primaryCta: 'Talk to us about fuel tracking',
+      secondaryCta: 'More about fuel tracking',
+      readoutLevel: 'Fuel level',
+      readoutAlert: 'Drain detected',
+      overview: 'See the fuel monitoring overview',
+    },
+    tracking: {
+      eyebrow: 'GPS fleet tracking',
+      title: 'One unit. Four reports.',
+      reports: {
+        position: { label: 'Position', line: 'Where every vehicle is, to within five metres.' },
+        fuel: { label: 'Fuel', line: 'Tank level, consumption and every sudden drop.' },
+        driver: { label: 'Driver behaviour', line: 'Speeding, harsh braking and cornering, per driver.' },
+        video: { label: 'Video', line: 'Four cameras, recorded as evidence.' },
+      },
+      specs: {
+        accuracy: { value: '5', unit: 'm', label: 'Location accuracy' },
+        interval: { value: '10', unit: 's', label: 'Update interval' },
+      },
+    },
   },
 
   stats: {

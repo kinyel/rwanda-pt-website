@@ -79,43 +79,6 @@ export const home: Translation<Dictionary['home']> = {
     },
   },
 
-  journey: {
-    eyebrow: 'Ibyo igikoresho cya PrimeTrack gitangaza',
-    title: 'Aho buri kinyabiziga kiri, ku ntera ya metero eshanu',
-    lead:
-      'Aho kiri buri masegonda icumi. Lisansi, imyitwarire y’umushoferi n’amashusho ya kamera binyura ku murongo umwe, bigana ku rubuga rumwe.',
-    closing:
-      'Raporo enye ku murongo umwe. Iyo urugendo rurangiye, uba ufite amateka y’urugendo utigeze ujyamo.',
-    specs: {
-      accuracy: { value: '5', unit: 'm', label: 'Ubusobanuro bw’aho kiri' },
-      interval: { value: '10', unit: 's', label: 'Igihe cyo kuvugurura' },
-    },
-    waypoints: {
-      position: {
-        label: 'Aho kiri n’inzira',
-        refrain: 'Uzi aho kiri.',
-        body: 'Aho kiri, umuvuduko n’amateka yose y’urugendo, ku ntera ya metero eshanu.',
-      },
-      fuel: {
-        label: 'Lisansi',
-        refrain: 'Uzi ibyo gikoresha.',
-        body: 'Urugero rwa lisansi mu kigega n’uko ikoreshwa, n’integuza ihita iza iyo lisansi igabanutse mu buryo butunguranye.',
-      },
-      driver: {
-        label: 'Imyitwarire y’umushoferi',
-        refrain: 'Uzi uko gitwarwa.',
-        body: 'Gufata feri bikabije, kurenza umuvuduko no gukata nabi, bipimwa kuri buri mushoferi.',
-      },
-      video: {
-        label: 'Amashusho',
-        refrain: 'Uzi ibyabaye.',
-        body: 'Amashusho y’ako kanya aturuka kuri kamera enye zidapfa n’imvura, n’ayafashwe abikwa nk’ikimenyetso.',
-      },
-    },
-    railLabel: 'Ikinyabiziga kigenda mu nzira, kigaragaza ibyo igikoresho gitangaza kuri buri cyiciro',
-    counterLabel: 'Raporo mu rugendo rumwe',
-  },
-
   trust: {
     eyebrow: 'Impamvu abakiriya batwizera',
     licensed: { title: 'Twemewe na RURA', body: 'Dufite uruhushya rwuzuye rwo gutanga serivisi zo gukurikirana ibinyabiziga hakoreshejwe GPS n’ikoranabuhanga rya telematiki mu Rwanda.' },
@@ -174,13 +137,32 @@ export const home: Translation<Dictionary['home']> = {
     secondaryCta: 'Byinshi ku gukurikirana amashusho',
   },
 
-  fuelFeature: {
-    eyebrow: 'Kugenzura lisansi',
-    title: 'Genzura ikoreshwa, menya ipfa ubusa, ukumire ubujura',
-    body:
-      'Sensor zo kugenzura zikurikirana neza uko lisansi ikoreshwa kandi zikerekana aho ipfira ubusa. Sisitemu igaragaza ibidakora neza ikaguha inama zihariye aho kuguha imbonerahamwe ngo wisobanurire wenyine.',
-    primaryCta: 'Tuvugishe ku gukurikirana lisansi',
-    secondaryCta: 'Byinshi ku gukurikirana lisansi',
+  story: {
+    steps: ['Incamake', 'Lisansi', 'Gukurikirana'],
+    fuel: {
+      eyebrow: 'Kugenzura lisansi',
+      title: 'Buri litiro irabarurwa.',
+      body: 'Sensor ziri mu kigega zipima buri litiro yinjira n’isohoka. Igabanuka ritunguranye rimenyeshwa ako kanya, hamwe n’icyo ukwiye gukora aho kuguha imbonerahamwe wisobanurira.',
+      primaryCta: 'Tuvugishe ku gukurikirana lisansi',
+      secondaryCta: 'Byinshi ku gukurikirana lisansi',
+      readoutLevel: 'Urugero rwa lisansi',
+      readoutAlert: 'Lisansi yibwe',
+      overview: 'Reba incamake yo kugenzura lisansi',
+    },
+    tracking: {
+      eyebrow: 'Gukurikirana ibinyabiziga na GPS',
+      title: 'Igikoresho kimwe. Raporo enye.',
+      reports: {
+        position: { label: 'Aho kiri', line: 'Aho buri kinyabiziga kiri, ku ntera ya metero eshanu.' },
+        fuel: { label: 'Lisansi', line: 'Urugero rwo mu kigega, ikoreshwa n’igabanuka ryose ritunguranye.' },
+        driver: { label: 'Imyitwarire y’umushoferi', line: 'Kurenza umuvuduko, gufata feri bikabije no gukata nabi, kuri buri mushoferi.' },
+        video: { label: 'Amashusho', line: 'Kamera enye, amashusho abikwa nk’ibimenyetso.' },
+      },
+      specs: {
+        accuracy: { value: '5', unit: 'm', label: 'Uburyo bwo kumenya aho kiri' },
+        interval: { value: '10', unit: 's', label: 'Igihe cyo kuvugurura' },
+      },
+    },
   },
 
   stats: {

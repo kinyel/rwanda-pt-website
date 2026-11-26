@@ -25,7 +25,7 @@ content by mistake. During `npm run dev` they also carry an orange "Placeholder"
 
 | # | Filename | Size (px) | Aspect | Format | Where it appears |
 | --- | --- | --- | --- | --- | --- |
-| 1 | `home/home-hero-fleet.jpg` | 2400 x 1600 | 3:2 | JPG | NOT CURRENTLY USED. The homepage hero is now the scroll-driven route graphic in HeroJourney.astro, which needs no photograph. The slot is kept in case a photographic hero is ever wanted again; nothing is missing from the site while it is empty. |
+| 1 | `home/home-hero-fleet.jpg` | 2400 x 1600 | 3:2 | JPG | NOT CURRENTLY USED. The homepage hero is now drawn in CSS 3D in HeroStory.astro, which needs no photograph. The slot is kept in case a photographic hero is ever wanted again; nothing is missing from the site while it is empty. |
 | 2 | `company/company-office-kigali.jpg` | 1600 x 1100 | 16:11 | JPG | Contact page |
 | 3 | `company/company-installation.jpg` | 1600 x 1100 | 16:11 | JPG | Why Choose PrimeTrack page |
 

@@ -21,7 +21,7 @@
       "height": 1600,
       "format": "jpg",
       "aspect": "3:2",
-      "usedOn": "NOT CURRENTLY USED. The homepage hero is now the scroll-driven route graphic in HeroJourney.astro, which needs no photograph. The slot is kept in case a photographic hero is ever wanted again; nothing is missing from the site while it is empty.",
+      "usedOn": "NOT CURRENTLY USED. The homepage hero is now drawn in CSS 3D in HeroStory.astro, which needs no photograph. The slot is kept in case a photographic hero is ever wanted again; nothing is missing from the site while it is empty.",
       "purpose": "A commercial vehicle or small fleet on a Rwandan road. Kigali arterial, a provincial highway, or a depot yard. Wide framing with room on the left for the headline. Shot in daylight, no heavy filters. Should read as a working vehicle, not a showroom shot.",
       "maxKb": 320
     },
@@ -45,7 +45,7 @@
       "height": 961,
       "format": "jpg",
       "aspect": "1.703:1",
-      "usedOn": "Homepage, fuel monitoring feature section",
+      "usedOn": "Homepage hero, fuel scene: a thumbnail that opens it full size",
       "purpose": "PrimeTrack fuel tank monitoring board: a branded tanker, the tank sensor, and the platform view with refuelling and fuel-drain events called out. Marketing artwork with printed type, so it must never be cropped to a house ratio.",
       "maxKb": 320
     },

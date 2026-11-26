@@ -195,61 +195,34 @@ links, non-descriptive link text, and em dashes in rendered output.
 Both are native CSS. There is no GSAP, no ScrollTrigger, no Lenis and no
 animation library anywhere in the project.
 
-### The hero journey (`HeroJourney.astro`)
+### The hero (`HeroStory.astro`)
 
-Formspree flies their product, a form, into the hero. The equivalent here is not
-a card. PrimeTrack's product is following a vehicle along a route, so **the
-scroll is the trip**: a vehicle travels a route down the right of the screen as
-you read, and each waypoint it reaches lights up one of the things the unit
-actually reports. It is the only animation on this site that is not decoration.
+Three scenes on one pinned stage, each copy on the left and an object on the
+right, all drawn in CSS 3D (no WebGL, no images) in one material: lit orange
+line work on dark glass, on a shared dotted floor under one camera.
 
-The section is two viewport-height panels and the rail is `position: sticky`
-across both, which is the point of the extra height. The headline scrolls away
-beneath it, the telemetry payoff scrolls up to replace it, and the rail stays put
-through the seam rather than being cut off at the hero's edge. By the time the
-vehicle reaches the last waypoint, all four report types are lit beside the
-matching list on the left.
+1. **Overview.** The h1 over Rwanda drawn as nothing but its roads and towns
+   (projected from real longitude and latitude): no outline, fill or dots.
+   No road shows until you scroll; then each draws itself in, and a
+   vehicle crosses the country on the Central Corridor with its live position
+   standing over it. The vehicle is hidden until the reader scrolls.
+2. **Fuel.** A tank cut open with its probe. The level holds, drops sharply,
+   and the drop is flagged. The fuel infographic stays on the page as this
+   scene's thumbnail and opens full size.
+3. **Tracking.** The unit opens into its four layers, each lighting as its
+   report is named on the left.
 
-```css
-.hero-journey  { view-timeline-name: --journey; }
-.journey-vehicle { animation-timeline: --journey; animation-range: cover 35% cover 90%; }
-```
+The script writes `--p` (section progress) and, per scene, `--in` (presence)
+and `--t` (progress through it); everything else is CSS reading those. A tiny
+inline script decides before the first paint whether the stage pins, so the
+hero never jumps when the main script arrives. Without JavaScript, under
+reduced motion, or on a phone on its side, the scenes are three still blocks
+in their finished state.
 
-One named timeline on the section, referenced by every moving part inside it, so
-the vehicle, the drawn route, the four markers, their labels and the four list
-entries share a single source of progress and cannot drift apart. The stops
-stagger by offsetting `animation-range` with their own `--n` rather than by
-writing four sets of keyframes.
-
-Three decisions worth keeping:
-
-- **The range starts at `cover 35%`, not 0.** The section is two viewport-sized
-  panels, so it is already about 35% through its own cover span at scroll zero.
-  Starting there puts the vehicle at the top of the route when the page opens
-  rather than a third of the way down it, and because both panels are sized in
-  viewport units that figure holds at any viewport height.
-- **One coordinate system.** The stage carries `aspect-ratio: 360 / 1000`, the
-  same as the viewBox, so the SVG fills it with no letterboxing and one user unit
-  is one stage unit. Markers sit at coordinates measured with `getPointAtLength`;
-  labels are HTML positioned as percentages of the same box, so they wrap and
-  translate. An HTML `offset-path` in pixels drifts against a viewBox that
-  scales, which is exactly the bug this arrangement avoids.
-- **Nothing that can conceal content runs on a clock that may not tick.** An
-  earlier version faded the panel in on the document timeline. A tab opened in
-  the background has a frozen document timeline, and `fill-mode: both` held the
-  content at `opacity: 0` for as long as the tab stayed unfocused. Found by
-  testing, not by reasoning about it.
-
-The hero has no drawn backdrop. It used to carry `HeroTerrain`, a stack of
-ridgelines behind the whole section. Every ridge was a full-width band with a
-translucent orange fill and a hairline edge, and against a white ground they
-read as bumps striping the screen behind the route and the report sequence,
-which are the two things the section is actually about. The component was
-deleted rather than switched off, and its only usage went with it. What stands
-in for it is not another picture of depth: the four reports are panels on a
-drum turning in real CSS perspective, so the section has depth because it has
-geometry. The one remaining background is a single soft warm field where the
-route runs.
+The section keeps the `hero-journey` class and sets `data-journey-live` while it
+plays, which is what the product helix reads to start one screen early beneath
+it; the stage fades to black over its last stretch and the helix fades up from
+that black.
 
 ### The helix (`ProductSpiral.astro`)
 

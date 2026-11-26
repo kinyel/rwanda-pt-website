@@ -189,54 +189,18 @@ const entries: NavEntry[] = primaryNav.map((group) => ({
 
 </header>
 
-<!-- READING PROGRESS, along the top edge of the screen, above the bar. It is a
-   sibling of the header rather than part of it, so it stays put when the bar
-   slides away and the car at its leading edge keeps driving while you read.
-   The car turns round when you scroll back, and brakes when you stop.
-   Decorative: the scrollbar already says all of this. -->
+<!-- READING PROGRESS, along the top edge of the screen. It is a sibling of
+   the header rather than part of it, so it stays put when the bar slides
+   away. A small triangle rides its leading edge, pointing the way the reader
+   is going, and turns round when they scroll back. It passes behind the
+   "Menu" tab, never over it. Decorative: the scrollbar already says all of
+   this. -->
 <div class="site-progress" aria-hidden="true">
   <span class="site-progress-road"></span>
   <span class="site-progress-fill"></span>
-  <span class="site-progress-car">
-    <svg viewBox="-30 -20 60 34" width="44" height="25" focusable="false">
-      <defs>
-        <linearGradient id="sp-beam" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stop-color="#ffe9c8" stop-opacity="0.55" />
-          <stop offset="1" stop-color="#ffe9c8" stop-opacity="0" />
-        </linearGradient>
-        <filter id="sp-soft" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="1.6" />
-        </filter>
-      </defs>
-      <g class="sp-turn">
-        <!-- On the road: shadow and headlight beam. -->
-        <ellipse class="sp-shadow" cx="1.5" cy="3" rx="19" ry="5.5" filter="url(#sp-soft)" />
-        <path class="sp-beam" d="M18 -3 L46 -9 L46 9 L18 3 Z" fill="url(#sp-beam)" />
-        <!-- The body, as planes stacked up the screen. -->
-        <g class="sp-l sp-chassis" style="--k:0">
-          <rect x="-14" y="-9.6" width="6" height="2.4" rx="1" />
-          <rect x="8" y="-9.6" width="6" height="2.4" rx="1" />
-          <rect x="-14" y="7.2" width="6" height="2.4" rx="1" />
-          <rect x="8" y="7.2" width="6" height="2.4" rx="1" />
-          <path d="M-19 -8 C-21 -8 -21 8 -19 8 L16 8.6 C21 8.6 21.5 -8.6 16 -8.6 Z" />
-        </g>
-        <g class="sp-l sp-side" style="--k:2.4">
-          <path d="M-19 -8 C-21 -8 -21 8 -19 8 L16 8.6 C21 8.6 21.5 -8.6 16 -8.6 Z" />
-        </g>
-        <g class="sp-l sp-body" style="--k:4.8">
-          <path d="M-19 -8 C-21 -8 -21 8 -19 8 L16 8.6 C21 8.6 21.5 -8.6 16 -8.6 Z" />
-          <circle class="sp-head" cx="19.4" cy="-4.6" r="1.6" />
-          <circle class="sp-head" cx="19.4" cy="4.6" r="1.6" />
-          <rect class="sp-brake" x="-20.6" y="-7" width="1.8" height="4.4" rx="0.7" />
-          <rect class="sp-brake" x="-20.6" y="2.6" width="1.8" height="4.4" rx="0.7" />
-        </g>
-        <g class="sp-l sp-glass" style="--k:7">
-          <path d="M-11.6 -7 L9.6 -7.4 C11.2 -3 11.2 3 9.6 7.4 L-11.6 7 C-13.6 2.6 -13.6 -2.6 -11.6 -7 Z" />
-        </g>
-        <g class="sp-l sp-roof" style="--k:8.8">
-          <path d="M-6.2 -5.6 L6.6 -5.8 L6.6 5.8 L-6.2 5.6 Z" />
-        </g>
-      </g>
+  <span class="site-progress-mark">
+    <svg viewBox="0 0 12 12" width="12" height="12" focusable="false">
+      <path class="sp-turn" d="M2 1.5 L10.5 6 L2 10.5 Z" />
     </svg>
   </span>
 </div>

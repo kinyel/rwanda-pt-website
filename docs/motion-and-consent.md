@@ -96,10 +96,9 @@ revealing elements confirms zero remaining collisions.
 
 ### What is deliberately left alone
 
-- **The hero journey rail.** Off limits. Its markup, classes, styles, path,
-  waypoints, aspect ratio, sticky behaviour and script are untouched. The only
-  edit anywhere near it was replacing the raw `2.6s` on the read head's live
-  tick with `--duration-pulse`, which is the same value.
+- **The hero.** Now `HeroStory.astro` (three scenes on one pinned stage; see
+  docs/information-architecture.md). Its scroll handler is its own, like the
+  helix's.
 - **The product helix.** It has its own `--p` scroll handler, as specified.
 - **The marquee.** A continuous ribbon rather than a loop the eye is asked to
   follow. It carries no state and nothing in it needs to be caught. It stops

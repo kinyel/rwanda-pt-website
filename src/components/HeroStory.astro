@@ -1,0 +1,2072 @@
+---
+/**
+ * The homepage hero, told in three scenes on one pinned stage.
+ *
+ *   1  Overview  the h1 over Rwanda drawn as nothing but its roads and
+ *                towns: no outline, fill or dots. Its roads light up
+ *                from Kigali as you scroll, and a vehicle crosses the country
+ *                on the Central Corridor with its live position beside it.
+ *   2  Fuel      a tank cut open, with the probe that measures it. The level
+ *                drops sharply and the drop is flagged.
+ *   3  Tracking  the unit opening into its four layers, each one lighting as
+ *                its report is named on the left.
+ *
+ * ONE STAGE, ONE CAMERA. Every scene is copy on the left and an object on the
+ * right, and every object is built from the same material: lit orange line
+ * work on dark glass, in real CSS 3D (no WebGL, no images). All three sit in
+ * the same world on the same dotted floor, under one camera that turns slowly
+ * as you scroll and settles lower once the map has gone. Scenes change in
+ * place: the outgoing object sinks into the floor as it fades, the next rises
+ * out of it.
+ *
+ * ONE NUMBER DRIVES IT. The script writes `--p`, the section's progress from
+ * 0 to 1, and for each scene `--in` (how present it is) and `--t` (how far
+ * through it the reader is). Everything else, from the roads drawn to the
+ * layers lit, is CSS reading those. The few things CSS cannot do (the
+ * vehicle's place on its road, the readouts' digits) are set by the same
+ * frame of the same script, so nothing can drift out of step.
+ *
+ * THE HAND-OVER. The section keeps the `hero-journey` class and sets
+ * `data-journey-live` while it runs, which is what the product helix below
+ * reads to start one screen early underneath it. So the stage still fades
+ * to black over its last stretch: the helix fades up from that black.
+ *
+ * WITHOUT THE SCROLL (no JavaScript, reduced motion, or a phone on its side)
+ * the three scenes are three ordinary blocks one after another, each object
+ * shown in its finished state: roads drawn, drop flagged, unit open and lit.
+ * Every word is in the page either way, in reading order, and the h1 is the
+ * first thing in it.
+ *
+ * WHAT SEARCH SEES. The h1, the lead and the two buttons are the ones the
+ * hero has always had. The fuel infographic (and its alt text) stays on the
+ * page as the fuel scene's thumbnail, which opens it full size.
+ */
+import Button from './Button.astro';
+import Picture from './Picture.astro';
+import { getImage } from 'astro:assets';
+import sensorSrc from '../assets/images/hero/fuel-sensor.png';
+import floatSrc from '../assets/images/hero/fuel-sensor-float.png';
+import { routes } from '../data/navigation';
+import { useTranslations, localizePath, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props as Props;
+const t = useTranslations(locale);
+const s = t.home.story;
+
+/* Where each scene sits on the section's progress, [from, to]. The script
+   reads the same list off the section, so this is the only copy. */
+const WINDOWS: [number, number][] = [
+  [0, 0.31],
+  [0.31, 0.64],
+  [0.64, 0.93],
+];
+
+/* ------------------------------------------------------------------------
+   THE MAP. Drawn from longitude and latitude, so it is Rwanda's shape rather
+   than an approximation of one, then projected flat into a 400 x 360 box.
+   ------------------------------------------------------------------------ */
+type LonLat = readonly [number, number];
+type Pt = [number, number];
+const project = ([lon, lat]: LonLat): Pt => [20 + (lon - 28.85) * 174, 30 + (-lat - 1.04) * 174];
+const r1 = (n: number) => Math.round(n * 10) / 10;
+
+/* A smooth line through the points (Catmull-Rom, as cubic Béziers), so the
+   border and the roads read as drawn rather than plotted. */
+function smooth(points: Pt[], closed: boolean) {
+  const n = points.length;
+  const at = (i: number) => (closed ? points[(i + n) % n] : points[Math.max(0, Math.min(n - 1, i))]);
+  let d = `M${r1(points[0][0])} ${r1(points[0][1])}`;
+  for (let i = 0; i < (closed ? n : n - 1); i++) {
+    const [p0, p1, p2, p3] = [at(i - 1), at(i), at(i + 1), at(i + 2)];
+    const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
+    const c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+    d += ` C${r1(c1[0])} ${r1(c1[1])} ${r1(c2[0])} ${r1(c2[1])} ${r1(p2[0])} ${r1(p2[1])}`;
+  }
+  return closed ? `${d}Z` : d;
+}
+
+const TOWNS = {
+  kigali: [30.06, -1.95],
+  musanze: [29.63, -1.5],
+  rubavu: [29.28, -1.69],
+  rwamagana: [30.43, -1.95],
+  kayonza: [30.51, -1.88],
+  rusumo: [30.75, -2.33],
+  nyagatare: [30.33, -1.3],
+  muhanga: [29.75, -2.08],
+  karongi: [29.38, -2.06],
+  huye: [29.74, -2.6],
+  nyamagabe: [29.57, -2.47],
+  rusizi: [28.96, -2.47],
+} as const satisfies Record<string, LonLat>;
+type Town = keyof typeof TOWNS;
+const town = (k: Town) => project(TOWNS[k]);
+
+/* The trip: the Central Corridor in from the Tanzanian border at Rusumo,
+   through Kigali, and out to Rubavu on Lake Kivu. The vehicle drives it. */
+const TRIP_TOWNS: Town[] = ['rusumo', 'kayonza', 'rwamagana', 'kigali', 'musanze', 'rubavu'];
+const TRIP = smooth(TRIP_TOWNS.map(town), false);
+
+/* Points spaced evenly along the same smooth line, each with how far along
+   it is (0 to 1): the vehicle's position reports, dropped behind it as it
+   drives, one per update. */
+function evenAlong(points: Pt[], count: number) {
+  const n = points.length;
+  const at = (i: number) => points[Math.max(0, Math.min(n - 1, i))];
+  const samples: Pt[] = [];
+  for (let i = 0; i < n - 1; i++) {
+    const [p0, p1, p2, p3] = [at(i - 1), at(i), at(i + 1), at(i + 2)];
+    const c1: Pt = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
+    const c2: Pt = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+    for (let k = 0; k < 48; k++) {
+      const t = k / 48;
+      const u = 1 - t;
+      samples.push([
+        u * u * u * p1[0] + 3 * u * u * t * c1[0] + 3 * u * t * t * c2[0] + t * t * t * p2[0],
+        u * u * u * p1[1] + 3 * u * u * t * c1[1] + 3 * u * t * t * c2[1] + t * t * t * p2[1],
+      ]);
+    }
+  }
+  samples.push(points[n - 1]);
+  const lengths = [0];
+  for (let i = 1; i < samples.length; i++) {
+    lengths.push(lengths[i - 1] + Math.hypot(samples[i][0] - samples[i - 1][0], samples[i][1] - samples[i - 1][1]));
+  }
+  const total = lengths[lengths.length - 1];
+  /* How far along the line each of the points it was drawn through is. */
+  const knots = points.map((_, i) => lengths[i * 48] / total);
+  if (!count) return { knots, points: [] };
+  return { knots, points: Array.from({ length: count }, (_, i) => {
+    const target = (total * (i + 0.5)) / count;
+    let j = 1;
+    while (lengths[j] < target) j++;
+    const f = (target - lengths[j - 1]) / (lengths[j] - lengths[j - 1]);
+    return {
+      x: r1(samples[j - 1][0] + (samples[j][0] - samples[j - 1][0]) * f),
+      y: r1(samples[j - 1][1] + (samples[j][1] - samples[j - 1][1]) * f),
+      at: +(target / total).toFixed(4),
+    };
+  }) };
+}
+const PINGS = evenAlong(TRIP_TOWNS.map(town), 30).points;
+
+/* The rest of the network, each lit over its own stretch of the scene
+   (`a` its start and `l` its length, in the scene's own progress). */
+const ROADS = [
+  { via: ['kigali', 'muhanga', 'huye'], a: 0.1, l: 0.36 },
+  { via: ['kayonza', 'nyagatare'], a: 0.18, l: 0.32 },
+  { via: ['muhanga', 'karongi'], a: 0.3, l: 0.28 },
+  { via: ['huye', 'nyamagabe', 'rusizi'], a: 0.4, l: 0.34 },
+].map((r) => ({ ...r, d: smooth((r.via as Town[]).map(town), false) }));
+
+/* WHEN EACH TOWN APPEARS, in the scene's own progress. On load the map is
+   Kigali and nothing else; a town comes in when something reaches it: the
+   vehicle (which covers the trip over the first 80% of the scene) or the
+   road being drawn to it. The trip's two ends come in with the first
+   scroll, so the reader sees where the vehicle is going. */
+const APPEAR: Partial<Record<Town, number>> = { rusumo: 0, rubavu: 0 };
+const note = (k: Town, t: number) => {
+  APPEAR[k] = Math.min(APPEAR[k] ?? 1, t);
+};
+evenAlong(TRIP_TOWNS.map(town), 0).knots.forEach((f, i) => note(TRIP_TOWNS[i], 0.8 * f));
+for (const r of ROADS) {
+  const via = r.via as Town[];
+  evenAlong(via.map(town), 0).knots.forEach((g, i) => note(via[i], r.a + r.l * g));
+}
+const appear = (k: Town) => `--ap:${(APPEAR[k] ?? 0).toFixed(3)}`;
+
+/* Small flat labels on the map itself, read in perspective like a real
+   chart. Kigali gets a standing label instead (see the markup). */
+const LABELS: { key: Town; name: string; dx: number; dy: number; anchor: 'start' | 'end' | 'middle' }[] = [
+  { key: 'rubavu', name: 'RUBAVU', dx: -7, dy: -6, anchor: 'end' },
+  { key: 'musanze', name: 'MUSANZE', dx: 0, dy: -9, anchor: 'middle' },
+  { key: 'nyagatare', name: 'NYAGATARE', dx: 7, dy: -5, anchor: 'start' },
+  { key: 'rusumo', name: 'RUSUMO', dx: -8, dy: 10, anchor: 'end' },
+  { key: 'huye', name: 'HUYE', dx: 8, dy: 10, anchor: 'start' },
+  { key: 'rusizi', name: 'RUSIZI', dx: 8, dy: 12, anchor: 'start' },
+];
+
+const kigali = town('kigali');
+const start = town('rusumo');
+const finish = town('rubavu');
+/* The geofence round Kigali, in map units. */
+const FENCE_R = 27;
+const pct = ([x, y]: Pt) => `--x:${(x / 400).toFixed(4)}; --y:${(y / 360).toFixed(4)}`;
+
+/* ------------------------------------------------------------------------
+   THE UNIT'S FOUR LAYERS, bottom to top, in the order the copy names them.
+   `at` is the point in the scene where each one lights.
+   ------------------------------------------------------------------------ */
+/* The fuel sensor, cut out of its photograph in two pieces (the head and rod,
+   and the float, which rides the fuel). Drawn about 150 and 50 pixels wide,
+   so those widths and their doubles for sharp screens, as WebP. */
+const [sensor1x, sensor2x, float1x, float2x] = await Promise.all([
+  getImage({ src: sensorSrc, width: 150, format: 'webp' }),
+  getImage({ src: sensorSrc, width: 300, format: 'webp' }),
+  getImage({ src: floatSrc, width: 52, format: 'webp' }),
+  getImage({ src: floatSrc, width: 104, format: 'webp' }),
+]);
+
+const REPORTS = (['position', 'fuel', 'driver', 'video'] as const).map((key, i) => ({ key, at: 0.26 + i * 0.16 }));
+const specs = [s.tracking.specs.accuracy, s.tracking.specs.interval];
+---
+
+<section
+  class="hero-journey hero-story on-dark"
+  data-nav="dark"
+  data-nav-overlay
+  data-ambient
+  data-story={JSON.stringify(WINDOWS)}
+>
+  <!-- Decides before the first paint whether the stage will pin, so the
+       hero is laid out once and never jumps when the main script arrives.
+       The same two conditions the main script checks. -->
+  <script is:inline>
+    (function (s) {
+      if (!matchMedia('(prefers-reduced-motion: reduce)').matches && matchMedia('(width >= 64rem), (height >= 34rem)').matches)
+        s.setAttribute('data-journey-live', '');
+    })(document.currentScript.parentElement);
+  </script>
+  <div class="hs-pin">
+    <div class="hs-ground" aria-hidden="true"></div>
+
+    <div class="container-wide hs-frame">
+      <!-- The floor every object stands on. Its own layer, so it stays put
+           while the scenes change over it. -->
+      <div class="hs-layer hs-floor-layer" aria-hidden="true">
+        <div class="hs-visual">
+          <div class="hs-cam">
+            <div class="hs-world">
+              <span class="hs-flat hs-floor"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================= 1 · Overview ======================= -->
+      <div class="hs-layer hs-scene" data-scene="0">
+        <div class="hs-copy">
+          <p class="hs-eyebrow arrive" style="--d:0">{t.home.hero.eyebrow}</p>
+          <h1 class="hs-h1 text-display-xl text-white arrive" style="--d:1">
+            {t.home.hero.title} <span class="hs-h1-rest">{t.home.hero.titleRest}</span>
+          </h1>
+          <p class="hs-lead measure text-lead text-ink-300 arrive" style="--d:2">{t.home.hero.lead}</p>
+          <div class="hs-ctas arrive" style="--d:3">
+            <Button href={localizePath(routes.contact, locale)} variant="primary" size="lg">
+              {t.home.hero.primaryCta}
+            </Button>
+            <Button href={localizePath(routes.solutions, locale)} variant="secondaryOnDark" size="lg">
+              {t.home.hero.secondaryCta}
+            </Button>
+          </div>
+        </div>
+
+        <div class="hs-visual hs-visual-map" aria-hidden="true">
+          <div class="hs-cam">
+            <div class="hs-world" style="--tilt-d:48deg">
+              <div class="hs-map">
+                <!-- Rwanda as nothing but its roads and towns: no outline, no
+                     fill, no dots, so there is nothing between the lines and
+                     the dark ground. -->
+                <svg class="hs-map-top" viewBox="0 0 400 360" focusable="false">
+
+                  <!-- A geofence round Kigali: a boundary drawn on the map. It
+                       lights while the vehicle is inside it and pulses as the
+                       vehicle crosses it, the way an enter or leave alert
+                       fires. -->
+                  <g class="hs-fence">
+                    <circle class="hs-fence-ring" cx={r1(kigali[0])} cy={r1(kigali[1])} r={FENCE_R} data-fence />
+                    <circle class="hs-fence-ripple" cx={r1(kigali[0])} cy={r1(kigali[1])} r={FENCE_R} data-fence-ripple />
+                  </g>
+
+                  <!-- No road is drawn until the reader scrolls: each one
+                       draws itself in over its own stretch of the scene. -->
+                  {
+                    ROADS.map((r) => (
+                      <path class="hs-road-lit" d={r.d} pathLength="1" style={`--a:${r.a}; --l:${r.l}`} />
+                    ))
+                  }
+                  <path class="hs-trip-glow" d={TRIP} pathLength="1" />
+                  <path class="hs-trip" d={TRIP} pathLength="1" data-trip />
+
+                  <!-- The trip as the platform records it: a position report
+                       every update, left behind the vehicle as it goes. -->
+                  {PINGS.map((p) => <circle class="hs-ping" cx={p.x} cy={p.y} r="1.6" style={`--at:${p.at}`} />)}
+
+                  <!-- Where the trip starts, and where it is going: the
+                       destination lights when the vehicle arrives. -->
+                  <g class="hs-start" transform={`translate(${r1(start[0])} ${r1(start[1])})`}>
+                    <circle class="hs-start-ring" r="5.5" />
+                    <circle class="hs-start-core" r="2" />
+                  </g>
+                  <g class="hs-dest" transform={`translate(${r1(finish[0])} ${r1(finish[1])})`}>
+                    <circle class="hs-dest-ring" r="7" />
+                    <circle class="hs-dest-core" r="3" />
+                  </g>
+
+                  {
+                    (Object.keys(TOWNS) as Town[])
+                      .filter((k) => k !== 'kigali' && k !== 'rusumo' && k !== 'rubavu')
+                      .map((k) => {
+                        const [x, y] = town(k);
+                        return <circle class="hs-town" cx={r1(x)} cy={r1(y)} r="2.4" style={appear(k)} />;
+                      })
+                  }
+                  {
+                    LABELS.map((l) => {
+                      const [x, y] = town(l.key);
+                      return (
+                        <text class="hs-town-name" x={r1(x + l.dx)} y={r1(y + l.dy)} text-anchor={l.anchor} style={appear(l.key)}>
+                          {l.name}
+                        </text>
+                      );
+                    })
+                  }
+
+                  <g class="hs-hub" transform={`translate(${r1(kigali[0])} ${r1(kigali[1])})`}>
+                    <circle class="hs-hub-ring" r="10" />
+                    <circle class="hs-hub-core" r="4.2" />
+                  </g>
+
+                  <!-- The vehicle: a heading arrow, placed on the trip by the
+                       script. Hidden until the reader scrolls. -->
+                  <g class="hs-car" data-car>
+                    <circle class="hs-car-halo" r="12" />
+                    <path class="hs-car-arrow" d="M0 -7.5 L5.6 6.5 L0 3.2 L-5.6 6.5 Z" />
+                  </g>
+                </svg>
+
+                <!-- Kigali, standing up off the map. -->
+                <span class="hs-bb hs-pin-kigali" style={pct(kigali)}>
+                  <span class="hs-stem"></span>
+                  <span class="hs-tag">KIGALI</span>
+                </span>
+
+                <!-- The vehicle's live position, standing over it. -->
+                <span class="hs-bb hs-car-chip" style={pct(project(TOWNS.rusumo))} data-car-chip>
+                  <span class="hs-stem"></span>
+                  <span class="hs-chip">
+                    <span class="hs-chip-dot"></span>
+                    <span data-lat>2.3300° S</span>
+                    <span data-lon>30.7500° E</span>
+                    <span class="hs-chip-acc">±5 m</span>
+                  </span>
+                </span>
+              </div>
+            </div>
+          </div>
+          <p class="hs-hud">
+            <span>{s.tracking.specs.accuracy.label} <b>{s.tracking.specs.accuracy.value} {s.tracking.specs.accuracy.unit}</b></span>
+            <span>{s.tracking.specs.interval.label} <b>{s.tracking.specs.interval.value} {s.tracking.specs.interval.unit}</b></span>
+          </p>
+        </div>
+      </div>
+
+      <!-- ========================= 2 · Fuel ========================= -->
+      <div class="hs-layer hs-scene" data-scene="1">
+        <div class="hs-copy">
+          <h2 class="hs-title">
+            <span class="hs-eyebrow">{s.fuel.eyebrow}</span>
+            <span class="hs-title-main">{s.fuel.title}</span>
+          </h2>
+          <p class="hs-body measure text-lead text-ink-300">{s.fuel.body}</p>
+          <div class="hs-ctas">
+            <Button href={localizePath(routes.contact, locale)} variant="primary" size="lg">
+              {s.fuel.primaryCta}
+            </Button>
+            <Button href={localizePath(routes.fuelmanagement, locale)} variant="secondaryOnDark" size="lg">
+              {s.fuel.secondaryCta}
+            </Button>
+          </div>
+          <figure class="hs-figure">
+            <Picture
+              imageKey="homeFuelMonitoring"
+              locale={locale}
+              wrapperClass="hs-figure-img"
+              sizes="10rem"
+            />
+            <figcaption>
+              <button type="button" class="hs-figure-open" data-figure-open aria-haspopup="dialog">
+                {s.fuel.overview}
+                <svg viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true" focusable="false">
+                  <path d="M9.5 2.5h4v4M13.5 2.5 9 7M6.5 13.5h-4v-4M2.5 13.5 7 9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </button>
+            </figcaption>
+          </figure>
+        </div>
+
+        <div class="hs-visual hs-visual-tank" aria-hidden="true">
+          <div class="hs-cam">
+            <div class="hs-world">
+              <div class="hs-tank" data-tank>
+                <!-- Light through the fuel, thrown on the ground. -->
+                <span class="hs-flat hs-shadow" style="--w:420; --d:340"></span>
+                <span class="hs-flat hs-tank-caustic" style="--w:250; --d:170; --z:0.5"></span>
+
+                <!-- The drain: a line out from the tank's foot, lit while the
+                     drop is flagged. -->
+                <span class="hs-flat hs-drain" style="--w:160; --d:110; --x:180; --y:77; --z:1">
+                  <svg viewBox="0 0 160 110" focusable="false">
+                    <defs>
+                      <linearGradient id="hs-drain-fade" gradientUnits="userSpaceOnUse" x1="10" y1="0" x2="158" y2="0">
+                        <stop offset="0" stop-color="#ffb27a" />
+                        <stop offset="1" stop-color="#ffb27a" stop-opacity="0" />
+                      </linearGradient>
+                    </defs>
+                    <path class="hs-drain-base" d="M10 8 C 60 10, 80 60, 120 76 S 150 98, 158 104" />
+                    <path class="hs-drain-flow" d="M10 8 C 60 10, 80 60, 120 76 S 150 98, 158 104" />
+                  </svg>
+                </span>
+
+                <!-- THE TANK: a glass box, 210 x 136 x 236, edged in lit
+                     orange, its front corner cut open. Glass with thickness
+                     (a second, fainter edge just inside the first), light
+                     raking across each pane, and fuel you can see the sensor
+                     through. Back panes first, then the fuel, then the
+                     sensor, then the front, so the planes are in a sensible
+                     order before any depth sort. -->
+                <span class="hs-flat hs-glass hs-glass-base" style="--w:210; --d:136; --z:0"></span>
+                <span class="hs-flat hs-glass hs-glass-base" style="--w:210; --d:136; --z:4"></span>
+                <span class="hs-stand hs-glass" style="--w:210; --h:236; --a:180deg; --off:68"><span class="hs-ticks"></span></span>
+                <span class="hs-stand hs-glass" style="--w:136; --h:236; --a:90deg; --off:105"></span>
+                <span class="hs-stand hs-glass" style="--w:136; --h:236; --a:-90deg; --off:105"></span>
+
+                <span class="hs-stand hs-fuel" style="--w:196; --h:230; --a:180deg; --off:61; --lift:4"></span>
+                <span class="hs-stand hs-fuel" style="--w:122; --h:230; --a:90deg; --off:98; --lift:4"></span>
+                <span class="hs-stand hs-fuel" style="--w:122; --h:230; --a:-90deg; --off:98; --lift:4"></span>
+                <span class="hs-stand hs-fuel hs-fuel-front" style="--w:196; --h:230; --a:0deg; --off:61; --lift:4"></span>
+                <span class="hs-flat hs-fuel-top" style="--w:196; --d:122"></span>
+
+                <!-- The sensor, from PrimeTrack's own photograph: head on the
+                     lid, rod down to the floor. It turns to face the camera,
+                     like the round thing it is. Its float is a separate piece
+                     that rides the fuel. -->
+                <span class="hs-sensor">
+                  <img
+                    src={sensor1x.src}
+                    srcset={`${sensor1x.src} 1x, ${sensor2x.src} 2x`}
+                    width={sensor1x.attributes.width}
+                    height={sensor1x.attributes.height}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    draggable="false"
+                  />
+                </span>
+                <span class="hs-sensor hs-float">
+                  <img
+                    src={float1x.src}
+                    srcset={`${float1x.src} 1x, ${float2x.src} 2x`}
+                    width={float1x.attributes.width}
+                    height={float1x.attributes.height}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    draggable="false"
+                  />
+                </span>
+
+                <!-- The front pane, cut open at its top corner, and the lid cut
+                     to match. Their outlines are drawn, so the cut edges glow
+                     like every other edge. -->
+                <span class="hs-stand hs-glass hs-glass-front" style="--w:210; --h:236; --a:0deg; --off:68">
+                  <svg class="hs-glass-line" viewBox="0 0 100 100" preserveAspectRatio="none" focusable="false">
+                    <path d="M0 100 V0 H38 L62 34 H100 V100 Z" />
+                  </svg>
+                </span>
+                <span class="hs-flat hs-glass hs-glass-lid" style="--w:210; --d:136; --z:236">
+                  <svg class="hs-glass-line" viewBox="0 0 100 100" preserveAspectRatio="none" focusable="false">
+                    <path d="M0 0 H100 V72 H62 L38 100 H0 Z" />
+                  </svg>
+                </span>
+
+                <!-- The readout, standing beside the tank. -->
+                <span class="hs-bb hs-readout">
+                  <span class="hs-lead-line"></span>
+                  <span class="hs-panel">
+                    <span class="hs-panel-label">{s.fuel.readoutLevel}</span>
+                    <span class="hs-panel-value" data-level>44%</span>
+                    <span class="hs-panel-bar"><span></span></span>
+                    <span class="hs-alert"><span class="hs-alert-dot"></span>{s.fuel.readoutAlert}</span>
+                  </span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================= 3 · Tracking ======================= -->
+      <div class="hs-layer hs-scene" data-scene="2">
+        <div class="hs-copy">
+          <h2 class="hs-title">
+            <span class="hs-eyebrow">{s.tracking.eyebrow}</span>
+            <span class="hs-title-main">{s.tracking.title}</span>
+          </h2>
+          <ol class="hs-reports">
+            {
+              REPORTS.map((r, i) => (
+                <li class="hs-report" style={`--at:${r.at}`}>
+                  <span class="hs-report-n" aria-hidden="true">0{i + 1}</span>
+                  <span class="hs-report-text">
+                    <span class="hs-report-label">{s.tracking.reports[r.key].label}</span>
+                    <span class="hs-report-line">{s.tracking.reports[r.key].line}</span>
+                  </span>
+                </li>
+              ))
+            }
+          </ol>
+          <dl class="hs-specs">
+            {
+              specs.map((spec) => (
+                <div class="hs-spec">
+                  <dt>{spec.label}</dt>
+                  <dd>
+                    {spec.value}
+                    <span>{spec.unit}</span>
+                  </dd>
+                </div>
+              ))
+            }
+          </dl>
+        </div>
+
+        <div class="hs-visual hs-visual-unit" aria-hidden="true">
+          <div class="hs-cam">
+            <div class="hs-world">
+              <div class="hs-unit">
+                <span class="hs-flat hs-shadow" style="--w:420; --d:420"></span>
+                <span class="hs-flat hs-unit-base" style="--w:262; --d:262; --z:0"></span>
+                <span class="hs-flat hs-unit-base hs-unit-base-top" style="--w:262; --d:262; --z:10"></span>
+                {
+                  REPORTS.map((r, i) => (
+                    <div class="hs-plate" style={`--i:${i}; --at:${r.at}`}>
+                      <span class="hs-flat hs-plate-edge" style="--w:226; --d:226; --z:-6" />
+                      <span class="hs-flat hs-plate-face" style="--w:226; --d:226">
+                        <svg class="hs-glyph" viewBox="0 0 100 100" fill="none" focusable="false">
+                          {r.key === 'position' && (
+                            <>
+                              <path class="hs-glyph-faint" d="M8 32H92M8 58H92M8 82H92M30 8V92M56 8V92M80 8V92" />
+                              <path d="M16 86 30 58H56V32L78 20" />
+                              <circle class="hs-glyph-fill" cx="78" cy="20" r="5.5" />
+                            </>
+                          )}
+                          {r.key === 'fuel' && (
+                            <>
+                              <rect x="20" y="16" width="44" height="70" rx="7" />
+                              <rect class="hs-glyph-fill hs-glyph-soft" x="25" y="48" width="34" height="33" rx="3" />
+                              <path d="M64 30h10a5 5 0 0 1 5 5v30a6 6 0 0 1-12 0V54" />
+                              <path class="hs-glyph-faint" d="M26 32h10M26 40h6" />
+                            </>
+                          )}
+                          {r.key === 'driver' && (
+                            <>
+                              <path d="M16 70a34 34 0 1 1 68 0" />
+                              <path class="hs-glyph-faint" d="M22 50l7 4M50 30v8M78 50l-7 4M34 36l4 7M66 36l-4 7" />
+                              <path d="M50 66 68 42" />
+                              <circle class="hs-glyph-fill" cx="50" cy="66" r="5" />
+                              <path class="hs-glyph-faint" d="M30 84h40" />
+                            </>
+                          )}
+                          {r.key === 'video' && (
+                            <>
+                              <rect x="12" y="18" width="34" height="27" rx="3" />
+                              <rect x="54" y="18" width="34" height="27" rx="3" />
+                              <rect x="12" y="55" width="34" height="27" rx="3" />
+                              <rect x="54" y="55" width="34" height="27" rx="3" />
+                              <circle class="hs-glyph-fill" cx="84" cy="10" r="3.5" />
+                            </>
+                          )}
+                        </svg>
+                      </span>
+                      <span class="hs-bb hs-plate-tag" style="--bx:128; --by:0; --bz:0">
+                        <span class="hs-plate-n">0{i + 1}</span>
+                      </span>
+                    </div>
+                  ))
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Where the reader is: three steps, each filling as it plays. Chrome
+         only; every scene names itself in its own heading. -->
+    <div class="container-wide hs-steps-wrap" aria-hidden="true">
+      <ol class="hs-steps">
+        {
+          s.steps.map((label, i) => (
+            <li class="hs-step" data-step={i} style={`--from:${WINDOWS[i][0]}; --to:${WINDOWS[i][1]}`}>
+              <span class="hs-step-n">0{i + 1}</span>
+              <span class="hs-step-label">{label}</span>
+              <span class="hs-step-bar"><span></span></span>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </div>
+
+  <!-- The fuel infographic, full size. Filled from the thumbnail on open. -->
+  <dialog class="hs-lightbox" data-figure-dialog aria-label={s.fuel.overview}>
+    <button type="button" class="hs-lightbox-close" data-figure-close aria-label={t.common.cookies.close}>
+      <svg viewBox="0 0 16 16" width="18" height="18" fill="none" aria-hidden="true" focusable="false">
+        <path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+      </svg>
+    </button>
+    <div class="hs-lightbox-body" data-figure-slot></div>
+  </dialog>
+</section>
+
+<style>
+  /* =====================================================================
+     THE SYSTEM. One ground, one accent, one material, one easing.
+     `--u` is the stage's unit: every object is drawn in it, so the whole
+     world scales with the screen as one piece.
+     ===================================================================== */
+  .hero-story {
+    --ink: #040508;
+    --glow: 255 125 41;
+    --accent: #ff7d29;
+    /* The stage's unit, from the size of the box the object stands in
+       (container units), so an object always fits its box: a long
+       Kinyarwanda paragraph that leaves a phone's stage short shrinks the
+       object rather than running it into the copy. */
+    --u0: min(calc(100cqw / 640), calc(100cqh / 430), 1.3px);
+    --spin-d: -6deg;
+    position: relative;
+    /* Up under the sticky header, which is clear over this section, so the
+       ground runs to the top of the screen. */
+    margin-top: calc(-1 * var(--header-h));
+    background-color: var(--ink);
+    color: #fff;
+  }
+
+  /* ---------------------------------------------------------------------
+     STILL: the three scenes as three blocks, one after another.
+     --------------------------------------------------------------------- */
+  .hs-pin {
+    position: relative;
+  }
+  .hs-ground {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(60% 55% at 74% 52%, rgb(243 93 1 / 0.075), transparent 70%),
+      radial-gradient(120% 70% at 50% 0%, rgb(255 255 255 / 0.03), transparent 60%);
+  }
+  .hs-frame {
+    position: relative;
+  }
+  .hs-layer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2.5rem;
+    padding-block: 4.5rem;
+  }
+  .hs-layer.hs-floor-layer,
+  .hs-steps-wrap {
+    display: none;
+  }
+  .hs-scene[data-scene='0'] {
+    padding-top: calc(var(--header-h) + 3rem);
+  }
+  .hs-scene + .hs-scene {
+    border-top: 1px solid rgb(255 255 255 / 0.06);
+  }
+
+  @media (width >= 64rem) {
+    .hs-layer {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      column-gap: clamp(2rem, 4vw, 5rem);
+      align-items: center;
+    }
+  }
+
+  /* ---------------------------------------------------------------------
+     THE COPY
+     --------------------------------------------------------------------- */
+  .hs-copy {
+    position: relative;
+    z-index: 2;
+    min-width: 0;
+  }
+
+  /* Labels and readouts speak in the data face. */
+  .hs-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    line-height: 1.4;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .hs-eyebrow::before {
+    content: '';
+    flex: none;
+    width: 1.5rem;
+    height: 1px;
+    background: currentColor;
+  }
+
+  .hs-h1 {
+    text-wrap: balance;
+  }
+  .hs-h1-rest {
+    display: block;
+    margin-top: 0.28em;
+    font-size: 0.5em;
+    font-weight: 500;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    color: var(--color-ink-200);
+  }
+  .hs-lead {
+    margin-top: 1.75rem;
+  }
+  .hs-ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 2.5rem;
+  }
+
+  .hs-title {
+    display: block;
+  }
+  .hs-title-main {
+    display: block;
+    font-size: clamp(2.4rem, 1.5rem + 3vw, 4.25rem);
+    font-weight: 700;
+    line-height: 1.02;
+    letter-spacing: -0.026em;
+    color: #fff;
+    text-wrap: balance;
+  }
+  .hs-body {
+    margin-top: 1.5rem;
+  }
+
+  /* The infographic, as a thumbnail that opens it. */
+  .hs-figure {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2rem;
+    max-width: 26rem;
+  }
+  .hs-figure :global(.hs-figure-img) {
+    flex: none;
+    width: 6.5rem;
+    border-radius: 0.375rem;
+    outline: 1px solid rgb(255 255 255 / 0.14);
+    outline-offset: -1px;
+    opacity: 0.86;
+    transition: opacity 240ms var(--ease-out);
+  }
+  .hs-figure:hover :global(.hs-figure-img) {
+    opacity: 1;
+  }
+  .hs-figure-open {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-align: left;
+    color: var(--color-ink-200);
+    transition: color 200ms var(--ease-out);
+  }
+  /* The whole figure is the target. */
+  .hs-figure-open::after {
+    content: '';
+    position: absolute;
+    inset: -0.375rem;
+  }
+  .hs-figure:hover .hs-figure-open {
+    color: #fff;
+  }
+
+  /* The four reports. Lit in turn while the scene plays; all lit when still. */
+  .hs-reports {
+    display: grid;
+    margin-top: 2rem;
+    border-top: 1px solid rgb(255 255 255 / 0.08);
+  }
+  .hs-report {
+    --on: clamp(0, (var(--t, 1) - var(--at)) * 10, 1);
+    display: grid;
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+    gap: 0.75rem;
+    padding-block: 0.95rem;
+    border-bottom: 1px solid rgb(255 255 255 / 0.08);
+    opacity: calc(0.3 + 0.7 * var(--on));
+  }
+  .hs-report-n {
+    padding-top: 0.2rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: color-mix(in oklab, var(--accent) calc(var(--on) * 100%), var(--color-ink-500));
+  }
+  .hs-report-label {
+    display: block;
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: #fff;
+  }
+  .hs-report-line {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--color-ink-300);
+  }
+
+  .hs-specs {
+    display: flex;
+    gap: 2.5rem;
+    margin-top: 1.75rem;
+  }
+  .hs-spec {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 0.2rem;
+  }
+  .hs-spec dt {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-ink-400);
+  }
+  .hs-spec dd {
+    font-family: var(--font-mono);
+    font-size: 2rem;
+    font-weight: 500;
+    line-height: 1;
+    color: #fff;
+  }
+  .hs-spec dd span {
+    margin-left: 0.2em;
+    font-size: 0.55em;
+    color: var(--accent);
+  }
+
+  /* ---------------------------------------------------------------------
+     THE STAGE. A camera (perspective, and the scene's fade) holding a
+     world (the tilt and turn, and the rise or sink). Nothing between the
+     world and its pieces may clip, mask or fade, or the 3D flattens; so a
+     scene fades on its camera, and each piece is a leaf.
+     --------------------------------------------------------------------- */
+  .hs-visual {
+    position: relative;
+    height: clamp(20rem, 62svh, 42rem);
+    min-width: 0;
+    container-type: size;
+  }
+  .hs-cam {
+    position: absolute;
+    inset: 0;
+    perspective: calc(1900 * var(--u0));
+    perspective-origin: 50% 30%;
+    opacity: var(--in, 1);
+  }
+  /* Each scene's world may sit at its own size (`--k`) and its own angle to
+     the shared camera (`--tilt-o`, `--spin-o`): the map reads best from
+     high above, a tank and a stack of layers from three-quarters on. */
+  .hs-world {
+    --u: calc(var(--u0) * var(--k, 1));
+    --rx: calc(var(--tilt, var(--tilt-d, 60deg)) + var(--tilt-o, 0deg));
+    --rz: calc(var(--spin, var(--spin-d)) + var(--spin-o, 0deg));
+    position: absolute;
+    left: 50%;
+    top: 60%;
+    width: 0;
+    height: 0;
+    transform-style: preserve-3d;
+    transform: rotateX(var(--rx)) rotateZ(var(--rz)) translateZ(calc((1 - var(--in, 1)) * -70 * var(--u)));
+  }
+  .hs-visual-tank .hs-world {
+    --k: 1.04;
+    --spin-o: -34deg;
+    --tilt-o: -2deg;
+  }
+  .hs-visual-unit .hs-world {
+    --k: 0.94;
+    --spin-o: -30deg;
+    --tilt-o: 2deg;
+  }
+  .hs-world > *,
+  .hs-map,
+  .hs-tank,
+  .hs-unit,
+  .hs-plate {
+    transform-style: preserve-3d;
+  }
+
+  /* A face lying flat: centred on its place, `--z` up off the floor. */
+  .hs-flat {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: calc(var(--w) * var(--u));
+    height: calc(var(--d) * var(--u));
+    margin-left: calc(var(--w) * var(--u) / -2);
+    margin-top: calc(var(--d) * var(--u) / -2);
+    transform: translate3d(calc(var(--x, 0) * var(--u)), calc(var(--y, 0) * var(--u)), calc(var(--z, 0) * var(--u)))
+      rotateX(var(--fr, 0deg));
+  }
+  /* A face standing up: its foot on the floor, pushed out `--off` from the
+     centre (and `--sx` along it, `--lift` up) and turned `--a` round it.
+     `--sy` shortens it from the foot. */
+  .hs-stand {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: calc(var(--w) * var(--u));
+    height: calc(var(--h) * var(--u));
+    margin-left: calc(var(--w) * var(--u) / -2);
+    margin-top: calc(var(--h) * var(--u) * -1);
+    transform-origin: 50% 100%;
+    transform: rotateZ(var(--a, 0deg))
+      translate3d(calc(var(--sx, 0) * var(--u)), calc(var(--off, 0) * var(--u)), calc(var(--lift, 0) * var(--u)))
+      rotateX(-90deg) scaleY(var(--sy, 1));
+  }
+  /* Stands up off its point and faces the camera whatever the turn. */
+  .hs-bb {
+    position: absolute;
+    width: 0;
+    height: 0;
+    transform: translate3d(calc(var(--bx, 0) * var(--u)), calc(var(--by, 0) * var(--u)), calc(var(--bz, 0) * var(--u)))
+      rotateZ(calc(var(--rz) * -1)) rotateX(calc(var(--rx) * -1));
+  }
+  .hs-stem {
+    position: absolute;
+    left: -0.5px;
+    bottom: 0;
+    width: 1px;
+    height: calc(var(--stem, 56) * var(--u));
+    background: linear-gradient(to top, rgb(var(--glow) / 0.1), rgb(var(--glow) / 0.85));
+  }
+
+  .hs-shadow {
+    background: radial-gradient(closest-side, rgb(243 93 1 / 0.16), rgb(243 93 1 / 0.05) 55%, transparent);
+  }
+  .hs-tank-caustic {
+    background: radial-gradient(closest-side, rgb(255 140 40 / 0.26), rgb(243 93 1 / 0.08) 60%, transparent);
+  }
+  .hs-floor {
+    --w: 1500;
+    --d: 1500;
+    background-image: radial-gradient(circle, rgb(255 255 255 / 0.16) 0 1px, transparent 1.6px);
+    background-size: calc(30 * var(--u)) calc(30 * var(--u));
+    background-position: center;
+    mask-image: radial-gradient(closest-side, #000 0, rgb(0 0 0 / 0.5) 45%, transparent 100%);
+    transform: translateZ(calc(-2 * var(--u)));
+  }
+
+  /* --------------------------------- THE MAP --------------------------------- */
+  .hs-map {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: calc(560 * var(--u));
+    height: calc(504 * var(--u));
+    margin-left: calc(-280 * var(--u));
+    margin-top: calc(-252 * var(--u));
+    transform: translateZ(calc(34 * var(--u)));
+  }
+  .hs-map > svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .hs-road-lit {
+    --draw: clamp(0, (var(--t, 1) - var(--a)) / var(--l), 1);
+    fill: none;
+    stroke: rgb(var(--glow) / 0.8);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-dasharray: 1 1;
+    stroke-dashoffset: calc(1 - var(--draw));
+    /* A road not yet started would still show its rounded tip as a dot. */
+    opacity: clamp(0, var(--draw) * 60, 1);
+  }
+  .hs-trip,
+  .hs-trip-glow {
+    fill: none;
+    stroke-linecap: round;
+    stroke-dasharray: 1 1;
+    stroke-dashoffset: calc(1 - var(--trip, 1));
+    opacity: clamp(0, var(--trip, 1) * 200, 1);
+  }
+  .hs-trip {
+    stroke: #ffb27a;
+    stroke-width: 2.2;
+  }
+  .hs-trip-glow {
+    stroke: rgb(var(--glow) / 0.3);
+    stroke-width: 7;
+  }
+  /* Report points: white with an orange rim, so they read on the lit trip
+     line itself. Each appears as the vehicle passes it. */
+  .hs-ping {
+    fill: #fff;
+    stroke: var(--accent);
+    stroke-width: 0.9;
+    opacity: clamp(0, (var(--trip, 1) - var(--at)) * 80, 1);
+  }
+  /* The fence, the start and the destination come in with the first
+     scroll, like the roads (`--car` is 0 until the reader scrolls, and
+     absent, so 1, when the hero is still). */
+  .hs-fence,
+  .hs-start,
+  .hs-dest {
+    opacity: var(--car, 1);
+  }
+  .hs-fence-ring {
+    fill: rgb(255 125 41 / 0);
+    stroke: rgb(255 255 255 / 0.32);
+    stroke-width: 0.8;
+    stroke-dasharray: 3 2.5;
+    transition:
+      fill 320ms var(--ease-out),
+      stroke 320ms var(--ease-out);
+  }
+  .hero-story[data-fence-in] .hs-fence-ring {
+    fill: rgb(255 125 41 / 0.1);
+    stroke: var(--accent);
+  }
+  .hs-fence-ripple {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 1.2;
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .hs-start-ring {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 1.2;
+  }
+  .hs-start-core {
+    fill: var(--accent);
+  }
+  .hs-dest {
+    --arrived: clamp(0, (var(--trip, 1) - 0.99) * 100, 1);
+  }
+  .hs-dest-ring {
+    fill: rgb(255 125 41 / calc(0.14 * var(--arrived)));
+    stroke: color-mix(in oklab, var(--accent) calc(var(--arrived) * 100%), rgb(255 255 255 / 0.55));
+    stroke-width: 1;
+  }
+  .hs-dest-core {
+    fill: color-mix(in oklab, var(--accent) calc(var(--arrived) * 100%), rgb(255 255 255 / 0.55));
+  }
+  /* A town comes in when something reaches it (see APPEAR). `--t` is 1
+     when the hero is still, so every town shows there. */
+  .hs-town,
+  .hs-town-name {
+    opacity: clamp(0, (var(--t, 1) - var(--ap, 0)) * 25, 1);
+  }
+  .hs-town {
+    fill: #0b0d11;
+    stroke: rgb(255 255 255 / 0.55);
+    stroke-width: 1;
+  }
+  .hs-town-name {
+    font-family: var(--font-mono);
+    font-size: 8.5px;
+    letter-spacing: 0.08em;
+    fill: rgb(255 255 255 / 0.58);
+  }
+  .hs-hub-core {
+    fill: var(--accent);
+  }
+  .hs-hub-ring {
+    fill: none;
+    stroke: rgb(var(--glow) / 0.7);
+    stroke-width: 1;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: hs-pulse 2.8s var(--ease-out) infinite;
+  }
+  @keyframes hs-pulse {
+    from {
+      transform: scale(0.45);
+      opacity: 1;
+    }
+    to {
+      transform: scale(2.1);
+      opacity: 0;
+    }
+  }
+  .hs-car {
+    display: none;
+  }
+  .hs-car-halo {
+    fill: rgb(var(--glow) / 0.28);
+  }
+  .hs-car-arrow {
+    fill: #fff;
+    stroke: var(--accent);
+    stroke-width: 1;
+    stroke-linejoin: round;
+  }
+
+  .hs-pin-kigali,
+  .hs-car-chip {
+    left: calc(var(--x) * 100%);
+    top: calc(var(--y) * 100%);
+  }
+  .hs-pin-kigali {
+    --stem: 40;
+  }
+  .hs-tag {
+    position: absolute;
+    bottom: calc(40 * var(--u) + 0.375rem);
+    left: 0;
+    translate: -50% 0;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    color: #fff;
+    white-space: nowrap;
+  }
+  .hs-car-chip {
+    --stem: 74;
+    display: none;
+  }
+  .hs-chip {
+    position: absolute;
+    bottom: calc(74 * var(--u));
+    left: 0;
+    translate: -50% 0;
+    display: grid;
+    grid-template-columns: auto auto;
+    align-items: center;
+    column-gap: 0.5rem;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid rgb(var(--glow) / 0.45);
+    border-radius: 0.375rem;
+    background: rgb(8 9 12 / 0.88);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    line-height: 1.45;
+    color: #fff;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .hs-chip-acc {
+    grid-column: 2;
+    color: var(--color-ink-400);
+  }
+  .hs-chip-dot {
+    grid-row: span 3;
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px rgb(var(--glow) / 0.2);
+  }
+
+  .hs-hud {
+    position: absolute;
+    right: 0;
+    bottom: 0.25rem;
+    display: flex;
+    gap: 1.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-ink-400);
+    opacity: var(--in, 1);
+  }
+  .hs-hud b {
+    margin-left: 0.4em;
+    font-weight: 500;
+    color: #fff;
+    /* "5 m", not "5 M". */
+    text-transform: none;
+  }
+
+  /* --------------------------------- THE TANK -------------------------------- */
+  .hs-tank {
+    --lvl: 0.44;
+    --alert: 1;
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+
+  /* Glass. Clear, with three things that make it read as glass rather than
+     as a drawing of a box: light raking across it in two soft streaks, a
+     warm glow just inside its edges (glass is brightest where you look
+     through more of it), and its thickness, as a second, fainter edge a
+     few units inside the first. */
+  .hs-glass {
+    border: 1px solid rgb(var(--glow) / 0.55);
+    background:
+      linear-gradient(
+        115deg,
+        transparent 26%,
+        rgb(255 255 255 / 0.09) 33%,
+        transparent 41%,
+        transparent 58%,
+        rgb(255 255 255 / 0.045) 62%,
+        transparent 67%
+      ),
+      linear-gradient(170deg, rgb(255 255 255 / 0.075), rgb(255 255 255 / 0.012) 55%, rgb(255 255 255 / 0.035));
+    box-shadow: inset 0 0 calc(22 * var(--u)) rgb(var(--glow) / 0.09);
+    outline: 1px solid rgb(255 255 255 / 0.07);
+    outline-offset: calc(-5 * var(--u));
+    backface-visibility: visible;
+  }
+  .hs-glass-base {
+    background: rgb(255 255 255 / 0.03);
+    border-color: rgb(var(--glow) / 0.42);
+    box-shadow: none;
+  }
+  /* The front and the lid are cut open, so their shape is clipped and their
+     outline drawn instead of bordered: the cut edge glows like the rest. */
+  .hs-glass-front,
+  .hs-glass-lid {
+    border: 0;
+    outline: 0;
+  }
+  .hs-glass-front {
+    clip-path: polygon(0 0, 38% 0, 62% 34%, 100% 34%, 100% 100%, 0 100%);
+  }
+  .hs-glass-lid {
+    clip-path: polygon(0 0, 100% 0, 100% 72%, 62% 72%, 38% 100%, 0 100%);
+    background: linear-gradient(160deg, rgb(255 255 255 / 0.07), rgb(255 255 255 / 0.02));
+    box-shadow: none;
+  }
+  .hs-glass-line {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .hs-glass-line path {
+    fill: none;
+    stroke: rgb(var(--glow) / 0.8);
+    stroke-width: 1.4;
+    vector-effect: non-scaling-stroke;
+  }
+  .hs-ticks {
+    position: absolute;
+    inset: 6% auto 6% 8%;
+    width: 14%;
+    background: repeating-linear-gradient(to top, transparent 0 calc(25% - 1px), rgb(255 255 255 / 0.28) calc(25% - 1px) 25%);
+  }
+
+  /* Fuel: amber, deeper with depth, its surface brighter and glossy, with
+     a bright line where it meets the glass. Translucent, so the rod and
+     the float read through it. */
+  .hs-fuel {
+    --sy: var(--lvl);
+    background: linear-gradient(to top, rgb(160 56 0 / 0.72), rgb(232 100 8 / 0.5) 62%, rgb(255 150 50 / 0.46));
+    border-top: 1.5px solid rgb(255 200 140 / 0.95);
+  }
+  .hs-fuel-front {
+    background:
+      linear-gradient(90deg, transparent 18%, rgb(255 215 160 / 0.13) 36%, transparent 52%),
+      linear-gradient(to top, rgb(160 56 0 / 0.66), rgb(232 100 8 / 0.44) 62%, rgb(255 150 50 / 0.4));
+  }
+  .hs-fuel-top {
+    --z: calc(4 + 230 * var(--lvl));
+    background:
+      radial-gradient(55% 65% at 40% 36%, rgb(255 220 170 / 0.45), transparent 70%),
+      linear-gradient(170deg, rgb(255 165 70 / 0.55), rgb(230 110 15 / 0.52));
+    box-shadow: inset 0 0 0 1px rgb(255 205 150 / 0.75);
+  }
+
+  /* The sensor: turns to face the camera (a cylinder looks the same from
+     every side, so its photograph does too), its foot 8 off the floor and
+     its flange on the lid. 228 of rod for 1319 pixels of photograph. */
+  .hs-sensor {
+    --sw: 113.4;
+    --sh: 262.6;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: calc(var(--sw) * var(--u));
+    height: calc(var(--sh) * var(--u));
+    margin-left: calc(var(--sw) * var(--u) / -2);
+    margin-top: calc(var(--sh) * var(--u) * -1);
+    transform-origin: 50% 100%;
+    transform: translateZ(calc(var(--lift, 8) * var(--u))) rotateZ(calc(var(--rz) * -1))
+      translateY(calc(var(--toward, 0) * var(--u))) rotateX(-90deg);
+  }
+  .hs-sensor img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    user-select: none;
+  }
+  /* The float rides the fuel: its middle on the surface, a hair nearer the
+     camera than the rod it runs on. */
+  .hs-float {
+    --sw: 39.1;
+    --sh: 43.9;
+    --lift: calc(4 + 230 * var(--lvl) - 21.95);
+    --toward: 1.5;
+  }
+
+  .hs-drain {
+    opacity: var(--alert);
+  }
+  .hs-drain svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .hs-drain path {
+    fill: none;
+    stroke-linecap: round;
+  }
+  .hs-drain-base {
+    stroke: url(#hs-drain-fade);
+    stroke-opacity: 0.25;
+    stroke-width: 6;
+  }
+  .hs-drain-flow {
+    stroke: url(#hs-drain-fade);
+    stroke-width: 2;
+    stroke-dasharray: 4 10;
+    animation: hs-flow 900ms linear infinite;
+  }
+  @keyframes hs-flow {
+    to {
+      stroke-dashoffset: -14;
+    }
+  }
+
+  /* Beside the tank's top corner, the panel running out to the right (to
+     the left on a phone, where the right is the edge of the screen). */
+  .hs-readout {
+    --bx: 112;
+    --by: 40;
+    --bz: 200;
+  }
+  .hs-readout .hs-lead-line {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: calc(34 * var(--u));
+    height: 1px;
+    background: rgb(var(--glow) / 0.7);
+  }
+  .hs-panel {
+    position: absolute;
+    left: calc(34 * var(--u));
+    bottom: 0;
+    translate: 0 50%;
+    display: grid;
+    gap: 0.4rem;
+    width: 11.5rem;
+    padding: 0.85rem 0.95rem;
+    border: 1px solid rgb(var(--glow) / 0.4);
+    border-radius: 0.5rem;
+    background: rgb(8 9 12 / 0.9);
+    font-family: var(--font-mono);
+  }
+  .hs-panel-label {
+    font-size: 0.625rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-ink-400);
+  }
+  .hs-panel-value {
+    font-size: 1.75rem;
+    font-weight: 500;
+    line-height: 1;
+    color: #fff;
+    font-variant-numeric: tabular-nums;
+  }
+  .hs-panel-bar {
+    height: 3px;
+    border-radius: 2px;
+    background: rgb(255 255 255 / 0.1);
+    overflow: hidden;
+  }
+  .hs-panel-bar span {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+    transform-origin: left;
+    transform: scaleX(var(--lvl));
+  }
+  .hs-alert {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-top: 0.2rem;
+    font-size: 0.6875rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+    opacity: var(--alert);
+    translate: 0 calc((1 - var(--alert)) * 4px);
+  }
+  .hs-alert-dot {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: hs-blink 1.1s steps(2, jump-none) infinite;
+  }
+  @keyframes hs-blink {
+    50% {
+      opacity: 0.25;
+    }
+  }
+
+  /* --------------------------------- THE UNIT -------------------------------- */
+  .hs-unit {
+    --o: clamp(0, var(--t, 1) / 0.22, 1);
+    --open: calc(var(--o) * var(--o) * (3 - 2 * var(--o)));
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform: translateZ(calc(-40 * var(--u)));
+  }
+  .hs-unit-base {
+    border: 1px solid rgb(var(--glow) / 0.35);
+    border-radius: calc(14 * var(--u));
+    background: #090a0e;
+  }
+  .hs-unit-base-top {
+    background: linear-gradient(160deg, #15181e, #0a0b0f);
+    border-color: rgb(var(--glow) / 0.55);
+  }
+  .hs-plate {
+    --on: clamp(0, (var(--t, 1) - var(--at)) * 10, 1);
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform: translateZ(calc((26 + var(--i) * (12 + 74 * var(--open))) * var(--u)));
+  }
+  .hs-plate-edge {
+    border-radius: calc(12 * var(--u));
+    background: rgb(255 255 255 / 0.03);
+    border: 1px solid rgb(var(--glow) / calc(0.15 + 0.25 * var(--on)));
+  }
+  .hs-plate-face {
+    border-radius: calc(12 * var(--u));
+    border: 1px solid rgb(var(--glow) / calc(0.3 + 0.6 * var(--on)));
+    background:
+      radial-gradient(80% 80% at 30% 20%, rgb(var(--glow) / calc(0.04 + 0.12 * var(--on))), transparent 70%),
+      linear-gradient(160deg, rgb(255 255 255 / 0.08), rgb(255 255 255 / 0.02));
+    box-shadow: 0 0 calc(40 * var(--u)) rgb(var(--glow) / calc(0.22 * var(--on)));
+  }
+  .hs-glyph {
+    position: absolute;
+    inset: 18%;
+    width: 64%;
+    height: 64%;
+    stroke: color-mix(in oklab, var(--accent) calc(var(--on) * 100%), rgb(255 255 255 / 0.32));
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .hs-glyph-faint {
+    stroke-opacity: 0.35;
+    stroke-width: 1.4;
+  }
+  .hs-glyph-fill {
+    fill: color-mix(in oklab, var(--accent) calc(var(--on) * 100%), rgb(255 255 255 / 0.32));
+    stroke: none;
+  }
+  .hs-glyph-soft {
+    fill-opacity: 0.35;
+  }
+  .hs-plate-n {
+    position: absolute;
+    left: 0.4rem;
+    bottom: 0;
+    translate: 0 50%;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: color-mix(in oklab, var(--accent) calc(var(--on) * 100%), var(--color-ink-500));
+  }
+
+  /* --------------------------------- STEPS ----------------------------------- */
+  .hs-steps {
+    display: flex;
+    gap: clamp(1rem, 2.5vw, 2.5rem);
+  }
+  .hs-step {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: baseline;
+    column-gap: 0.6rem;
+    row-gap: 0.6rem;
+    width: 9.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-ink-500);
+    transition: color 300ms var(--ease-out);
+  }
+  .hs-step[data-current] {
+    color: #fff;
+  }
+  .hs-step-n {
+    color: inherit;
+  }
+  .hs-step[data-current] .hs-step-n {
+    color: var(--accent);
+  }
+  .hs-step-bar {
+    grid-column: 1 / -1;
+    height: 1px;
+    background: rgb(255 255 255 / 0.12);
+  }
+  .hs-step-bar span {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+    transform-origin: left;
+    transform: scaleX(clamp(0, (var(--p, 0) - var(--from)) / (var(--to) - var(--from)), 1));
+  }
+
+  /* --------------------------------- LIGHTBOX -------------------------------- */
+  .hs-lightbox {
+    width: min(92vw, 1400px);
+    max-width: none;
+    max-height: 92svh;
+    padding: 0;
+    border: 0;
+    border-radius: 0.75rem;
+    background: #0b0d11;
+    overflow: visible;
+  }
+  .hs-lightbox::backdrop {
+    background: rgb(2 3 5 / 0.82);
+    backdrop-filter: blur(6px);
+  }
+  .hs-lightbox[open] {
+    animation: arrive-plain 420ms var(--ease-out) both;
+  }
+  .hs-lightbox-body :global(.hs-figure-img) {
+    width: 100%;
+    border-radius: 0.75rem;
+  }
+  .hs-lightbox-close {
+    position: absolute;
+    top: -0.75rem;
+    right: -0.75rem;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    background: #fff;
+    color: var(--color-ink-950);
+    box-shadow: 0 6px 24px rgb(0 0 0 / 0.4);
+  }
+
+  /* =====================================================================
+     LIVE: one pinned stage, the scenes played in place.
+     ===================================================================== */
+  .hero-story[data-journey-live] {
+    /* The opening frame, before the script has written anything. */
+    --tilt: 48deg;
+    --spin: -12deg;
+    --trip: 0;
+    --car: 0;
+    --end: clamp(0, (var(--p, 0) - 0.93) * 16.5, 1);
+    height: 440svh;
+  }
+  .hero-story[data-journey-live] .hs-scene {
+    --in: 0;
+    --cin: 0;
+    --t: 0;
+  }
+  .hero-story[data-journey-live] .hs-scene[data-scene='0'] {
+    --in: 1;
+    --cin: 1;
+  }
+  .hero-story[data-journey-live] .hs-pin {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    overflow: clip;
+    opacity: calc(1 - var(--end));
+  }
+  .hero-story[data-journey-live] .hs-frame {
+    display: grid;
+    height: 100%;
+    padding-top: var(--header-h);
+    padding-bottom: 4.5rem;
+  }
+  .hero-story[data-journey-live] .hs-layer {
+    grid-area: 1 / 1;
+    min-height: 0;
+    padding-block: 0;
+  }
+  .hero-story[data-journey-live] .hs-scene + .hs-scene {
+    border-top: 0;
+  }
+  .hero-story[data-journey-live] .hs-floor-layer {
+    display: grid;
+  }
+  /* The map is made of dots itself, so the floor's dots would double up
+     under it: the floor comes up as the map goes. */
+  .hero-story[data-journey-live] .hs-floor-layer .hs-cam {
+    opacity: var(--floor, 0);
+  }
+  .hero-story[data-journey-live] .hs-floor-layer .hs-visual {
+    grid-column: -2;
+  }
+  .hero-story[data-journey-live] .hs-steps-wrap {
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 1.75rem;
+  }
+  .hero-story[data-journey-live] .hs-visual {
+    height: 100%;
+    max-height: 48rem;
+    align-self: center;
+  }
+
+  /* A scene's copy fades with it and rises as it arrives. Only the scene
+     being read takes clicks. */
+  .hero-story[data-journey-live] .hs-scene .hs-copy {
+    opacity: var(--cin, 0);
+    translate: 0 calc((1 - var(--cin, 0)) * 1.5rem);
+    pointer-events: none;
+  }
+  .hero-story[data-journey-live] .hs-scene[data-current] .hs-copy {
+    pointer-events: auto;
+  }
+  .hero-story[data-journey-live] .hs-scene:not([data-current]) .hs-cam {
+    pointer-events: none;
+  }
+  /* The first scene is there from the first frame: its own arrival is the
+     load animation, not the scroll. */
+  .hero-story[data-journey-live] .hs-scene[data-scene='0'] .hs-copy {
+    translate: 0 calc((1 - var(--cin, 1)) * -1.5rem);
+  }
+
+  .hero-story[data-journey-live] .hs-car,
+  .hero-story[data-journey-live] .hs-car-chip {
+    display: block;
+    opacity: var(--car, 0);
+  }
+  .hero-story[data-journey-live] .hs-visual-map {
+    animation: arrive-plain 1200ms var(--ease-out) 240ms both;
+  }
+
+  /* --------------------------------- PHONE ----------------------------------- */
+  @media (width < 64rem) {
+    .hero-story {
+      --u0: min(calc(100cqw / 600), calc(100cqh / 400));
+    }
+    .hs-visual {
+      height: clamp(15rem, 40svh, 24rem);
+    }
+    .hero-story[data-journey-live] .hs-frame {
+      padding-bottom: 3.25rem;
+    }
+    .hero-story[data-journey-live] .hs-layer {
+      grid-template-rows: minmax(7.5rem, 1fr) auto;
+      align-content: stretch;
+      gap: 1rem;
+    }
+    .hero-story[data-journey-live] .hs-visual {
+      grid-row: 1;
+      height: 100%;
+      min-height: 0;
+    }
+    .hero-story[data-journey-live] .hs-copy {
+      grid-row: 2;
+    }
+    .hero-story[data-journey-live] .hs-floor-layer .hs-visual {
+      grid-column: 1;
+    }
+    .hero-story[data-journey-live] .hs-steps-wrap {
+      bottom: 1rem;
+    }
+    .hs-steps {
+      gap: 0.75rem;
+    }
+    .hs-step {
+      width: auto;
+      flex: 1;
+    }
+    .hs-step-label {
+      display: none;
+    }
+
+    .hs-eyebrow {
+      margin-bottom: 0.875rem;
+      font-size: 0.6875rem;
+      letter-spacing: 0.08em;
+    }
+    .hs-eyebrow::before {
+      width: 1rem;
+    }
+    .hs-h1 {
+      font-size: clamp(2.25rem, 10vw, 2.6rem);
+      line-height: 1.06;
+    }
+    .hs-lead,
+    .hs-body {
+      margin-top: 0.875rem;
+      font-size: 1rem;
+      line-height: 1.55;
+    }
+    .hs-ctas {
+      margin-top: 1.25rem;
+      gap: 0.625rem;
+    }
+    .hs-ctas :global(.btn) {
+      min-height: 2.875rem;
+      padding: 0.625rem 1.05rem;
+      font-size: 1rem;
+    }
+    .hs-title-main {
+      font-size: clamp(2rem, 8.6vw, 2.5rem);
+    }
+    .hs-figure {
+      margin-top: 1rem;
+    }
+    .hs-figure :global(.hs-figure-img) {
+      width: 4.5rem;
+    }
+    .hs-reports {
+      margin-top: 1rem;
+    }
+    .hs-report {
+      grid-template-columns: 1.75rem minmax(0, 1fr);
+      gap: 0.5rem;
+      padding-block: 0.55rem;
+    }
+    .hs-report-label {
+      font-size: 1rem;
+    }
+    .hs-report-line {
+      font-size: 0.875rem;
+      line-height: 1.45;
+    }
+    .hs-specs {
+      margin-top: 1rem;
+      gap: 2rem;
+    }
+    .hs-spec dd {
+      font-size: 1.5rem;
+    }
+    .hs-hud {
+      display: none;
+    }
+    .hs-floor {
+      --w: 900;
+      --d: 900;
+    }
+    /* On a phone the tank has the stage's whole width, so its readout
+       is one line standing over it rather than a panel beside it. */
+    .hs-visual-tank .hs-world {
+      --k: 0.98;
+      top: 66%;
+    }
+    .hs-readout {
+      --bx: 0;
+      --by: 0;
+      --bz: 322;
+    }
+    .hs-readout .hs-lead-line,
+    .hs-panel-bar,
+    .hs-panel-label {
+      display: none;
+    }
+    .hs-panel {
+      left: 0;
+      translate: -50% 0;
+      grid-auto-flow: column;
+      align-items: center;
+      gap: 0.6rem;
+      width: max-content;
+      padding: 0.45rem 0.65rem;
+    }
+    .hs-panel-value {
+      font-size: 1rem;
+    }
+    .hs-alert {
+      margin-top: 0;
+    }
+    .hs-panel-value {
+      font-size: 1.35rem;
+    }
+  }
+
+  /* A short phone screen: the scene's copy has to fit under its object. */
+  @media (width < 64rem) and (height < 760px) {
+    .hero-story[data-journey-live] .hs-specs {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hs-hub-ring,
+    .hs-drain-flow,
+    .hs-alert-dot,
+    .hs-lightbox[open] {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  /**
+   * Plays the hero.
+   *
+   * Writes `--p` (the section's progress, 0 to 1) and the camera's tilt and
+   * turn on the section, and on each scene `--in` (how present it is) and
+   * `--t` (how far through it the reader is). The vehicle's place on its
+   * road and the readouts' digits are set in the same frame.
+   *
+   * Runs only where the stage can pin: not under reduced motion, and not on
+   * a phone on its side, where a pinned stage would be taller than the
+   * screen. Anywhere else the section is three still blocks and this does
+   * nothing at all.
+   */
+  const clamp = (n: number, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, n));
+  const ease = (n: number) => n * n * (3 - 2 * n);
+
+  function initStory(root: HTMLElement) {
+    const windows = JSON.parse(root.dataset.story ?? '[]') as [number, number][];
+    /* SCENE CHANGES ARE QUICK AND NEVER OVERLAP. A scene, words and object
+       alike, has fully gone by the boundary between two scenes, and the next
+       only starts to arrive from it, so two scenes are never on screen at
+       once. Each fade is 2% of the section (about 60px of scrolling), so the
+       empty moment between them is a single beat, not a gap. */
+    const FADE = 0.02;
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const room = window.matchMedia('(width >= 64rem), (height >= 34rem)');
+
+    const scenes = [...root.querySelectorAll<HTMLElement>('[data-scene]')];
+    const steps = [...root.querySelectorAll<HTMLElement>('[data-step]')];
+    const trip = root.querySelector<SVGPathElement>('[data-trip]');
+    const car = root.querySelector<SVGGElement>('[data-car]');
+    const chip = root.querySelector<HTMLElement>('[data-car-chip]');
+    const lat = root.querySelector<HTMLElement>('[data-lat]');
+    const lon = root.querySelector<HTMLElement>('[data-lon]');
+    const tank = root.querySelector<HTMLElement>('[data-tank]');
+    const level = root.querySelector<HTMLElement>('[data-level]');
+    const tripLength = trip ? trip.getTotalLength() : 0;
+    const fence = root.querySelector<SVGCircleElement>('[data-fence]');
+    const ripple = root.querySelector<SVGCircleElement>('[data-fence-ripple]');
+    let inFence = false;
+
+    let live = false;
+    let frame = 0;
+    let lastLevel = '';
+
+    /* How present scene `i` is at progress `p`: the first is there from the
+       start, the last stays until the stage fades out as a whole. */
+    const presence = (i: number, p: number) => {
+      const [from, to] = windows[i];
+      const fadeIn = i === 0 ? 1 : ease(clamp((p - from) / FADE));
+      const fadeOut = i === windows.length - 1 ? 1 : 1 - ease(clamp((p - (to - FADE)) / FADE));
+      return fadeIn * fadeOut;
+    };
+
+    /* The vehicle, `c` of the way along the Central Corridor. */
+    const placeCar = (c: number) => {
+      if (!trip || !car || !tripLength) return;
+      const at = c * tripLength;
+      const a = trip.getPointAtLength(at);
+      const b = trip.getPointAtLength(Math.min(tripLength, at + 2));
+      const heading = c >= 1 ? 0 : (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI + 90;
+      car.setAttribute('transform', `translate(${a.x.toFixed(2)} ${a.y.toFixed(2)}) rotate(${heading.toFixed(1)})`);
+      if (chip) {
+        chip.style.setProperty('--x', (a.x / 400).toFixed(4));
+        chip.style.setProperty('--y', (a.y / 360).toFixed(4));
+      }
+      /* Back out of the map's projection: the readout is the real
+         position of the point drawn. */
+      const lonDeg = (a.x - 20) / 174 + 28.85;
+      const latDeg = (a.y - 30) / 174 + 1.04;
+      if (lat) lat.textContent = `${latDeg.toFixed(4)}° S`;
+      if (lon) lon.textContent = `${lonDeg.toFixed(4)}° E`;
+
+      /* The geofence: lit while the vehicle is inside it, and a pulse
+         each time it crosses the boundary, in either direction. */
+      if (fence) {
+        const inside =
+          c > 0 && Math.hypot(a.x - fence.cx.baseVal.value, a.y - fence.cy.baseVal.value) < fence.r.baseVal.value;
+        if (inside !== inFence) {
+          inFence = inside;
+          root.toggleAttribute('data-fence-in', inside);
+          ripple?.animate(
+            [
+              { transform: 'scale(1)', opacity: 0.9 },
+              { transform: 'scale(1.9)', opacity: 0 },
+            ],
+            { duration: 900, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' },
+          );
+        }
+      }
+    };
+
+    const update = () => {
+      frame = 0;
+      if (!live) return;
+      const rect = root.getBoundingClientRect();
+      const vh = window.innerHeight;
+      if (rect.bottom < 0 || rect.top > vh) return;
+
+      const travel = rect.height - vh;
+      const p = travel > 0 ? clamp(-rect.top / travel) : 0;
+      root.style.setProperty('--p', p.toFixed(4));
+
+      /* The camera: high over the map, then lower once it has gone, and a
+         slow turn across the whole hero. */
+      const lower = ease(clamp((p - 0.28) / 0.05));
+      root.style.setProperty('--tilt', `${(48 + lower * 12).toFixed(2)}deg`);
+      root.style.setProperty('--spin', `${(-12 + p * 26).toFixed(2)}deg`);
+      root.style.setProperty('--floor', (1 - presence(0, p)).toFixed(3));
+
+      let current = 0;
+      let best = -1;
+      scenes.forEach((scene, i) => {
+        const [from, to] = windows[i];
+        const words = presence(i, p);
+        const local = clamp((p - from) / (to - from));
+        scene.style.setProperty('--in', words.toFixed(3));
+        scene.style.setProperty('--cin', words.toFixed(3));
+        scene.style.setProperty('--t', local.toFixed(4));
+        if (words > best) {
+          best = words;
+          current = i;
+        }
+      });
+      scenes.forEach((scene, i) => scene.toggleAttribute('data-current', i === current && best > 0.6));
+      steps.forEach((step, i) => step.toggleAttribute('data-current', i === current));
+
+      /* Scene one: the vehicle appears the moment the reader scrolls, and
+         drives the corridor over the scene. */
+      const t0 = clamp(p / windows[0][1]);
+      const c = clamp(t0 / 0.8);
+      root.style.setProperty('--car', clamp(t0 * 40).toFixed(3));
+      root.style.setProperty('--trip', c.toFixed(4));
+      placeCar(c);
+
+      /* Scene two: the level holds, then drops sharply, then the drop is
+         flagged. */
+      const t1 = clamp((p - windows[1][0]) / (windows[1][1] - windows[1][0]));
+      const drop = ease(clamp((t1 - 0.36) / 0.16));
+      const lvl = 0.78 - drop * 0.34;
+      if (tank) {
+        tank.style.setProperty('--lvl', lvl.toFixed(4));
+        tank.style.setProperty('--alert', clamp((t1 - 0.5) * 8).toFixed(3));
+      }
+      const shown = `${Math.round(lvl * 100)}%`;
+      if (level && shown !== lastLevel) {
+        level.textContent = shown;
+        lastLevel = shown;
+      }
+    };
+
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+
+    /* Focus on something in a scene that is not on screen (tabbing, or a
+       screen reader moving through the page) brings that scene up. */
+    const onFocus = (event: FocusEvent) => {
+      if (!live) return;
+      const scene = (event.target as HTMLElement).closest<HTMLElement>('[data-scene]');
+      if (!scene || scene.hasAttribute('data-current')) return;
+      const i = scenes.indexOf(scene);
+      const [from, to] = windows[i];
+      const target = i === 0 ? 0 : i === windows.length - 1 ? to - 0.02 : (from + to) / 2;
+      const top = root.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({ top: top + target * (root.offsetHeight - window.innerHeight), behavior: 'instant' });
+    };
+
+    const apply = () => {
+      live = !still.matches && room.matches;
+      root.toggleAttribute('data-journey-live', live);
+      if (live) {
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', onScroll, { passive: true });
+        update();
+      } else {
+        window.removeEventListener('scroll', onScroll);
+        window.removeEventListener('resize', onScroll);
+        for (const name of ['--p', '--tilt', '--spin', '--floor', '--car', '--trip']) root.style.removeProperty(name);
+        for (const scene of scenes) {
+          scene.style.removeProperty('--in');
+          scene.style.removeProperty('--cin');
+          scene.style.removeProperty('--t');
+          scene.removeAttribute('data-current');
+        }
+        root.removeAttribute('data-fence-in');
+        inFence = false;
+        tank?.style.removeProperty('--lvl');
+        tank?.style.removeProperty('--alert');
+        if (level) level.textContent = '44%';
+        lastLevel = '';
+      }
+    };
+
+    root.addEventListener('focusin', onFocus);
+    still.addEventListener('change', apply);
+    room.addEventListener('change', apply);
+    apply();
+
+    /* The infographic, full size: the thumbnail's own picture, asked for at
+       the size it will now be shown. */
+    const dialog = root.querySelector<HTMLDialogElement>('[data-figure-dialog]');
+    const slot = root.querySelector<HTMLElement>('[data-figure-slot]');
+    const thumb = root.querySelector<HTMLElement>('.hs-figure-img');
+    root.querySelector('[data-figure-open]')?.addEventListener('click', () => {
+      if (!dialog || !slot || !thumb) return;
+      if (!slot.firstElementChild) {
+        const copy = thumb.cloneNode(true) as HTMLElement;
+        copy.querySelectorAll('source, img').forEach((el) => el.setAttribute('sizes', 'min(92vw, 1400px)'));
+        copy.querySelector('img')?.setAttribute('loading', 'eager');
+        slot.append(copy);
+      }
+      dialog.showModal();
+    });
+    root.querySelector('[data-figure-close]')?.addEventListener('click', () => dialog?.close());
+    dialog?.addEventListener('click', (event) => {
+      if (event.target === dialog) dialog.close();
+    });
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-story]').forEach((el) => initStory(el));
+</script>

@@ -9,22 +9,24 @@
  * most useful thing the old homepage had was its list of fleet pain points, and
  * it was going to waste as a control that did nothing.
  *
- *   1 Hero journey             what we do, then what a unit reports,
- *                             carried by one pinned scroll-driven rail
+ *   1 Hero                     three scenes on one pinned stage: what we
+ *                             do (over a map of Rwanda), fuel monitoring
+ *                             (the Rwanda market's first concern), then
+ *                             what a unit reports
  *   2 Products                 the range, as a CSS 3D helix
  *   3 Descriptor band          six verified one-liners from the live site
  *   4 Industries               the eight verticals
  *   5 Challenges               the visitor's own problem, routed to the fix
  *   6 Value proposition        how we answer it (Solutions / Service / Simplicity)
  *   7 Video telematics         flagship product, full-bleed dark
- *   8 Fuel monitoring          second feature, light split
+ *   8 (Fuel monitoring moved up into the hero, as its second scene)
  *   9 Services                 what happens to the data
  *  10 Platform capabilities    what is included
  *  11 Why PrimeTrack + stats   credibility, with the numbers
  *  12 Clients                  named organisations
  *  13 CTA                      conversion
  *
- * TONE. The page opens on one long dark passage — the hero journey runs
+ * TONE. The page opens on one long dark passage — the hero runs
  * straight into the product helix with no seam between them, because both are
  * on ink-950 and both are a lit object turning against it. That is the point:
  * the two scroll-driven pieces read as one continuous descent rather than as
@@ -41,7 +43,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Section from '../components/Section.astro';
 import SectionHeader from '../components/SectionHeader.astro';
 import Button from '../components/Button.astro';
-import HeroJourney from '../components/HeroJourney.astro';
+import HeroStory from '../components/HeroStory.astro';
 import IndustryIndex from '../components/IndustryIndex.astro';
 import FleetBrief from '../components/FleetBrief';
 import { challenges } from '../data/challenges';
@@ -99,10 +101,9 @@ const whyKeys = ['regulator', 'support', 'hardware'] as const;
   description={t.seo.home.description}
   schemas={[localBusinessSchema(logoUrl)]}
 >
-  <!-- 1 · Hero, as a scroll-driven journey.
-       Owns the headline and the pinned report presentation that follows it.
-       See HeroJourney for why it runs to roughly three and a half screens. -->
-  <HeroJourney locale={locale} />
+  <!-- 1 · Hero: three scenes on one pinned stage (overview, fuel,
+       tracking). See HeroStory. -->
+  <HeroStory locale={locale} />
 
   <!-- 2 · Products, as the helix.
        Directly against the hero, deliberately: both run on ink-950, so there is
@@ -238,27 +239,6 @@ const whyKeys = ['regulator', 'support', 'hardware'] as const;
         wrapperClass="media-frame media-frame-dark reveal-right"
         sizes="(min-width: 1024px) 46vw, 100vw"
       />
-    </div>
-  </Section>
-
-  <!-- 8 · Fuel monitoring -->
-  <Section navSection="products" tone="light" space="lg">
-    <div class="grid items-center gap-12 lg:grid-cols-2">
-      <Picture
-        imageKey="homeFuelMonitoring"
-        locale={locale}
-        wrapperClass="media-frame reveal-left lg:order-1"
-        sizes="(min-width: 1024px) 46vw, 100vw"
-      />
-      <div>
-        <p class="eyebrow mb-4">{t.home.fuelFeature.eyebrow}</p>
-        <h2 class="text-h2">{t.home.fuelFeature.title}</h2>
-        <p class="mt-5 measure text-lead text-ink-600">{t.home.fuelFeature.body}</p>
-        <div class="mt-9 flex flex-wrap gap-3">
-          <Button href={localizePath(routes.contact, locale)} variant="primary">{t.home.fuelFeature.primaryCta}</Button>
-          <Button href={localizePath(routes.fuelmanagement, locale)} variant="secondary">{t.home.fuelFeature.secondaryCta}</Button>
-        </div>
-      </div>
     </div>
   </Section>
 
