@@ -313,14 +313,14 @@ Usually deliberate: brand and product names, figures, addresses. Confirm each.
 | `home.services.lead` | Hardware is half the job. These three services decide whether the reporting becomes a management tool or another dashboard nobody opens. | Ibikoresho ni kimwe cya kabiri cy’akazi. Izi serivisi eshatu ni zo zigena niba raporo ziba igikoresho cyo kuyobora cyangwa indi mbonerahamwe nta we ufungura. |
 | `home.capabilities.eyebrow` | On the platform | Kuri porogaramu |
 | `home.capabilities.title` | Included with the tracking, not sold separately | Biri mu gukurikirana, ntibigurishwa ukwabyo |
-| `home.capabilities.items.mobile.title` | Track on the go | Kurikirana aho uri hose |
+| `home.capabilities.items.mobile.title` | Mobile App to track on the go | Porogaramu ya telefoni yo gukurikirana aho uri hose |
 | `home.capabilities.items.mobile.body` | PrimeTrack's mobile apps are available on iOS and Android, carrying the tools needed to manage a fleet from a phone rather than a desk. | Porogaramu za telefoni za PrimeTrack ziboneka kuri iOS na Android, zifite ibikoresho byose bikenewe mu gucunga ibinyabiziga uri kuri telefoni aho kuba ku biro. |
-| `home.capabilities.items.driver.title` | Driver behaviour monitoring | Gukurikirana imyitwarire y’abashoferi |
+| `home.capabilities.items.driver.title` | Driver Behaviour Monitoring | Gukurikirana imyitwarire y’abashoferi |
 | `home.capabilities.items.driver.body` | Detailed reporting on driving habits, so poor behaviour is identified in time to correct it rather than after it has affected operations. | Raporo zirambuye ku buryo abashoferi batwara, ku buryo imyitwarire mibi imenyekana hakiri kare igakosorwa mbere y’uko igira ingaruka ku kazi. |
-| `home.capabilities.items.maintenance.title` | Preventive maintenance | Kubungabunga mbere y’uko bipfa |
+| `home.capabilities.items.maintenance.title` | Vehicle preventive maintenance | Kubungabunga ibinyabiziga mbere y’uko bipfa |
 | `home.capabilities.items.maintenance.body` | Automated maintenance scheduling, which takes service due dates and vehicle paper renewals off somebody's memory and into the system. | Gutegura igihe cyo gusana mu buryo bwikora, ku buryo amatariki yo gusana n’ayo kuvugurura ibyangombwa by’ibinyabiziga atagisigara mu mutwe w’umuntu ahubwo ajya muri sisitemu. |
-| `home.capabilities.items.speedLimiters.title` | Arrive Alive speed limiters | Ibigabanya umuvuduko bya Arrive Alive |
-| `home.capabilities.items.speedLimiters.body` | Speed limiting fitted alongside the tracking, supporting both driver safety and compliance with road speed requirements. | Igabanya umuvuduko ishyirwa hamwe n’igikoresho cyo gukurikirana, igafasha umutekano w’abashoferi no kubahiriza amategeko y’umuvuduko mu muhanda. |
+| `home.capabilities.items.reporting.title` | Reporting & vehicle analytics | Raporo n’isesengura ry’ibinyabiziga |
+| `home.capabilities.items.reporting.body` | Detailed reports on trip history, driver performance, fuel consumption and vehicle health. | Raporo zirambuye ku mateka y’ingendo, imikorere y’abashoferi, ikoreshwa rya lisansi n’ubuzima bw’ibinyabiziga. |
 | `home.videoFeature.eyebrow` | AI-enabled video telematics | Gukurikirana amashusho hifashishijwe AI |
 | `home.videoFeature.title` | Your vehicle's smart CCTV | Kamera z’ubwenge z’ikinyabiziga cyawe |
 | `home.videoFeature.body` | Real-time video streaming and 360 degree monitoring of the vehicle and the road around it. ADAS and blind-spot mitigation give drivers a warning before a situation develops, and the AI-interactive features keep drivers a... | Kohereza amashusho ako kanya no kugenzura impande zose z’ikinyabiziga n’umuhanda ugikikije. ADAS n’uburyo bwo kwirinda ahatagaragara biburira umushoferi mbere y’uko ikibazo kivuka, kandi uburyo bwa AI bwo gusabana butuma... |

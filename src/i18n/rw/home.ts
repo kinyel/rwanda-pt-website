@@ -109,7 +109,7 @@ export const home: Translation<Dictionary['home']> = {
     title: 'Biri mu gukurikirana, ntibigurishwa ukwabyo',
     items: {
       mobile: {
-        title: 'Kurikirana aho uri hose',
+        title: 'Porogaramu ya telefoni yo gukurikirana aho uri hose',
         body: 'Porogaramu za telefoni za PrimeTrack ziboneka kuri iOS na Android, zifite ibikoresho byose bikenewe mu gucunga ibinyabiziga uri kuri telefoni aho kuba ku biro.',
       },
       driver: {
@@ -117,12 +117,12 @@ export const home: Translation<Dictionary['home']> = {
         body: 'Raporo zirambuye ku buryo abashoferi batwara, ku buryo imyitwarire mibi imenyekana hakiri kare igakosorwa mbere y’uko igira ingaruka ku kazi.',
       },
       maintenance: {
-        title: 'Kubungabunga mbere y’uko bipfa',
+        title: 'Kubungabunga ibinyabiziga mbere y’uko bipfa',
         body: 'Gutegura igihe cyo gusana mu buryo bwikora, ku buryo amatariki yo gusana n’ayo kuvugurura ibyangombwa by’ibinyabiziga atagisigara mu mutwe w’umuntu ahubwo ajya muri sisitemu.',
       },
-      speedLimiters: {
-        title: 'Ibigabanya umuvuduko bya Arrive Alive',
-        body: 'Igabanya umuvuduko ishyirwa hamwe n’igikoresho cyo gukurikirana, igafasha umutekano w’abashoferi no kubahiriza amategeko y’umuvuduko mu muhanda.',
+      reporting: {
+        title: 'Raporo n’isesengura ry’ibinyabiziga',
+        body: 'Raporo zirambuye ku mateka y’ingendo, imikorere y’abashoferi, ikoreshwa rya lisansi n’ubuzima bw’ibinyabiziga.',
       },
     },
   },

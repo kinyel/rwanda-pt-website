@@ -137,20 +137,21 @@ export const home = {
     title: 'Included with the tracking, not sold separately',
     items: {
       mobile: {
-        title: 'Track on the go',
+        title: 'Mobile App to track on the go',
         body: 'PrimeTrack\'s mobile apps are available on iOS and Android, carrying the tools needed to manage a fleet from a phone rather than a desk.',
       },
       driver: {
-        title: 'Driver behaviour monitoring',
+        title: 'Driver Behaviour Monitoring',
         body: 'Detailed reporting on driving habits, so poor behaviour is identified in time to correct it rather than after it has affected operations.',
       },
       maintenance: {
-        title: 'Preventive maintenance',
+        title: 'Vehicle preventive maintenance',
         body: 'Automated maintenance scheduling, which takes service due dates and vehicle paper renewals off somebody\'s memory and into the system.',
       },
-      speedLimiters: {
-        title: 'Arrive Alive speed limiters',
-        body: 'Speed limiting fitted alongside the tracking, supporting both driver safety and compliance with road speed requirements.',
+      /** Source: the Fleet Trackers page ("Comprehensive reporting"). */
+      reporting: {
+        title: 'Reporting & vehicle analytics',
+        body: 'Detailed reports on trip history, driver performance, fuel consumption and vehicle health.',
       },
     },
   },
