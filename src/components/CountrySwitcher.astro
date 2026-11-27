@@ -1,6 +1,7 @@
 ---
 /**
- * Region switcher: Nigeria / Rwanda / Egypt.
+ * Region switcher: Nigeria / Rwanda / Egypt, each by its flag and full name
+ * (no three-letter codes anywhere).
  *
  * Preserved from the live site's "Home" dropdown, including the fact that
  * Egypt is served from the Nigeria domain. Built on <details>, so it opens on
@@ -11,6 +12,7 @@
  * language is something a Rwandan visitor may genuinely want; changing country
  * is a rare action and should not compete for the same attention.
  */
+import Flag from './Flag';
 import { countries, ACTIVE_COUNTRY } from '../data/company';
 import { useTranslations, localizePath, type Locale } from '../i18n';
 
@@ -24,6 +26,7 @@ interface Props {
 const { locale, tone = 'light', class: className = '' } = Astro.props;
 const t = useTranslations(locale);
 const active = countries.find((c) => c.code === ACTIVE_COUNTRY)!;
+const activeName = t.common.country.names[active.code];
 
 const triggers = {
   auto: 'nav-control hover:bg-[color:var(--nav-chip-hover-bg)]',
@@ -35,11 +38,12 @@ const trigger = triggers[tone];
 
 <details class={`group relative ${className}`} data-country-switcher>
   <summary
-    class={`flex h-8 cursor-pointer list-none items-center gap-1.5 rounded-[--radius-card] border px-3
+    class={`flex h-8 cursor-pointer list-none items-center gap-2 rounded-[--radius-card] border px-3
             text-[0.8125rem] font-bold transition-colors duration-[--duration-theme] ease-[--ease-prime] ${trigger}`}
-    aria-label={t.common.country.srLabel}
+    aria-label={`${t.common.country.srLabel}: ${activeName}`}
   >
-    <span aria-hidden="true" class="text-[0.6875rem] tracking-[0.12em]">{active.code}</span>
+    <Flag code={active.code} />
+    <span>{activeName}</span>
     <svg
       class="h-3 w-3 transition-transform duration-[--duration-base] ease-[--ease-prime] group-open:rotate-180"
       viewBox="0 0 12 12"
@@ -72,13 +76,12 @@ const trigger = triggers[tone];
                             : 'text-[color:var(--nav-fg)] hover:bg-[color:var(--nav-panel-hover)]'
                         }`}
               >
-                <span>{t.common.country.names[country.code]}</span>
-                {isActive ? (
-                  <span class="text-[0.6875rem] font-bold tracking-[0.12em] text-[color:var(--nav-accent)]">
-                    {country.code}
-                    <span class="sr-only">. {t.common.country.current}</span>
-                  </span>
-                ) : (
+                <span class="flex items-center gap-2.5">
+                  <Flag code={country.code} />
+                  {t.common.country.names[country.code]}
+                  {isActive && <span class="sr-only">. {t.common.country.current}</span>}
+                </span>
+                {isActive ? null : (
                   <svg class="h-3.5 w-3.5 text-[color:var(--nav-fg-muted)]" viewBox="0 0 14 14" fill="none" aria-hidden="true">
                     <path
                       d="M5 3h6v6M11 3 3.5 10.5"

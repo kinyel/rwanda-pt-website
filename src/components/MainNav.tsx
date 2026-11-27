@@ -10,6 +10,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
 } from 'react';
 import { createPortal } from 'react-dom';
+import Flag from './Flag';
 
 /**
  * Primary navigation: desktop mega-menu and mobile drawer.
@@ -706,9 +707,9 @@ export default function MainNav({
                                       : 'text-[color:var(--nav-fg)]'
                                   }`}
                     >
-                      {region.name}
-                      <span className="text-[0.75rem] font-bold tracking-[0.12em] text-[color:var(--nav-fg-muted)]">
-                        {region.code}
+                      <span className="flex items-center gap-3">
+                        <Flag code={region.code} />
+                        {region.name}
                         {region.active && <span className="sr-only">. {regionCurrentLabel}</span>}
                       </span>
                     </a>

@@ -2350,6 +2350,18 @@
     }
   }
 
+  /* A country's flag beside its name (Flag.tsx): a small 3:2 chip with
+     softened corners and a hairline ring, so Nigeria's white band still has
+     an edge on a white menu. */
+  .flag {
+    flex: none;
+    width: 1.25rem;
+    height: 0.875rem;
+    border-radius: 2px;
+    overflow: hidden;
+    box-shadow: 0 0 0 1px rgb(128 128 128 / 0.28);
+  }
+
   /* --- Where the bar went -----------------------------------------------
      While the bar is away, a small tab hangs from the top edge: an arrow that
      nudges upward and the word "Menu", so the reader knows the bar is one
